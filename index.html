@@ -106,6 +106,8 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text-primary)
 .zone2{display:none;gap:20px;margin-top:20px}.zone2.visible{display:flex}
 .zone2-left{flex:0 0 70%;max-width:70%}
 .zone2-right{flex:0 0 calc(30% - 20px);max-width:calc(30% - 20px)}
+.zone2-left>.card,.zone2-right>.card{display:flex;flex-direction:column;height:calc(100vh - 120px);max-height:800px}
+.zone2-left>.card>.card-body,.zone2-right>.card>.library-content{flex:1;overflow-y:auto;min-height:0}
 .card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
 .card-header{padding:14px 20px;border-bottom:1px solid var(--border-light);display:flex;align-items:center;justify-content:space-between}
 .card-title{font-size:14px;font-weight:600}
@@ -141,13 +143,13 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text-primary)
 .seq-legend-item{display:flex;align-items:center;gap:5px;font-size:11px}
 .seq-legend-swatch{width:8px;height:8px;border-radius:2px}
 .seq-legend-name{color:var(--text-secondary);font-weight:500}
-.sequence-viewer{padding:16px;background:var(--bg-subtle);border-radius:var(--radius);border:1px solid var(--border-light);font-family:var(--font-mono);font-size:12px;line-height:2;max-height:400px;overflow-y:auto;white-space:pre}
+.sequence-viewer{padding:16px;background:var(--bg-subtle);border-radius:var(--radius);border:1px solid var(--border-light);font-family:var(--font-mono);font-size:12px;line-height:2;overflow-y:auto;white-space:pre}
 .seq-line-number{display:inline-block;width:50px;text-align:right;padding-right:12px;color:var(--text-tertiary);user-select:none;font-size:11px}
 .library-tabs{display:flex;border-bottom:1px solid var(--border-light)}
 .library-tab{flex:1;padding:10px 8px;border:none;background:transparent;font-family:var(--font-sans);font-size:12px;font-weight:500;color:var(--text-tertiary);cursor:pointer;text-align:center;transition:all .15s;border-bottom:2px solid transparent}
 .library-tab:hover{color:var(--text-secondary)}
 .library-tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
-.library-content{padding:16px}
+.library-content{padding:16px;overflow-y:auto;flex:1;min-height:0}
 .library-empty{text-align:center;padding:32px 16px;color:var(--text-tertiary);font-size:13px}
 .library-empty-icon{font-size:28px;margin-bottom:8px;opacity:.4}
 .zone3{display:none;margin-top:20px}.zone3.visible{display:block}
@@ -517,15 +519,15 @@ if(totalSeq.length>0){headerEl.style.display='';headerEl.innerHTML='';assembled.
 const viewer=document.getElementById('sequenceViewer');
 const mutMap2=getMutationMap();
 if(totalSeq.length>0){viewer.style.display='';viewer.innerHTML='';const colorMap=[];assembled.forEach(p=>{for(let i=0;i<p.sequence.length;i++)colorMap.push(p.color.main);});
-for(let start=0;start<totalSeq.length;start+=60){const numSpan=document.createElement('span');numSpan.className='seq-line-number';numSpan.textContent=String(start+1).padStart(5);viewer.appendChild(numSpan);
-const chunk=totalSeq.slice(start,start+60);for(let j=0;j<chunk.length;j++){const globalIdx=start+j;const span=document.createElement('span');
+for(let start=0;start<totalSeq.length;start+=100){const numSpan=document.createElement('span');numSpan.className='seq-line-number';numSpan.textContent=String(start+1).padStart(5);viewer.appendChild(numSpan);
+const chunk=totalSeq.slice(start,start+100);for(let j=0;j<chunk.length;j++){const globalIdx=start+j;const span=document.createElement('span');
 const mut=mutMap2[globalIdx];
 if(mut){span.textContent=mut.mutant;span.className='seq-mutated seq-clickable';span.title=`${mut.original}${mut.position}${mut.mutant}`;}
 else{span.textContent=chunk[j];span.style.color=colorMap[globalIdx]||'var(--text-primary)';span.style.fontWeight='500';span.className='seq-clickable';}
 span.dataset.globalpos=globalIdx;
 span.addEventListener('click',e=>{showMutationPopup(globalIdx,e);});
 viewer.appendChild(span);if((j+1)%10===0&&j<chunk.length-1){const sp=document.createElement('span');sp.textContent=' ';viewer.appendChild(sp);}}
-const endSpan=document.createElement('span');endSpan.style.color='var(--text-tertiary)';endSpan.style.fontSize='10px';endSpan.textContent=` ${Math.min(start+60,totalSeq.length)}`;viewer.appendChild(endSpan);viewer.appendChild(document.createTextNode('\n'));}}else{viewer.style.display='none';}
+const endSpan=document.createElement('span');endSpan.style.color='var(--text-tertiary)';endSpan.style.fontSize='10px';endSpan.textContent=` ${Math.min(start+100,totalSeq.length)}`;viewer.appendChild(endSpan);viewer.appendChild(document.createTextNode('\n'));}}else{viewer.style.display='none';}
 // Render right panel mutations
 renderRightPanel();
 }
