@@ -175,6 +175,15 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text-primary)
 .landing-icon svg{width:32px;height:32px;color:var(--accent)}
 .landing-title{font-size:20px;font-weight:700;margin-bottom:8px}
 .landing-desc{font-size:14px;color:var(--text-secondary);line-height:1.6}
+/* Drag and drop */
+.part-card[draggable="true"]{cursor:grab}
+.part-card[draggable="true"]:active{cursor:grabbing}
+.part-card.dragging{opacity:0.4;transform:scale(0.95)}
+.part-card.drag-over{border-color:var(--accent)!important;box-shadow:0 0 0 2px rgba(37,99,235,0.2)!important}
+.construct-bar-segment[draggable="true"]{cursor:grab}
+.construct-bar-segment[draggable="true"]:active{cursor:grabbing}
+.construct-bar-segment.dragging{opacity:0.4}
+.construct-bar-segment.drag-over{outline:2px solid var(--accent);outline-offset:-2px}
 /* Add part popup */
 .add-part-popup{position:fixed;z-index:200;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);padding:0;width:420px;display:none}
 .add-part-popup-header{display:flex;border-bottom:1px solid var(--border-light)}
@@ -461,6 +470,7 @@ partLevelView.forEach(part=>{
   if(part.sequence.length===0)return;
   const pct=(part.sequence.length/totalLen*100).toFixed(2);
   const div=document.createElement('div');div.className='construct-bar-segment';
+  div.draggable=true;div.dataset.partIdx=part.partIndex;
   div.style.width=`${pct}%`;div.style.backgroundColor=part.color.main;
   if(part.sequence.length/totalLen>0.08){
     const label=document.createElement('span');label.style.position='relative';label.style.zIndex='1';
@@ -468,6 +478,17 @@ partLevelView.forEach(part=>{
   }
   barEl.appendChild(div);
 });
+// Drag and drop on construct bar
+let barDragSrc=null;
+barEl.querySelectorAll('.construct-bar-segment[draggable]').forEach(seg=>{
+seg.addEventListener('dragstart',e=>{barDragSrc=parseInt(seg.dataset.partIdx);seg.classList.add('dragging');e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',barDragSrc);});
+seg.addEventListener('dragend',()=>{seg.classList.remove('dragging');barEl.querySelectorAll('.construct-bar-segment').forEach(s=>s.classList.remove('drag-over'));});
+seg.addEventListener('dragover',e=>{e.preventDefault();e.dataTransfer.dropEffect='move';seg.classList.add('drag-over');});
+seg.addEventListener('dragleave',()=>{seg.classList.remove('drag-over');});
+seg.addEventListener('drop',e=>{e.preventDefault();seg.classList.remove('drag-over');const fromIdx=parseInt(e.dataTransfer.getData('text/plain'));const toIdx=parseInt(seg.dataset.partIdx);
+if(fromIdx!==toIdx){const part=AppState.construct.parts.splice(fromIdx,1)[0];AppState.construct.parts.splice(toIdx,0,part);
+const newExp=new Set();AppState.expandedParts.forEach(i=>{if(i===fromIdx)newExp.add(toIdx);else if(fromIdx<toIdx){if(i>fromIdx&&i<=toIdx)newExp.add(i-1);else newExp.add(i);}else{if(i>=toIdx&&i<fromIdx)newExp.add(i+1);else newExp.add(i);}});AppState.expandedParts=newExp;
+renderAll();}});});
 // SS track
 const ssTrackEl=document.getElementById('ssTrack');ssTrackEl.innerHTML='';let allSS=[];partLevelView.forEach(p=>{allSS=allSS.concat(p.ss);});
 if(allSS.length>0){let runs=[],ct=allSS[0],cnt=1;for(let i=1;i<allSS.length;i++){if(allSS[i]===ct)cnt++;else{runs.push({type:ct,count:cnt});ct=allSS[i];cnt=1;}}runs.push({type:ct,count:cnt});
@@ -493,6 +514,7 @@ const cTermLabel=strip.querySelector('.strip-term-c');
 AppState.construct.parts.forEach((part,idx)=>{
 if(idx>0){const arrow=document.createElement('span');arrow.className='strip-arrow';arrow.textContent='→';strip.insertBefore(arrow,cTermLabel);}
 const card=document.createElement('div');card.className='part-card'+(AppState.expandedParts.has(idx)?' expanded':'');
+card.draggable=true;card.dataset.partIdx=idx;
 const typeColor=part.type==='protein'?DOMAIN_COLORS[0]:(PART_COLORS[part.type]||PART_COLORS.tag);card.style.borderColor=typeColor.border;card.style.background=typeColor.bg;
 const seq=part.type==='protein'?part.segments.filter(s=>s.active).map(s=>s.sequence).join(''):(part.sequence||'');
 let rangeInfo='';if(part.type!=='protein'&&part.sequence){rangeInfo=`<div class="part-card-range">${part.originalRange||part.sequence.length+' aa'}</div>`;}
@@ -507,6 +529,18 @@ substrip.appendChild(subcard);});domainsDiv.appendChild(substrip);card.appendChi
 card.addEventListener('click',e=>{if(e.target.classList.contains('domain-toggle')||e.target.classList.contains('part-card-remove'))return;if(AppState.expandedParts.has(idx))AppState.expandedParts.delete(idx);else AppState.expandedParts.add(idx);renderAll();});
 }
 strip.insertBefore(card,cTermLabel);});
+// Drag and drop on part cards
+let dragSrcIdx=null;
+strip.querySelectorAll('.part-card[draggable]').forEach(card=>{
+card.addEventListener('dragstart',e=>{dragSrcIdx=parseInt(card.dataset.partIdx);card.classList.add('dragging');e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',dragSrcIdx);});
+card.addEventListener('dragend',()=>{card.classList.remove('dragging');strip.querySelectorAll('.part-card').forEach(c=>c.classList.remove('drag-over'));});
+card.addEventListener('dragover',e=>{e.preventDefault();e.dataTransfer.dropEffect='move';card.classList.add('drag-over');});
+card.addEventListener('dragleave',()=>{card.classList.remove('drag-over');});
+card.addEventListener('drop',e=>{e.preventDefault();card.classList.remove('drag-over');const fromIdx=parseInt(e.dataTransfer.getData('text/plain'));const toIdx=parseInt(card.dataset.partIdx);
+if(fromIdx!==toIdx){const part=AppState.construct.parts.splice(fromIdx,1)[0];AppState.construct.parts.splice(toIdx,0,part);
+// Re-index expanded parts
+const newExp=new Set();AppState.expandedParts.forEach(i=>{if(i===fromIdx)newExp.add(toIdx);else if(fromIdx<toIdx){if(i>fromIdx&&i<=toIdx)newExp.add(i-1);else newExp.add(i);}else{if(i>=toIdx&&i<fromIdx)newExp.add(i+1);else newExp.add(i);}});AppState.expandedParts=newExp;
+renderAll();}});});
 strip.querySelectorAll('.part-card-remove').forEach(btn=>{btn.addEventListener('click',e=>{e.stopPropagation();const idx=parseInt(btn.dataset.idx);AppState.construct.parts.splice(idx,1);AppState.expandedParts.delete(idx);const nE=new Set();AppState.expandedParts.forEach(i=>{if(i<idx)nE.add(i);else if(i>idx)nE.add(i-1);});AppState.expandedParts=nE;renderAll();});});
 strip.querySelectorAll('.domain-toggle').forEach(cb=>{cb.addEventListener('click',e=>{e.stopPropagation();const pi=parseInt(cb.dataset.part);const si=parseInt(cb.dataset.seg);AppState.construct.parts[pi].segments[si].active=cb.checked;renderAll();});});
 // Stats
