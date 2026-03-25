@@ -231,7 +231,7 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text-primary)
 </div></div>
 <div class="zone2" id="zone2"><div class="zone2-left"><div class="card"><div class="card-header"><span class="card-title">Construct Assembly</span><div style="display:flex;gap:8px"><button class="btn btn-secondary" id="copyFastaBtn" style="font-size:12px;padding:5px 10px">Copy FASTA</button></div></div>
 <div class="card-body"><div class="construct-strip" id="constructStrip"><span class="strip-term-label strip-term-n">N-term ←</span><div class="construct-strip-empty" id="stripEmpty">Load a protein to begin assembly</div><span class="strip-term-label strip-term-c">→ C-term</span></div>
-<div class="construct-stats" id="constructStats" style="display:none"><div class="stat-item">Length: <span class="stat-value" id="statLength">0</span> aa</div><div class="stat-item">MW: <span class="stat-value" id="statMW">0</span> kDa</div><div class="stat-item">ε<sub>280</sub>: <span class="stat-value" id="statExtCoeff">0</span> M⁻¹cm⁻¹</div></div>
+<div class="construct-stats" id="constructStats" style="display:none"><div class="stat-item">Length: <span class="stat-value" id="statLength">0</span> aa</div><div class="stat-item">MW: <span class="stat-value" id="statMW">0</span> kDa</div><div class="stat-item">ε<sub>280</sub> (SS): <span class="stat-value" id="statExtCoeffOx">0</span></div><div class="stat-item">ε<sub>280</sub> (red): <span class="stat-value" id="statExtCoeffRed">0</span></div></div>
 <div class="sequence-viewer-header" id="seqViewerHeader" style="display:none"></div>
 <div class="sequence-viewer" id="sequenceViewer" style="display:none"></div>
 </div></div></div>
@@ -382,7 +382,13 @@ result.push({sequence:seg.sequence,ss:seg.ss||[],color,name:seg.name,type:seg.ty
 });return result;}
 
 function calculateMW(seq){const t={A:71.08,R:156.19,N:114.10,D:115.09,C:103.14,E:129.12,Q:128.13,G:57.05,H:137.14,I:113.16,L:113.16,K:128.17,M:131.20,F:147.18,P:97.12,S:87.08,T:101.10,W:186.21,Y:163.18,V:99.13};let mw=18.02;for(const aa of seq.toUpperCase())mw+=t[aa]||110;return mw;}
-function calculateExtinctionCoeff(seq){const s=seq.toUpperCase();return(s.match(/Y/g)||[]).length*1490+(s.match(/W/g)||[]).length*5500+Math.floor((s.match(/C/g)||[]).length/2)*125;}
+function calculateExtinctionCoeff(sequence){
+  const s=sequence.toUpperCase();
+  const nY=(s.match(/Y/g)||[]).length;const nW=(s.match(/W/g)||[]).length;const nC=(s.match(/C/g)||[]).length;
+  const oxidized=nY*1490+nW*5500+Math.floor(nC/2)*125;
+  const reduced=nY*1490+nW*5500;
+  return{oxidized,reduced};
+}
 function shortName(name){if(!name)return'';const semi=name.indexOf(';');return semi>0?name.slice(0,semi):name;}
 function ssComposition(ssArr){if(!ssArr||ssArr.length===0)return'';const h=ssArr.filter(s=>s==='helix').length;const st=ssArr.filter(x=>x==='strand').length;const total=ssArr.length;const parts=[];if(h>0)parts.push(`${Math.round(h/total*100)}% α`);if(st>0)parts.push(`${Math.round(st/total*100)}% β`);return parts.length===0?'100% loop':parts.join(', ');}
 
@@ -394,8 +400,8 @@ if(AppState.construct.parts.length===0){card.classList.remove('visible');landing
 landing.style.display='none';card.classList.add('visible');
 const proteinPart=AppState.construct.parts.find(p=>p.type==='protein');const metaEl=document.getElementById('proteinMeta');
 if(proteinPart){const totalSeq=getAssembledSequence();const totalMW=calculateMW(totalSeq);
-const extCoeff=calculateExtinctionCoeff(totalSeq);const abs01=totalMW>0?(extCoeff/totalMW).toFixed(3):'—';
-metaEl.innerHTML=`<div style="width:100%"><div class="protein-meta" style="margin-bottom:8px"><div class="protein-meta-item"><span class="meta-label">Protein</span><span class="meta-value">${proteinPart.name}</span></div><div class="protein-meta-item"><span class="meta-label">UniProt</span><span class="meta-value">${proteinPart.accession||'Custom'}</span></div><div class="protein-meta-item"><span class="meta-label">Gene</span><span class="meta-value">${proteinPart.gene||'—'}</span></div><div class="protein-meta-item"><span class="meta-label">Organism</span><span class="meta-value">${proteinPart.organism||'—'}</span></div></div><div class="protein-meta"><div class="protein-meta-item"><span class="meta-label">Length</span><span class="meta-value">${totalSeq.length} aa</span></div><div class="protein-meta-item"><span class="meta-label">MW</span><span class="meta-value">${(totalMW/1000).toFixed(1)} kDa</span></div><div class="protein-meta-item"><span class="meta-label">ε280</span><span class="meta-value">${extCoeff.toLocaleString()} M⁻¹cm⁻¹</span></div><div class="protein-meta-item"><span class="meta-label">Abs 0.1%</span><span class="meta-value">${abs01}</span></div></div></div>`;}
+const extCoeff=calculateExtinctionCoeff(totalSeq);
+metaEl.innerHTML=`<div style="width:100%"><div class="protein-meta" style="margin-bottom:8px"><div class="protein-meta-item"><span class="meta-label">Protein</span><span class="meta-value">${proteinPart.name}</span></div><div class="protein-meta-item"><span class="meta-label">UniProt</span><span class="meta-value">${proteinPart.accession||'Custom'}</span></div><div class="protein-meta-item"><span class="meta-label">Gene</span><span class="meta-value">${proteinPart.gene||'—'}</span></div><div class="protein-meta-item"><span class="meta-label">Organism</span><span class="meta-value">${proteinPart.organism||'—'}</span></div></div><div class="protein-meta"><div class="protein-meta-item"><span class="meta-label">Length</span><span class="meta-value">${totalSeq.length} aa</span></div><div class="protein-meta-item"><span class="meta-label">MW</span><span class="meta-value">${(totalMW/1000).toFixed(1)} kDa</span></div><div class="protein-meta-item"><span class="meta-label">ε280 (SS)</span><span class="meta-value">${extCoeff.oxidized.toLocaleString()}</span></div><div class="protein-meta-item"><span class="meta-label">ε280 (red)</span><span class="meta-value">${extCoeff.reduced.toLocaleString()}</span></div></div></div>`;}
 // Build part-level view for Zone 1 (one block per part, not per domain)
 const partLevelView=[];
 let proteinColorIdx=0;
@@ -467,7 +473,7 @@ strip.querySelectorAll('.part-card-remove').forEach(btn=>{btn.addEventListener('
 strip.querySelectorAll('.domain-toggle').forEach(cb=>{cb.addEventListener('click',e=>{e.stopPropagation();const pi=parseInt(cb.dataset.part);const si=parseInt(cb.dataset.seg);AppState.construct.parts[pi].segments[si].active=cb.checked;renderAll();});});
 // Stats
 const totalSeq=getAssembledSequence();const statsEl=document.getElementById('constructStats');
-if(totalSeq.length>0){statsEl.style.display='';document.getElementById('statLength').textContent=totalSeq.length;document.getElementById('statMW').textContent=(calculateMW(totalSeq)/1000).toFixed(1);document.getElementById('statExtCoeff').textContent=calculateExtinctionCoeff(totalSeq).toLocaleString();}else{statsEl.style.display='none';}
+if(totalSeq.length>0){statsEl.style.display='';document.getElementById('statLength').textContent=totalSeq.length;document.getElementById('statMW').textContent=(calculateMW(totalSeq)/1000).toFixed(1);const ec=calculateExtinctionCoeff(totalSeq);document.getElementById('statExtCoeffOx').textContent=ec.oxidized.toLocaleString();document.getElementById('statExtCoeffRed').textContent=ec.reduced.toLocaleString();}else{statsEl.style.display='none';}
 // Sequence color legend
 const assembled=getAssembledParts();const headerEl=document.getElementById('seqViewerHeader');
 if(totalSeq.length>0){headerEl.style.display='';headerEl.innerHTML='';assembled.forEach(part=>{const item=document.createElement('div');item.className='seq-legend-item';item.innerHTML=`<div class="seq-legend-swatch" style="background:${part.color.main}"></div><span class="seq-legend-name">${shortName(part.name)}</span>`;headerEl.appendChild(item);});}else{headerEl.style.display='none';}
