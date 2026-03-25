@@ -173,6 +173,36 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text-primary)
 .landing-icon svg{width:32px;height:32px;color:var(--accent)}
 .landing-title{font-size:20px;font-weight:700;margin-bottom:8px}
 .landing-desc{font-size:14px;color:var(--text-secondary);line-height:1.6}
+/* Mutations */
+.seq-mutated{color:#dc2626!important;font-weight:700!important;text-decoration:underline;cursor:pointer;position:relative}
+.seq-clickable{cursor:pointer;border-radius:2px;transition:background .1s}.seq-clickable:hover{background:rgba(37,99,235,0.15)}
+.mutation-popup{position:fixed;z-index:200;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-lg);padding:12px 16px;min-width:200px}
+.mutation-popup-title{font-size:12px;font-weight:600;color:var(--text-primary);margin-bottom:8px}
+.mutation-popup-pos{font-family:var(--font-mono);font-size:11px;color:var(--text-tertiary);margin-bottom:8px}
+.mutation-popup-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.mutation-popup-row select{padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-family:var(--font-mono);font-size:13px;font-weight:600}
+.mutation-popup-row .arrow{color:var(--text-tertiary);font-size:14px}
+.mutation-popup-actions{display:flex;gap:6px;margin-top:8px}
+.mutation-popup-actions .btn{padding:4px 10px;font-size:11px}
+.mutation-badge{display:inline-block;font-size:9px;font-weight:700;color:#dc2626;vertical-align:super;margin-left:1px}
+/* Mutation list in right panel */
+.mutation-list-item{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-bottom:1px solid var(--border-light);font-size:12px;transition:background .1s}
+.mutation-list-item:last-child{border-bottom:none}
+.mutation-list-item:hover{background:var(--bg-subtle)}
+.mutation-list-info{display:flex;flex-direction:column;gap:2px}
+.mutation-list-change{font-family:var(--font-mono);font-weight:600;color:var(--text-primary)}
+.mutation-list-desc{font-size:10px;color:var(--text-tertiary);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mutation-list-source{font-size:9px;padding:1px 5px;border-radius:3px;font-weight:600}
+.mutation-src-uniprot{background:#ede9fe;color:#7c3aed}
+.mutation-src-manual{background:#fef3c7;color:#d97706}
+.mutation-list-actions{display:flex;gap:4px}
+.mutation-apply-btn{padding:3px 8px;border:1px solid var(--color-signal);background:var(--color-signal-bg);color:var(--color-signal);border-radius:4px;font-size:10px;font-weight:600;cursor:pointer;font-family:var(--font-sans)}
+.mutation-apply-btn:hover{background:var(--color-signal);color:white}
+.mutation-apply-btn.applied{background:var(--color-signal);color:white}
+.mutation-remove-btn{padding:3px 6px;border:1px solid var(--border);background:var(--bg);color:var(--text-tertiary);border-radius:4px;font-size:10px;cursor:pointer;font-family:var(--font-sans)}
+.mutation-remove-btn:hover{border-color:#dc2626;color:#dc2626;background:#fef2f2}
+.right-panel-section{margin-bottom:16px}
+.right-panel-section-title{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-tertiary);margin-bottom:6px;padding:0 4px}
 ::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}::-webkit-scrollbar-thumb:hover{background:var(--text-tertiary)}
 @media(max-width:1200px){.zone1-header,.zone1-body{padding-left:40px;padding-right:40px}}
 @media(max-width:900px){.zone2{flex-direction:column}.zone2-left,.zone2-right{flex:1;max-width:100%}.zone1-header,.zone1-body{padding-left:20px;padding-right:20px}}
@@ -205,10 +235,29 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text-primary)
 <div class="sequence-viewer-header" id="seqViewerHeader" style="display:none"></div>
 <div class="sequence-viewer" id="sequenceViewer" style="display:none"></div>
 </div></div></div>
-<div class="zone2-right"><div class="card"><div class="library-tabs"><button class="library-tab active" data-libtab="signals">Signals</button><button class="library-tab" data-libtab="linkers">Linkers</button><button class="library-tab" data-libtab="tags">Tags</button></div>
-<div class="library-content" id="libraryContent"><div class="library-empty"><div class="library-empty-icon">🧬</div>Parts library loading…<br><span style="font-size:11px;color:var(--text-tertiary)">Will be populated in a future update</span></div></div></div></div></div>
-<div class="zone3" id="zone3"><div class="card"><div class="zone3-tabs"><button class="zone3-tab active" data-z3tab="mutations">Mutations</button><button class="zone3-tab" data-z3tab="features">Features</button><button class="zone3-tab" data-z3tab="publications">Publications</button></div>
-<div class="zone3-panel visible" id="panelMutations"></div><div class="zone3-panel" id="panelFeatures"></div><div class="zone3-panel" id="panelPublications"></div></div></div>
+<div class="zone2-right"><div class="card"><div class="library-tabs"><button class="library-tab active" data-libtab="mutations">Mutations</button><button class="library-tab" data-libtab="signals">Signals</button><button class="library-tab" data-libtab="linkers">Linkers</button><button class="library-tab" data-libtab="tags">Tags</button></div>
+<div class="library-content" id="libraryContent">
+<div id="libMutations"><div class="library-empty"><div class="library-empty-icon">🧬</div>Load a protein to see known variants</div></div>
+<div id="libSignals" style="display:none"><div class="library-empty"><div class="library-empty-icon">🧬</div>Parts library — coming soon</div></div>
+<div id="libLinkers" style="display:none"><div class="library-empty"><div class="library-empty-icon">🔗</div>Parts library — coming soon</div></div>
+<div id="libTags" style="display:none"><div class="library-empty"><div class="library-empty-icon">🏷️</div>Parts library — coming soon</div></div>
+</div></div></div></div>
+<!-- Mutation popup -->
+<div class="mutation-popup" id="mutationPopup" style="display:none">
+<div class="mutation-popup-title" id="mutPopTitle">Mutate residue</div>
+<div class="mutation-popup-pos" id="mutPopPos"></div>
+<div class="mutation-popup-row">
+<span id="mutPopOriginal" style="font-family:var(--font-mono);font-size:16px;font-weight:700"></span>
+<span class="arrow">→</span>
+<select id="mutPopSelect"></select>
+</div>
+<div class="mutation-popup-actions">
+<button class="btn btn-primary" id="mutPopApply" style="padding:4px 12px;font-size:11px">Apply</button>
+<button class="btn btn-secondary" id="mutPopCancel" style="padding:4px 12px;font-size:11px">Cancel</button>
+</div>
+</div>
+<div class="zone3" id="zone3"><div class="card"><div class="zone3-tabs"><button class="zone3-tab active" data-z3tab="features">Features</button><button class="zone3-tab" data-z3tab="publications">Publications</button></div>
+<div class="zone3-panel visible" id="panelFeatures"></div><div class="zone3-panel" id="panelPublications"></div></div></div>
 </main>
 <script>
 const AppState={expressionSystem:'mammalian',searchMode:'search',construct:{parts:[]},uniprotCache:{},expandedParts:new Set()};
@@ -255,14 +304,73 @@ const ssPerResidue=new Array(length).fill('loop');
 features.forEach(f=>{const start=f.location?.start?.value;const end=f.location?.end?.value;if(!start||!end)return;
 if(f.type==='Helix')for(let i=start-1;i<end&&i<length;i++)ssPerResidue[i]='helix';
 else if(f.type==='Beta strand')for(let i=start-1;i<end&&i<length;i++)ssPerResidue[i]='strand';});
-segments.forEach(seg=>{seg.ss=ssPerResidue.slice(seg.start-1,seg.end);});
+segments.forEach(seg=>{seg.ss=ssPerResidue.slice(seg.start-1,seg.end);if(!seg.mutations)seg.mutations=[];});
 const mutations=features.filter(f=>f.type==='Natural variant'||f.type==='Mutagenesis').map(f=>({type:f.type,position:f.location?.start?.value||'?',change:f.description||''}));
 const otherFeatures=features.filter(f=>!segmentTypes.has(f.type)&&!['Signal peptide','Signal','Helix','Beta strand','Turn','Natural variant','Mutagenesis'].includes(f.type)).map(f=>({type:f.type,start:f.location?.start?.value||'?',end:f.location?.end?.value||'?',description:f.description||f.type}));
 const publications=(data.references||[]).map(ref=>({title:ref.citation?.title||'Untitled',authors:(ref.citation?.authors||[]).slice(0,5).join(', ')+((ref.citation?.authors||[]).length>5?' et al.':''),journal:ref.citation?.journal||'',year:ref.citation?.publicationDate||'',pubmedId:ref.citation?.citationCrossReferences?.find(x=>x.database==='PubMed')?.id||null}));
 return{part:{type:'protein',name,gene,organism,accession,source:'uniprot',fullSequence:fullSeq,length,mw,segments,expanded:false},signalPeptide,topoFeatures,mutations,features:otherFeatures,publications,ssPerResidue};
 }
 
-function getAssembledSequence(){let seq='';AppState.construct.parts.forEach(p=>{if(p.type==='protein')p.segments.filter(s=>s.active).forEach(s=>{seq+=s.sequence});else seq+=p.sequence||''});return seq;}
+function getAssembledSequence(){let seq='';AppState.construct.parts.forEach(p=>{if(p.type==='protein')p.segments.filter(s=>s.active).forEach(s=>{
+  let segSeq=s.sequence.split('');
+  (s.mutations||[]).forEach(m=>{const idx=m.position-s.start;if(idx>=0&&idx<segSeq.length)segSeq[idx]=m.mutant;});
+  seq+=segSeq.join('');
+});else seq+=p.sequence||''});return seq;}
+
+// Get mutation map: globalPosition -> mutation object
+function getMutationMap(){
+  const map={};let gpos=0;
+  AppState.construct.parts.forEach(p=>{
+    if(p.type==='protein'){p.segments.filter(s=>s.active).forEach(s=>{
+      (s.mutations||[]).forEach(m=>{const idx=m.position-s.start;if(idx>=0&&idx<s.sequence.length)map[gpos+idx]=m;});
+      gpos+=s.sequence.length;});
+    }else{gpos+=(p.sequence||'').length;}
+  });return map;
+}
+
+// Get all known UniProt variants for the loaded protein
+function getKnownVariants(){
+  const proteinPart=AppState.construct.parts.find(p=>p.type==='protein'&&p.accession);
+  if(!proteinPart)return[];
+  const cached=AppState.uniprotCache[proteinPart.accession];
+  if(!cached)return[];
+  return cached.mutations||[];
+}
+
+// Find which segment owns a given global position
+function findSegmentAtGlobalPos(globalPos){
+  let gpos=0;
+  for(const part of AppState.construct.parts){
+    if(part.type==='protein'){
+      for(const seg of part.segments){
+        if(!seg.active)continue;
+        if(globalPos>=gpos&&globalPos<gpos+seg.sequence.length){
+          return{part,seg,localIdx:globalPos-gpos,uniprotPos:seg.start+(globalPos-gpos)};
+        }
+        gpos+=seg.sequence.length;
+      }
+    }else{gpos+=(part.sequence||'').length;}
+  }
+  return null;
+}
+
+// Apply a mutation to a segment
+function applyMutation(seg,uniprotPos,original,mutant,source,description){
+  if(!seg.mutations)seg.mutations=[];
+  // Remove existing mutation at this position if any
+  seg.mutations=seg.mutations.filter(m=>m.position!==uniprotPos);
+  if(original!==mutant){
+    seg.mutations.push({position:uniprotPos,original,mutant,source:source||'manual',description:description||''});
+  }
+  renderAll();
+}
+
+// Remove a mutation from a segment
+function removeMutation(seg,uniprotPos){
+  if(!seg.mutations)return;
+  seg.mutations=seg.mutations.filter(m=>m.position!==uniprotPos);
+  renderAll();
+}
 
 function getAssembledParts(){
 const result=[];let dci=0;
@@ -331,9 +439,14 @@ runs.forEach(run=>{const div=document.createElement('div');div.className='ss-res
 // Ruler
 const rulerEl=document.getElementById('ruler');rulerEl.innerHTML='';
 if(totalLen>0){const step=totalLen<100?10:totalLen<500?50:totalLen<2000?100:200;for(let i=step;i<=totalLen;i+=step){const tick=document.createElement('div');tick.className='ruler-tick';tick.style.left=`${(i/totalLen*100).toFixed(2)}%`;tick.textContent=i;rulerEl.appendChild(tick);}}
-// Zone 1 sequence — one color per part
+// Zone 1 sequence — one color per part, mutations in red
 const seqEl=document.getElementById('zone1Sequence');seqEl.innerHTML='';let gpos=0;
-partLevelView.forEach(part=>{for(const aa of part.sequence){const span=document.createElement('span');span.className='seq-residue';span.textContent=aa;span.style.color=part.color.main;seqEl.appendChild(span);gpos++;if(gpos%10===0){const sp=document.createElement('span');sp.textContent=' ';seqEl.appendChild(sp);}}});
+const mutMap=getMutationMap();
+partLevelView.forEach(part=>{for(let i=0;i<part.sequence.length;i++){const span=document.createElement('span');const globalIdx=gpos;
+const isMutated=mutMap[globalIdx];
+if(isMutated){span.className='seq-residue seq-mutated';span.textContent=isMutated.mutant;span.title=`${isMutated.original}${isMutated.position}${isMutated.mutant} (${isMutated.source})`;}
+else{span.className='seq-residue';span.textContent=part.sequence[i];span.style.color=part.color.main;}
+seqEl.appendChild(span);gpos++;if(gpos%10===0){const sp=document.createElement('span');sp.textContent=' ';seqEl.appendChild(sp);}}});
 }
 
 function renderZone2(){
@@ -366,19 +479,128 @@ if(totalSeq.length>0){statsEl.style.display='';document.getElementById('statLeng
 // Sequence color legend
 const assembled=getAssembledParts();const headerEl=document.getElementById('seqViewerHeader');
 if(totalSeq.length>0){headerEl.style.display='';headerEl.innerHTML='';assembled.forEach(part=>{const item=document.createElement('div');item.className='seq-legend-item';item.innerHTML=`<div class="seq-legend-swatch" style="background:${part.color.main}"></div><span class="seq-legend-name">${shortName(part.name)}</span>`;headerEl.appendChild(item);});}else{headerEl.style.display='none';}
-// Sequence viewer
+// Sequence viewer — clickable for mutations
 const viewer=document.getElementById('sequenceViewer');
+const mutMap2=getMutationMap();
 if(totalSeq.length>0){viewer.style.display='';viewer.innerHTML='';const colorMap=[];assembled.forEach(p=>{for(let i=0;i<p.sequence.length;i++)colorMap.push(p.color.main);});
 for(let start=0;start<totalSeq.length;start+=60){const numSpan=document.createElement('span');numSpan.className='seq-line-number';numSpan.textContent=String(start+1).padStart(5);viewer.appendChild(numSpan);
-const chunk=totalSeq.slice(start,start+60);for(let j=0;j<chunk.length;j++){const span=document.createElement('span');span.textContent=chunk[j];span.style.color=colorMap[start+j]||'var(--text-primary)';span.style.fontWeight='500';viewer.appendChild(span);if((j+1)%10===0&&j<chunk.length-1){const sp=document.createElement('span');sp.textContent=' ';viewer.appendChild(sp);}}
+const chunk=totalSeq.slice(start,start+60);for(let j=0;j<chunk.length;j++){const globalIdx=start+j;const span=document.createElement('span');
+const mut=mutMap2[globalIdx];
+if(mut){span.textContent=mut.mutant;span.className='seq-mutated seq-clickable';span.title=`${mut.original}${mut.position}${mut.mutant}`;}
+else{span.textContent=chunk[j];span.style.color=colorMap[globalIdx]||'var(--text-primary)';span.style.fontWeight='500';span.className='seq-clickable';}
+span.dataset.globalpos=globalIdx;
+span.addEventListener('click',e=>{showMutationPopup(globalIdx,e);});
+viewer.appendChild(span);if((j+1)%10===0&&j<chunk.length-1){const sp=document.createElement('span');sp.textContent=' ';viewer.appendChild(sp);}}
 const endSpan=document.createElement('span');endSpan.style.color='var(--text-tertiary)';endSpan.style.fontSize='10px';endSpan.textContent=` ${Math.min(start+60,totalSeq.length)}`;viewer.appendChild(endSpan);viewer.appendChild(document.createTextNode('\n'));}}else{viewer.style.display='none';}
+// Render right panel mutations
+renderRightPanel();
+}
+
+const AA_LIST=['A','C','D','E','F','G','H','I','K','L','M','N','P','Q','R','S','T','V','W','Y'];
+
+function showMutationPopup(globalPos,event){
+  const info=findSegmentAtGlobalPos(globalPos);if(!info)return;
+  const popup=document.getElementById('mutationPopup');
+  const origAA=info.seg.sequence[info.localIdx];
+  // Check if already mutated
+  const existingMut=(info.seg.mutations||[]).find(m=>m.position===info.uniprotPos);
+  const displayAA=existingMut?existingMut.mutant:origAA;
+  const realOriginal=existingMut?existingMut.original:origAA;
+  
+  document.getElementById('mutPopTitle').textContent=existingMut?'Edit mutation':'Mutate residue';
+  document.getElementById('mutPopPos').textContent=`Position ${info.uniprotPos} in ${shortName(info.seg.name)} (${info.seg.start}–${info.seg.end})`;
+  document.getElementById('mutPopOriginal').textContent=realOriginal;
+  
+  const select=document.getElementById('mutPopSelect');select.innerHTML='';
+  AA_LIST.forEach(aa=>{const opt=document.createElement('option');opt.value=aa;opt.textContent=aa;if(aa===displayAA)opt.selected=true;select.appendChild(opt);});
+  
+  // Position popup near click
+  const rect=event.target.getBoundingClientRect();
+  popup.style.left=Math.min(rect.left,window.innerWidth-240)+'px';
+  popup.style.top=(rect.bottom+6)+'px';
+  popup.style.display='block';
+  
+  // Store context for apply
+  popup.dataset.partType=info.part.type;
+  popup.dataset.segStart=info.seg.start;
+  popup.dataset.uniprotPos=info.uniprotPos;
+  popup.dataset.original=realOriginal;
+}
+
+function renderRightPanel(){
+  const mutPanel=document.getElementById('libMutations');
+  const proteinPart=AppState.construct.parts.find(p=>p.type==='protein'&&p.accession);
+  const cached=proteinPart?AppState.uniprotCache[proteinPart.accession]:null;
+  
+  let html='';
+  
+  // Applied mutations section
+  const appliedMuts=[];
+  AppState.construct.parts.forEach(part=>{
+    if(part.type==='protein'){part.segments.forEach(seg=>{
+      (seg.mutations||[]).forEach(m=>{appliedMuts.push({...m,segName:seg.name,seg});});
+    });}
+  });
+  
+  if(appliedMuts.length>0){
+    html+='<div class="right-panel-section"><div class="right-panel-section-title">Applied mutations ('+appliedMuts.length+')</div>';
+    appliedMuts.forEach(m=>{
+      html+=`<div class="mutation-list-item">
+        <div class="mutation-list-info">
+          <div class="mutation-list-change">${m.original}${m.position}${m.mutant}</div>
+          <div class="mutation-list-desc">${shortName(m.segName)} · ${m.description||'Manual'}</div>
+        </div>
+        <div class="mutation-list-actions">
+          <span class="mutation-list-source ${m.source==='uniprot'?'mutation-src-uniprot':'mutation-src-manual'}">${m.source==='uniprot'?'UniProt':'Manual'}</span>
+          <button class="mutation-remove-btn" data-seg-start="${m.seg.start}" data-pos="${m.position}" title="Remove">×</button>
+        </div>
+      </div>`;
+    });
+    html+='</div>';
+  }
+  
+  // Known variants from UniProt
+  if(cached&&cached.mutations.length>0){
+    html+='<div class="right-panel-section"><div class="right-panel-section-title">Known variants (UniProt)</div>';
+    cached.mutations.forEach(m=>{
+      // Parse the variant description to get original/mutant AA
+      const desc=m.change||'';
+      // Try to detect if already applied
+      const pos=m.position;
+      const isApplied=appliedMuts.some(am=>am.position===pos&&am.source==='uniprot');
+      
+      html+=`<div class="mutation-list-item">
+        <div class="mutation-list-info">
+          <div class="mutation-list-change" style="font-size:11px">${m.type==='Mutagenesis'?'🔬':'🧬'} Pos ${pos}</div>
+          <div class="mutation-list-desc" title="${desc}">${desc.slice(0,45)}${desc.length>45?'…':''}</div>
+        </div>
+        <div class="mutation-list-actions">
+          ${isApplied?'<span style="font-size:10px;color:var(--color-signal);font-weight:600">✓ Applied</span>':''}
+        </div>
+      </div>`;
+    });
+    html+='</div>';
+  }
+  
+  if(!html){html='<div class="library-empty"><div class="library-empty-icon">🧬</div>Load a protein to see known variants<br><span style="font-size:11px">Click residues in the sequence to add mutations</span></div>';}
+  
+  mutPanel.innerHTML=html;
+  
+  // Bind remove buttons
+  mutPanel.querySelectorAll('.mutation-remove-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const segStart=parseInt(btn.dataset.segStart);const pos=parseInt(btn.dataset.pos);
+      // Find the segment
+      AppState.construct.parts.forEach(part=>{if(part.type==='protein'){part.segments.forEach(seg=>{
+        if(seg.start===segStart)removeMutation(seg,pos);
+      });}});
+    });
+  });
 }
 
 function renderZone3(){
 const zone3=document.getElementById('zone3');if(AppState.construct.parts.length===0){zone3.classList.remove('visible');return;}zone3.classList.add('visible');
 const proteinPart=AppState.construct.parts.find(p=>p.type==='protein'&&p.accession);const cached=proteinPart?AppState.uniprotCache[proteinPart.accession]:null;
-const mutPanel=document.getElementById('panelMutations');
-if(cached&&cached.mutations.length>0){let html='<table class="data-table"><thead><tr><th>Type</th><th>Position</th><th>Description</th></tr></thead><tbody>';cached.mutations.forEach(m=>{html+=`<tr><td>${m.type}</td><td class="pos-badge">${m.position}</td><td>${m.change}</td></tr>`;});html+='</tbody></table>';mutPanel.innerHTML=html;}else{mutPanel.innerHTML='<div class="empty-state">No mutations annotated for this protein</div>';}
 const featPanel=document.getElementById('panelFeatures');
 if(cached&&cached.features.length>0){let html='<table class="data-table"><thead><tr><th>Type</th><th>Position</th><th>Description</th></tr></thead><tbody>';cached.features.forEach(f=>{html+=`<tr><td>${f.type}</td><td class="pos-badge">${f.start}${f.end!==f.start?'–'+f.end:''}</td><td>${f.description}</td></tr>`;});html+='</tbody></table>';featPanel.innerHTML=html;}else{featPanel.innerHTML='<div class="empty-state">No additional features annotated</div>';}
 const pubPanel=document.getElementById('panelPublications');
@@ -405,7 +627,7 @@ function loadPastedSequence(raw){let seq=raw.trim();if(seq.startsWith('>')){cons
 if(!/^[ACDEFGHIKLMNPQRSTVWY]+$/.test(seq)){alert('Invalid amino acid characters detected.');return;}if(seq.length<5){alert('Sequence too short (min 5 aa).');return;}
 // Always replace
 AppState.construct.parts=[];AppState.expandedParts.clear();AppState.uniprotCache={};
-AppState.construct.parts.push({type:'protein',name:'Custom protein',gene:'—',organism:'—',accession:null,source:'custom',fullSequence:seq,length:seq.length,mw:calculateMW(seq),segments:[{name:'Custom protein',type:'full',start:1,end:seq.length,sequence:seq,description:'Pasted sequence',active:true,isTM:false,ss:new Array(seq.length).fill('loop')}],expanded:false});
+AppState.construct.parts.push({type:'protein',name:'Custom protein',gene:'—',organism:'—',accession:null,source:'custom',fullSequence:seq,length:seq.length,mw:calculateMW(seq),segments:[{name:'Custom protein',type:'full',start:1,end:seq.length,sequence:seq,description:'Pasted sequence',active:true,isTM:false,mutations:[],ss:new Array(seq.length).fill('loop')}],expanded:false});
 AppState.uniprotCache['custom']={mutations:[],features:[],publications:[]};document.getElementById('pasteTextarea').value='';document.getElementById('pasteArea').classList.remove('visible');renderAll();}
 
 document.addEventListener('DOMContentLoaded',()=>{
@@ -421,8 +643,27 @@ document.getElementById('pasteLoadBtn').addEventListener('click',()=>{const val=
 document.getElementById('pasteClearBtn').addEventListener('click',()=>{document.getElementById('pasteTextarea').value='';});
 document.getElementById('changeBtn').addEventListener('click',()=>{if(confirm('Clear entire construct and start over?')){AppState.construct.parts=[];AppState.expandedParts.clear();AppState.uniprotCache={};renderAll();}});
 document.getElementById('copyFastaBtn').addEventListener('click',()=>{const seq=getAssembledSequence();const pp=AppState.construct.parts.find(p=>p.type==='protein');const header=`>${pp?.name||'Construct'} | ${seq.length} aa | Designed with ConstructAI`;const fasta=header+'\n'+seq.match(/.{1,60}/g).join('\n');navigator.clipboard.writeText(fasta).then(()=>{const btn=document.getElementById('copyFastaBtn');btn.textContent='Copied!';setTimeout(()=>{btn.textContent='Copy FASTA';},1500);});});
-document.querySelectorAll('.zone3-tab').forEach(tab=>{tab.addEventListener('click',()=>{document.querySelectorAll('.zone3-tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.zone3-panel').forEach(p=>p.classList.remove('visible'));tab.classList.add('active');const m={mutations:'panelMutations',features:'panelFeatures',publications:'panelPublications'};document.getElementById(m[tab.dataset.z3tab]).classList.add('visible');});});
-document.querySelectorAll('.library-tab').forEach(tab=>{tab.addEventListener('click',()=>{document.querySelectorAll('.library-tab').forEach(t=>t.classList.remove('active'));tab.classList.add('active');});});
+document.querySelectorAll('.zone3-tab').forEach(tab=>{tab.addEventListener('click',()=>{document.querySelectorAll('.zone3-tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.zone3-panel').forEach(p=>p.classList.remove('visible'));tab.classList.add('active');const m={features:'panelFeatures',publications:'panelPublications'};document.getElementById(m[tab.dataset.z3tab]).classList.add('visible');});});
+document.querySelectorAll('.library-tab').forEach(tab=>{tab.addEventListener('click',()=>{
+  document.querySelectorAll('.library-tab').forEach(t=>t.classList.remove('active'));tab.classList.add('active');
+  const target=tab.dataset.libtab;
+  ['libMutations','libSignals','libLinkers','libTags'].forEach(id=>{document.getElementById(id).style.display='none';});
+  const panelMap={mutations:'libMutations',signals:'libSignals',linkers:'libLinkers',tags:'libTags'};
+  document.getElementById(panelMap[target]).style.display='';
+});});
+// Mutation popup handlers
+document.getElementById('mutPopApply').addEventListener('click',()=>{
+  const popup=document.getElementById('mutationPopup');
+  const segStart=parseInt(popup.dataset.segStart);const uniprotPos=parseInt(popup.dataset.uniprotPos);
+  const original=popup.dataset.original;const mutant=document.getElementById('mutPopSelect').value;
+  // Find the segment
+  for(const part of AppState.construct.parts){if(part.type==='protein'){for(const seg of part.segments){
+    if(seg.start===segStart){applyMutation(seg,uniprotPos,original,mutant,'manual','');popup.style.display='none';return;}
+  }}}
+  popup.style.display='none';
+});
+document.getElementById('mutPopCancel').addEventListener('click',()=>{document.getElementById('mutationPopup').style.display='none';});
+document.addEventListener('click',e=>{const popup=document.getElementById('mutationPopup');if(popup.style.display==='block'&&!popup.contains(e.target)&&!e.target.classList.contains('seq-clickable')){popup.style.display='none';}});
 renderAll();});
 </script>
 </body>
