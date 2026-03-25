@@ -173,6 +173,24 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text-primary)
 .landing-icon svg{width:32px;height:32px;color:var(--accent)}
 .landing-title{font-size:20px;font-weight:700;margin-bottom:8px}
 .landing-desc{font-size:14px;color:var(--text-secondary);line-height:1.6}
+/* Add part popup */
+.add-part-popup{position:fixed;z-index:200;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);padding:0;width:420px;display:none}
+.add-part-popup-header{display:flex;border-bottom:1px solid var(--border-light)}
+.add-part-popup-tab{flex:1;padding:10px 12px;border:none;background:transparent;font-family:var(--font-sans);font-size:12px;font-weight:500;color:var(--text-tertiary);cursor:pointer;text-align:center;border-bottom:2px solid transparent;transition:all .15s}
+.add-part-popup-tab:hover{color:var(--text-secondary)}
+.add-part-popup-tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+.add-part-popup-body{padding:16px}
+.add-part-search-input{width:100%;height:38px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-family:var(--font-sans);font-size:13px;outline:none;color:var(--text-primary)}
+.add-part-search-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,0.1)}
+.add-part-results{max-height:200px;overflow-y:auto;margin-top:8px}
+.add-part-result{padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--border-light);border-radius:4px;transition:background .1s;font-size:12px}
+.add-part-result:hover{background:var(--bg-subtle)}
+.add-part-result-name{font-weight:600;font-size:13px}
+.add-part-result-meta{color:var(--text-secondary);margin-top:1px}
+.add-part-paste-area{width:100%;height:80px;padding:10px;font-family:var(--font-mono);font-size:12px;border:1.5px solid var(--border);border-radius:6px;resize:vertical;outline:none;margin-bottom:8px}
+.add-part-paste-area:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,0.1)}
+.add-part-name-input{width:100%;height:34px;padding:0 10px;border:1.5px solid var(--border);border-radius:6px;font-family:var(--font-sans);font-size:12px;outline:none;margin-bottom:8px}
+.add-part-name-input:focus{border-color:var(--accent)}
 /* Mutations */
 .seq-mutated{color:#dc2626!important;font-weight:700!important;text-decoration:underline;cursor:pointer;position:relative}
 .seq-clickable{cursor:pointer;border-radius:2px;transition:background .1s}.seq-clickable:hover{background:rgba(37,99,235,0.15)}
@@ -218,7 +236,7 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text-primary)
 </div></header>
 <main class="main">
 <div id="landingState" class="landing-state"><div class="landing-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/></svg></div><h2 class="landing-title">Design your construct</h2><p class="landing-desc">Search for a protein above or paste a sequence to get started. Build expression-ready constructs with signals, tags, and linkers.</p></div>
-<div class="zone1-card" id="zone1Card"><div class="zone1-header"><div class="protein-meta" id="proteinMeta"></div><button class="btn-change" id="changeBtn">← Clear construct</button></div>
+<div class="zone1-card" id="zone1Card"><div class="zone1-header"><div class="protein-meta" id="proteinMeta"></div><div style="display:flex;gap:8px;flex-shrink:0"><button class="btn btn-primary" id="addPartBtn" style="font-size:12px;padding:6px 14px">+ Add sequence</button><button class="btn-change" id="changeBtn">← Clear construct</button></div></div>
 <div class="zone1-body">
 <div class="term-labels"><span class="term-label term-label-n">N-term ←</span><span class="term-label term-label-c">→ C-term</span></div>
 <div class="construct-bar" id="constructBar"></div>
@@ -254,6 +272,24 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text-primary)
 <div class="mutation-popup-actions">
 <button class="btn btn-primary" id="mutPopApply" style="padding:4px 12px;font-size:11px">Apply</button>
 <button class="btn btn-secondary" id="mutPopCancel" style="padding:4px 12px;font-size:11px">Cancel</button>
+</div>
+</div>
+<!-- Add Part Popup -->
+<div class="add-part-popup" id="addPartPopup">
+<div class="add-part-popup-header">
+<button class="add-part-popup-tab active" data-addtab="search">Search UniProt</button>
+<button class="add-part-popup-tab" data-addtab="paste">Paste sequence</button>
+</div>
+<div class="add-part-popup-body">
+<div id="addPartSearch">
+<input type="text" class="add-part-search-input" id="addPartSearchInput" placeholder="Search protein name, gene, or UniProt ID…">
+<div class="add-part-results" id="addPartResults"></div>
+</div>
+<div id="addPartPaste" style="display:none">
+<input type="text" class="add-part-name-input" id="addPartName" placeholder="Name (e.g., Fc region, Nanobody)">
+<textarea class="add-part-paste-area" id="addPartPasteArea" placeholder="Paste amino acid sequence…"></textarea>
+<button class="btn btn-primary" id="addPartPasteBtn" style="font-size:12px;width:100%">Add to construct</button>
+</div>
 </div>
 </div>
 <div class="zone3" id="zone3"><div class="card"><div class="zone3-tabs"><button class="zone3-tab active" data-z3tab="features">Features</button><button class="zone3-tab" data-z3tab="publications">Publications</button></div>
@@ -662,6 +698,81 @@ document.getElementById('mutPopApply').addEventListener('click',()=>{
 });
 document.getElementById('mutPopCancel').addEventListener('click',()=>{document.getElementById('mutationPopup').style.display='none';});
 document.addEventListener('click',e=>{const popup=document.getElementById('mutationPopup');if(popup.style.display==='block'&&!popup.contains(e.target)&&!e.target.classList.contains('seq-clickable')){popup.style.display='none';}});
+// === Add Part Popup ===
+const addPartPopup=document.getElementById('addPartPopup');
+document.getElementById('addPartBtn').addEventListener('click',e=>{
+  const rect=e.target.getBoundingClientRect();
+  addPartPopup.style.left=Math.max(10,Math.min(rect.left,window.innerWidth-440))+'px';
+  addPartPopup.style.top=(rect.bottom+8)+'px';
+  addPartPopup.style.display=addPartPopup.style.display==='block'?'none':'block';
+  if(addPartPopup.style.display==='block'){document.getElementById('addPartSearchInput').value='';document.getElementById('addPartResults').innerHTML='';document.getElementById('addPartSearchInput').focus();}
+});
+// Tab switching
+document.querySelectorAll('.add-part-popup-tab').forEach(tab=>{tab.addEventListener('click',()=>{
+  document.querySelectorAll('.add-part-popup-tab').forEach(t=>t.classList.remove('active'));tab.classList.add('active');
+  document.getElementById('addPartSearch').style.display=tab.dataset.addtab==='search'?'':'none';
+  document.getElementById('addPartPaste').style.display=tab.dataset.addtab==='paste'?'':'none';
+});});
+// Search in popup
+let addSearchDebounce=null;
+document.getElementById('addPartSearchInput').addEventListener('input',function(){
+  clearTimeout(addSearchDebounce);const query=this.value.trim();const resultsEl=document.getElementById('addPartResults');
+  if(query.length<2){resultsEl.innerHTML='';return;}
+  resultsEl.innerHTML='<div style="padding:8px;color:var(--text-tertiary);font-size:12px">Searching…</div>';
+  addSearchDebounce=setTimeout(async()=>{
+    const results=await searchUniProt(query);
+    if(results.length===0){resultsEl.innerHTML='<div style="padding:8px;color:var(--text-tertiary);font-size:12px">No results</div>';return;}
+    resultsEl.innerHTML='';
+    results.forEach(r=>{
+      const div=document.createElement('div');div.className='add-part-result';
+      div.innerHTML=`<div class="add-part-result-name">${r.name} <span class="search-result-badge ${r.reviewed?'badge-reviewed':'badge-unreviewed'}" style="font-size:9px">${r.reviewed?'★':'○'}</span></div><div class="add-part-result-meta">${r.accession} · ${r.gene} · ${r.organism} · ${r.length} aa</div>`;
+      div.addEventListener('click',()=>addProteinPart(r.accession));
+      resultsEl.appendChild(div);
+    });
+  },350);
+});
+// Add protein from UniProt (no signal extraction, full sequence)
+async function addProteinPart(accession){
+  addPartPopup.style.display='none';
+  const data=await fetchUniProtEntry(accession);if(!data){alert('Failed to fetch protein data.');return;}
+  const parsed=parseUniProtToProteinPart(data);
+  AppState.uniprotCache[accession]=parsed;
+  // Merge signal peptide back into segments if present
+  const part=parsed.part;
+  if(parsed.signalPeptide){
+    // Add signal as first segment of the protein
+    part.segments.unshift({
+      name:'Signal peptide',type:'Signal peptide',
+      start:parsed.signalPeptide.start,end:parsed.signalPeptide.end,
+      sequence:parsed.signalPeptide.sequence,
+      description:parsed.signalPeptide.description,
+      active:true,isTM:false,mutations:[],
+      ss:new Array(parsed.signalPeptide.sequence.length).fill('loop'),
+    });
+  }
+  AppState.construct.parts.push(part);
+  renderAll();
+}
+// Paste custom sequence
+document.getElementById('addPartPasteBtn').addEventListener('click',()=>{
+  let seq=document.getElementById('addPartPasteArea').value.trim();
+  const name=document.getElementById('addPartName').value.trim()||'Custom sequence';
+  if(seq.startsWith('>')){const lines=seq.split('\n');seq=lines.slice(1).join('').trim();}
+  seq=seq.replace(/[\s\d]/g,'').toUpperCase();
+  if(!/^[ACDEFGHIKLMNPQRSTVWY]+$/.test(seq)){alert('Invalid amino acid characters.');return;}
+  if(seq.length<2){alert('Sequence too short.');return;}
+  AppState.construct.parts.push({
+    type:'protein',name:name,gene:'—',organism:'—',accession:null,source:'custom',
+    fullSequence:seq,length:seq.length,mw:calculateMW(seq),
+    segments:[{name:name,type:'full',start:1,end:seq.length,sequence:seq,description:'Custom sequence',active:true,isTM:false,mutations:[],ss:new Array(seq.length).fill('loop')}],
+    expanded:false,
+  });
+  document.getElementById('addPartPasteArea').value='';document.getElementById('addPartName').value='';
+  addPartPopup.style.display='none';
+  renderAll();
+});
+// Close popup on outside click
+document.addEventListener('click',e=>{if(addPartPopup.style.display==='block'&&!addPartPopup.contains(e.target)&&e.target.id!=='addPartBtn'){addPartPopup.style.display='none';}});
 renderAll();});
 </script>
 </body>
