@@ -407,22 +407,7 @@ AppState.construct.parts.forEach((part,pi)=>{
   const color=part.type==='protein'?{main:PROTEIN_COLORS[proteinColorIdx%PROTEIN_COLORS.length],bg:'#cffafe'}:(PART_COLORS[part.type]||PART_COLORS.tag);
   if(part.type==='protein')proteinColorIdx++;
   // Build domain summary for tooltip
-  let domainSummary='';
-  if(part.type==='protein'&&part.segments){
-    const activeSegs=part.segments.filter(s=>s.active);
-    const named=activeSegs.filter(s=>s.type!=='unannotated');
-    const tmCount=named.filter(s=>s.isTM).length;
-    const otherNamed=named.filter(s=>!s.isTM);
-    const parts=[];
-    if(otherNamed.length>0){
-      const shown=otherNamed.slice(0,4).map(s=>shortName(s.name));
-      if(otherNamed.length>4)shown.push(`+${otherNamed.length-4} more`);
-      parts.push(shown.join(', '));
-    }
-    if(tmCount>0)parts.push(`${tmCount} TM domain${tmCount>1?'s':''}`);
-    domainSummary=parts.join(' · ')+` · ${activeSegs.length} segments total`;
-  }
-  partLevelView.push({sequence:seq,ss,color,name:part.name,type:part.type,partIndex:pi,accession:part.accession||null,domainSummary});
+  partLevelView.push({sequence:seq,ss,color,name:part.name,type:part.type,partIndex:pi,accession:part.accession||null});
 });
 const totalLen=partLevelView.reduce((a,p)=>a+p.sequence.length,0);
 // Construct bar
@@ -436,11 +421,7 @@ partLevelView.forEach(part=>{
     const label=document.createElement('span');label.style.position='relative';label.style.zIndex='1';
     const sn=shortName(part.name);label.textContent=sn.length>18?sn.slice(0,16)+'…':sn;div.appendChild(label);
   }
-  const tooltip=document.createElement('div');tooltip.className='bar-tooltip';
-  let tooltipHTML=`<div class="bar-tooltip-name">${part.type.toUpperCase()}: ${shortName(part.name)}</div><div class="bar-tooltip-range">${part.sequence.length} aa · ${ssComposition(part.ss)}</div>`;
-  if(part.domainSummary)tooltipHTML+=`<div class="bar-tooltip-ss" style="margin-top:4px;max-width:300px;white-space:normal;line-height:1.4">${part.domainSummary}</div>`;
-  tooltip.innerHTML=tooltipHTML;
-  div.appendChild(tooltip);barEl.appendChild(div);
+  barEl.appendChild(div);
 });
 // SS track
 const ssTrackEl=document.getElementById('ssTrack');ssTrackEl.innerHTML='';let allSS=[];partLevelView.forEach(p=>{allSS=allSS.concat(p.ss);});
