@@ -7,2240 +7,413 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-/* ===== RESET & BASE ===== */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-:root {
-  --font-sans: 'IBM Plex Sans', -apple-system, sans-serif;
-  --font-mono: 'IBM Plex Mono', 'Menlo', monospace;
-
-  --bg: #ffffff;
-  --bg-subtle: #f7f8fa;
-  --bg-hover: #f0f1f4;
-  --border: #e2e4e9;
-  --border-light: #ecedf0;
-
-  --text-primary: #1a1d23;
-  --text-secondary: #5f6570;
-  --text-tertiary: #8b8f99;
-
-  --accent: #2563eb;
-  --accent-hover: #1d4ed8;
-  --accent-light: #eff4ff;
-
-  /* Part type colors */
-  --color-signal: #16a34a;
-  --color-signal-bg: #dcfce7;
-  --color-signal-border: #86efac;
-
-  --color-tag: #d97706;
-  --color-tag-bg: #fef3c7;
-  --color-tag-border: #fcd34d;
-
-  --color-linker: #6b7280;
-  --color-linker-bg: #f3f4f6;
-  --color-linker-border: #d1d5db;
-
-  --color-protease: #dc2626;
-  --color-protease-bg: #fef2f2;
-  --color-protease-border: #fca5a5;
-
-  /* Domain color cycle */
-  --domain-0: #0891b2;
-  --domain-0-bg: #cffafe;
-  --domain-0-border: #67e8f9;
-  --domain-1: #7c3aed;
-  --domain-1-bg: #ede9fe;
-  --domain-1-border: #c4b5fd;
-  --domain-2: #0d9488;
-  --domain-2-bg: #ccfbf1;
-  --domain-2-border: #5eead4;
-  --domain-3: #4f46e5;
-  --domain-3-bg: #e0e7ff;
-  --domain-3-border: #a5b4fc;
-  --domain-4: #be185d;
-  --domain-4-bg: #fce7f3;
-  --domain-4-border: #f9a8d4;
-  --domain-5: #ea580c;
-  --domain-5-bg: #fff7ed;
-  --domain-5-border: #fdba74;
-
-  /* SS colors */
-  --ss-helix: #ef4444;
-  --ss-strand: #3b82f6;
-  --ss-loop: #d1d5db;
-
-  --radius: 8px;
-  --radius-lg: 12px;
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-  --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
-  --shadow-lg: 0 4px 12px rgba(0,0,0,0.08);
-}
-
-body {
-  font-family: var(--font-sans);
-  background: var(--bg);
-  color: var(--text-primary);
-  line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
-}
-
-/* ===== HERO ZONE ===== */
-.hero {
-  padding: 32px 40px 24px;
-  border-bottom: 1px solid var(--border-light);
-}
-
-.hero-inner {
-  max-width: 1400px;
-  margin: 0 auto;
-}
-
-.hero-brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-.hero-logo {
-  width: 32px;
-  height: 32px;
-  background: var(--accent);
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.hero-logo svg {
-  width: 20px;
-  height: 20px;
-  fill: white;
-}
-
-.hero-title {
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--text-primary);
-  letter-spacing: -0.3px;
-}
-
-.hero-subtitle {
-  font-size: 12px;
-  color: var(--text-tertiary);
-  font-weight: 400;
-  margin-left: 2px;
-}
-
-.search-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.search-container {
-  flex: 1;
-  position: relative;
-}
-
-.search-input {
-  width: 100%;
-  height: 44px;
-  padding: 0 16px 0 40px;
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius);
-  font-family: var(--font-sans);
-  font-size: 14px;
-  color: var(--text-primary);
-  background: var(--bg);
-  transition: border-color 0.15s, box-shadow 0.15s;
-  outline: none;
-}
-
-.search-input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-}
-
-.search-input::placeholder { color: var(--text-tertiary); }
-
-.search-icon {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 18px;
-  height: 18px;
-  color: var(--text-tertiary);
-}
-
-.search-dropdown {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  right: 0;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-lg);
-  z-index: 100;
-  max-height: 320px;
-  overflow-y: auto;
-  display: none;
-}
-
-.search-dropdown.visible { display: block; }
-
-.search-result {
-  padding: 10px 16px;
-  cursor: pointer;
-  border-bottom: 1px solid var(--border-light);
-  transition: background 0.1s;
-}
-
-.search-result:last-child { border-bottom: none; }
-.search-result:hover { background: var(--bg-subtle); }
-
-.search-result-name {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.search-result-meta {
-  font-size: 12px;
-  color: var(--text-secondary);
-  margin-top: 2px;
-}
-
-.search-result-badge {
-  display: inline-block;
-  font-size: 10px;
-  font-weight: 600;
-  padding: 1px 6px;
-  border-radius: 4px;
-  margin-left: 6px;
-}
-
-.badge-reviewed {
-  background: #dcfce7;
-  color: #16a34a;
-}
-
-.badge-unreviewed {
-  background: #fef3c7;
-  color: #d97706;
-}
-
-.search-loading {
-  padding: 16px;
-  text-align: center;
-  color: var(--text-tertiary);
-  font-size: 13px;
-}
-
-.expression-group {
-  display: flex;
-  gap: 4px;
-  background: var(--bg-subtle);
-  padding: 4px;
-  border-radius: var(--radius);
-}
-
-.expression-btn {
-  padding: 8px 14px;
-  border: none;
-  background: transparent;
-  font-family: var(--font-sans);
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text-secondary);
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.15s;
-  white-space: nowrap;
-}
-
-.expression-btn:hover { color: var(--text-primary); background: var(--bg); }
-.expression-btn.active {
-  background: var(--bg);
-  color: var(--text-primary);
-  box-shadow: var(--shadow-sm);
-  font-weight: 600;
-}
-
-/* Mode toggle for empty state */
-.mode-toggle {
-  display: flex;
-  gap: 8px;
-  margin-top: 12px;
-}
-
-.mode-btn {
-  padding: 6px 14px;
-  border: 1.5px solid var(--border);
-  background: var(--bg);
-  font-family: var(--font-sans);
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--text-secondary);
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.mode-btn:hover { border-color: var(--accent); color: var(--accent); }
-.mode-btn.active {
-  border-color: var(--accent);
-  background: var(--accent-light);
-  color: var(--accent);
-}
-
-/* Paste modal */
-.paste-area {
-  margin-top: 12px;
-  display: none;
-}
-
-.paste-area.visible { display: block; }
-
-.paste-textarea {
-  width: 100%;
-  max-width: 600px;
-  height: 120px;
-  padding: 12px;
-  font-family: var(--font-mono);
-  font-size: 13px;
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius);
-  resize: vertical;
-  outline: none;
-  color: var(--text-primary);
-  line-height: 1.6;
-}
-
-.paste-textarea:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-}
-
-.paste-actions {
-  margin-top: 8px;
-  display: flex;
-  gap: 8px;
-}
-
-.btn {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 6px;
-  font-family: var(--font-sans);
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.btn-primary {
-  background: var(--accent);
-  color: white;
-}
-
-.btn-primary:hover { background: var(--accent-hover); }
-
-.btn-secondary {
-  background: var(--bg-subtle);
-  color: var(--text-secondary);
-  border: 1px solid var(--border);
-}
-
-.btn-secondary:hover { background: var(--bg-hover); }
-
-/* ===== MAIN CONTENT ===== */
-.main {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0 40px 60px;
-}
-
-/* ===== ZONE 1 — TOP CARD ===== */
-.zone1-card {
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  margin-top: 24px;
-  overflow: hidden;
-  display: none;
-}
-
-.zone1-card.visible { display: block; }
-
-.zone1-header {
-  padding: 20px 120px;
-  border-bottom: 1px solid var(--border-light);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.protein-meta {
-  display: flex;
-  align-items: center;
-  gap: 24px;
-  flex-wrap: wrap;
-}
-
-.protein-meta-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.meta-label {
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--text-tertiary);
-}
-
-.meta-value {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.btn-change {
-  padding: 6px 12px;
-  border: 1px solid var(--border);
-  background: var(--bg);
-  font-family: var(--font-sans);
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text-secondary);
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.btn-change:hover {
-  border-color: #ef4444;
-  color: #ef4444;
-  background: #fef2f2;
-}
-
-.zone1-body {
-  padding: 24px 120px 28px;
-}
-
-/* Construct bar */
-.construct-bar-wrapper {
-  position: relative;
-  margin-bottom: 4px;
-}
-
-.term-labels {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 8px;
-}
-
-.term-label {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.3px;
-}
-
-.term-label-n { color: #16a34a; }
-.term-label-c { color: #dc2626; }
-
-.construct-bar {
-  display: flex;
-  width: 100%;
-  height: 40px;
-  border-radius: 6px;
-  overflow: hidden;
-  border: 1px solid var(--border);
-  background: var(--bg-subtle);
-}
-
-.construct-bar-segment {
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.3px;
-  color: white;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  padding: 0 6px;
-  position: relative;
-  cursor: default;
-  transition: opacity 0.15s;
-}
-
-.construct-bar-segment:hover { opacity: 0.85; }
-
-.construct-bar-segment .segment-tooltip {
-  display: none;
-  position: absolute;
-  bottom: calc(100% + 6px);
-  left: 50%;
-  transform: translateX(-50%);
-  background: var(--text-primary);
-  color: white;
-  padding: 4px 10px;
-  border-radius: 4px;
-  font-size: 11px;
-  font-weight: 500;
-  white-space: nowrap;
-  z-index: 10;
-  pointer-events: none;
-}
-
-.construct-bar-segment:hover .segment-tooltip { display: block; }
-
-/* SS Track */
-.ss-track-wrapper {
-  margin-top: 6px;
-}
-
-.ss-track {
-  display: flex;
-  width: 100%;
-  height: 12px;
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.ss-residue {
-  height: 100%;
-  min-width: 0;
-}
-
-/* Ruler */
-.ruler {
-  position: relative;
-  width: 100%;
-  height: 20px;
-  margin-top: 2px;
-}
-
-.ruler-tick {
-  position: absolute;
-  top: 0;
-  font-size: 9px;
-  font-family: var(--font-mono);
-  color: var(--text-tertiary);
-  transform: translateX(-50%);
-}
-
-.ruler-tick::before {
-  content: '';
-  position: absolute;
-  top: -4px;
-  left: 50%;
-  width: 1px;
-  height: 4px;
-  background: var(--border);
-}
-
-/* Legend */
-.ss-legend {
-  display: flex;
-  gap: 16px;
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid var(--border-light);
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  color: var(--text-secondary);
-}
-
-.legend-swatch {
-  width: 14px;
-  height: 8px;
-  border-radius: 2px;
-}
-
-/* Sequence display */
-.sequence-display-zone1 {
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid var(--border-light);
-  font-family: var(--font-mono);
-  font-size: 12px;
-  line-height: 1.8;
-  word-break: break-all;
-  max-height: 160px;
-  overflow-y: auto;
-}
-
-.sequence-display-zone1 .seq-residue {
-  font-weight: 500;
-}
-
-/* ===== ZONE 2 ===== */
-.zone2 {
-  display: none;
-  gap: 20px;
-  margin-top: 20px;
-}
-
-.zone2.visible { display: flex; }
-
-.zone2-left {
-  flex: 0 0 70%;
-  max-width: 70%;
-}
-
-.zone2-right {
-  flex: 0 0 calc(30% - 20px);
-  max-width: calc(30% - 20px);
-}
-
-.card {
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-}
-
-.card-header {
-  padding: 14px 20px;
-  border-bottom: 1px solid var(--border-light);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.card-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.card-body {
-  padding: 20px;
-}
-
-/* Construct strip */
-.construct-strip {
-  display: flex;
-  align-items: center;
-  gap: 0;
-  padding: 16px;
-  background: var(--bg-subtle);
-  border-radius: var(--radius);
-  border: 1.5px dashed var(--border);
-  min-height: 100px;
-  flex-wrap: wrap;
-  position: relative;
-}
-
-.construct-strip-empty {
-  width: 100%;
-  text-align: center;
-  color: var(--text-tertiary);
-  font-size: 13px;
-  padding: 20px;
-}
-
-.strip-term-label {
-  font-size: 11px;
-  font-weight: 700;
-  padding: 4px 0;
-  writing-mode: horizontal-tb;
-  flex-shrink: 0;
-}
-
-.strip-term-n { color: #16a34a; margin-right: 8px; }
-.strip-term-c { color: #dc2626; margin-left: 8px; }
-
-.strip-arrow {
-  color: var(--text-tertiary);
-  font-size: 16px;
-  margin: 0 4px;
-  flex-shrink: 0;
-}
-
-/* Part card in strip */
-.part-card {
-  background: var(--bg);
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius);
-  padding: 10px 14px;
-  min-width: 120px;
-  max-width: 200px;
-  position: relative;
-  cursor: pointer;
-  transition: all 0.15s;
-  flex-shrink: 0;
-}
-
-.part-card:hover {
-  box-shadow: var(--shadow);
-  transform: translateY(-1px);
-}
-
-.part-card-remove {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  width: 18px;
-  height: 18px;
-  border: none;
-  background: transparent;
-  color: var(--text-tertiary);
-  cursor: pointer;
-  font-size: 14px;
-  line-height: 1;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.part-card-remove:hover { background: #fef2f2; color: #dc2626; }
-
-.part-card-type {
-  font-size: 9px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  margin-bottom: 4px;
-}
-
-.part-card-name {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 4px;
-}
-
-.part-card-seq {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--text-tertiary);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.part-card-expand-icon {
-  position: absolute;
-  top: 4px;
-  left: 4px;
-  width: 16px;
-  height: 16px;
-  color: var(--text-tertiary);
-  font-size: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Expanded protein domains */
-.part-card-domains {
-  display: none;
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid var(--border-light);
-}
-
-.part-card.expanded { max-width: 100%; flex-basis: 100%; }
-.part-card.expanded .part-card-domains { display: block; }
-
-.domain-substrip {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-.domain-subcard {
-  background: var(--bg-subtle);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 6px 10px;
-  min-width: 80px;
-  cursor: default;
-  transition: all 0.15s;
-}
-
-.domain-subcard:hover { box-shadow: var(--shadow-sm); }
-
-.domain-subcard-name {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.domain-subcard-range {
-  font-size: 10px;
-  font-family: var(--font-mono);
-  color: var(--text-tertiary);
-  margin-top: 2px;
-}
-
-.domain-subcard-active {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin-top: 4px;
-}
-
-.domain-toggle {
-  width: 14px;
-  height: 14px;
-  cursor: pointer;
-  accent-color: var(--accent);
-}
-
-/* Summary stats */
-.construct-stats {
-  display: flex;
-  gap: 20px;
-  margin-top: 16px;
-  padding: 10px 0;
-  border-top: 1px solid var(--border-light);
-}
-
-.stat-item {
-  font-size: 13px;
-  color: var(--text-secondary);
-}
-
-.stat-value {
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-/* Zone 2 sequence viewer */
-.sequence-viewer {
-  margin-top: 16px;
-  padding: 16px;
-  background: var(--bg-subtle);
-  border-radius: var(--radius);
-  border: 1px solid var(--border-light);
-  font-family: var(--font-mono);
-  font-size: 12px;
-  line-height: 2;
-  max-height: 400px;
-  overflow-y: auto;
-  white-space: pre;
-}
-
-.seq-line-number {
-  display: inline-block;
-  width: 50px;
-  text-align: right;
-  padding-right: 12px;
-  color: var(--text-tertiary);
-  user-select: none;
-  font-size: 11px;
-}
-
-.seq-tick {
-  color: var(--text-tertiary);
-  font-size: 9px;
-}
-
-/* ===== ZONE 2 RIGHT — Parts Library ===== */
-.library-tabs {
-  display: flex;
-  border-bottom: 1px solid var(--border-light);
-}
-
-.library-tab {
-  flex: 1;
-  padding: 10px 8px;
-  border: none;
-  background: transparent;
-  font-family: var(--font-sans);
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text-tertiary);
-  cursor: pointer;
-  text-align: center;
-  transition: all 0.15s;
-  border-bottom: 2px solid transparent;
-}
-
-.library-tab:hover { color: var(--text-secondary); }
-.library-tab.active {
-  color: var(--accent);
-  border-bottom-color: var(--accent);
-  font-weight: 600;
-}
-
-.library-content {
-  padding: 16px;
-}
-
-.library-empty {
-  text-align: center;
-  padding: 32px 16px;
-  color: var(--text-tertiary);
-  font-size: 13px;
-}
-
-.library-empty-icon {
-  font-size: 28px;
-  margin-bottom: 8px;
-  opacity: 0.4;
-}
-
-/* ===== ZONE 3 ===== */
-.zone3 {
-  display: none;
-  margin-top: 20px;
-}
-
-.zone3.visible { display: block; }
-
-.zone3-tabs {
-  display: flex;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 0;
-}
-
-.zone3-tab {
-  padding: 12px 20px;
-  border: none;
-  background: transparent;
-  font-family: var(--font-sans);
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--text-tertiary);
-  cursor: pointer;
-  border-bottom: 2px solid transparent;
-  transition: all 0.15s;
-}
-
-.zone3-tab:hover { color: var(--text-secondary); }
-.zone3-tab.active {
-  color: var(--accent);
-  border-bottom-color: var(--accent);
-  font-weight: 600;
-}
-
-.zone3-panel {
-  display: none;
-  padding: 20px;
-}
-
-.zone3-panel.visible { display: block; }
-
-/* Feature/mutation table */
-.data-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-}
-
-.data-table th {
-  text-align: left;
-  padding: 8px 12px;
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--text-tertiary);
-  border-bottom: 1px solid var(--border);
-  background: var(--bg-subtle);
-}
-
-.data-table td {
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--border-light);
-  color: var(--text-secondary);
-}
-
-.data-table tr:hover td { background: var(--bg-subtle); }
-
-.data-table .pos-badge {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--accent);
-}
-
-/* Publication list */
-.pub-item {
-  padding: 12px 0;
-  border-bottom: 1px solid var(--border-light);
-}
-
-.pub-item:last-child { border-bottom: none; }
-
-.pub-title {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--text-primary);
-}
-
-.pub-authors {
-  font-size: 12px;
-  color: var(--text-tertiary);
-  margin-top: 2px;
-}
-
-.pub-journal {
-  font-size: 12px;
-  color: var(--text-secondary);
-  font-style: italic;
-  margin-top: 2px;
-}
-
-.pub-link {
-  font-size: 12px;
-  color: var(--accent);
-  text-decoration: none;
-  margin-top: 4px;
-  display: inline-block;
-}
-
-.pub-link:hover { text-decoration: underline; }
-
-.empty-state {
-  text-align: center;
-  padding: 32px;
-  color: var(--text-tertiary);
-  font-size: 13px;
-}
-
-/* ===== EMPTY LANDING STATE ===== */
-.landing-state {
-  text-align: center;
-  padding: 80px 40px;
-  max-width: 500px;
-  margin: 0 auto;
-}
-
-.landing-icon {
-  width: 64px;
-  height: 64px;
-  background: var(--accent-light);
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 20px;
-}
-
-.landing-icon svg {
-  width: 32px;
-  height: 32px;
-  color: var(--accent);
-}
-
-.landing-title {
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin-bottom: 8px;
-}
-
-.landing-desc {
-  font-size: 14px;
-  color: var(--text-secondary);
-  line-height: 1.6;
-}
-
-/* ===== SCROLLBAR ===== */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--text-tertiary); }
-
-/* ===== ANIMATIONS ===== */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.animate-in {
-  animation: fadeIn 0.25s ease-out;
-}
-
-/* Responsive */
-@media (max-width: 1200px) {
-  .zone1-header, .zone1-body { padding-left: 40px; padding-right: 40px; }
-}
-
-@media (max-width: 900px) {
-  .zone2 { flex-direction: column; }
-  .zone2-left, .zone2-right { flex: 1; max-width: 100%; }
-  .zone1-header, .zone1-body { padding-left: 20px; padding-right: 20px; }
-}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+--font-sans:'IBM Plex Sans',-apple-system,sans-serif;
+--font-mono:'IBM Plex Mono','Menlo',monospace;
+--bg:#ffffff;--bg-subtle:#f7f8fa;--bg-hover:#f0f1f4;
+--border:#e2e4e9;--border-light:#ecedf0;
+--text-primary:#1a1d23;--text-secondary:#5f6570;--text-tertiary:#8b8f99;
+--accent:#2563eb;--accent-hover:#1d4ed8;--accent-light:#eff4ff;
+--color-signal:#16a34a;--color-signal-bg:#dcfce7;--color-signal-border:#86efac;
+--color-tag:#d97706;--color-tag-bg:#fef3c7;--color-tag-border:#fcd34d;
+--color-linker:#6b7280;--color-linker-bg:#f3f4f6;--color-linker-border:#d1d5db;
+--color-protease:#dc2626;--color-protease-bg:#fef2f2;--color-protease-border:#fca5a5;
+--ss-helix:#ef4444;--ss-strand:#3b82f6;--ss-loop:#d1d5db;
+--topo-extra:#3b82f6;--topo-cyto:#f59e0b;--topo-membrane:#374151;--topo-lumenal:#8b5cf6;
+--radius:8px;--radius-lg:12px;
+--shadow-sm:0 1px 2px rgba(0,0,0,0.05);
+--shadow:0 1px 3px rgba(0,0,0,0.08),0 1px 2px rgba(0,0,0,0.04);
+--shadow-lg:0 4px 12px rgba(0,0,0,0.08);
+}
+body{font-family:var(--font-sans);background:var(--bg);color:var(--text-primary);line-height:1.5;-webkit-font-smoothing:antialiased}
+.hero{padding:32px 40px 24px;border-bottom:1px solid var(--border-light)}
+.hero-inner{max-width:1400px;margin:0 auto}
+.hero-brand{display:flex;align-items:center;gap:10px;margin-bottom:20px}
+.hero-logo{width:32px;height:32px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center}
+.hero-logo svg{width:20px;height:20px;fill:white}
+.hero-title{font-size:18px;font-weight:700;letter-spacing:-0.3px}
+.hero-subtitle{font-size:12px;color:var(--text-tertiary);font-weight:400;margin-left:2px}
+.search-row{display:flex;align-items:center;gap:12px}
+.search-container{flex:1;position:relative}
+.search-input{width:100%;height:44px;padding:0 16px 0 40px;border:1.5px solid var(--border);border-radius:var(--radius);font-family:var(--font-sans);font-size:14px;color:var(--text-primary);background:var(--bg);transition:border-color .15s,box-shadow .15s;outline:none}
+.search-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,0.1)}
+.search-input::placeholder{color:var(--text-tertiary)}
+.search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--text-tertiary)}
+.search-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-lg);z-index:100;max-height:320px;overflow-y:auto;display:none}
+.search-dropdown.visible{display:block}
+.search-result{padding:10px 16px;cursor:pointer;border-bottom:1px solid var(--border-light);transition:background .1s}
+.search-result:last-child{border-bottom:none}
+.search-result:hover{background:var(--bg-subtle)}
+.search-result-name{font-size:14px;font-weight:600}
+.search-result-meta{font-size:12px;color:var(--text-secondary);margin-top:2px}
+.search-result-badge{display:inline-block;font-size:10px;font-weight:600;padding:1px 6px;border-radius:4px;margin-left:6px}
+.badge-reviewed{background:#dcfce7;color:#16a34a}
+.badge-unreviewed{background:#fef3c7;color:#d97706}
+.search-loading{padding:16px;text-align:center;color:var(--text-tertiary);font-size:13px}
+.expression-group{display:flex;gap:4px;background:var(--bg-subtle);padding:4px;border-radius:var(--radius)}
+.expression-btn{padding:8px 14px;border:none;background:transparent;font-family:var(--font-sans);font-size:12px;font-weight:500;color:var(--text-secondary);border-radius:6px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.expression-btn:hover{color:var(--text-primary);background:var(--bg)}
+.expression-btn.active{background:var(--bg);color:var(--text-primary);box-shadow:var(--shadow-sm);font-weight:600}
+.mode-toggle{display:flex;gap:8px;margin-top:12px}
+.mode-btn{padding:6px 14px;border:1.5px solid var(--border);background:var(--bg);font-family:var(--font-sans);font-size:13px;font-weight:500;color:var(--text-secondary);border-radius:6px;cursor:pointer;transition:all .15s}
+.mode-btn:hover{border-color:var(--accent);color:var(--accent)}
+.mode-btn.active{border-color:var(--accent);background:var(--accent-light);color:var(--accent)}
+.paste-area{margin-top:12px;display:none}.paste-area.visible{display:block}
+.paste-textarea{width:100%;max-width:600px;height:120px;padding:12px;font-family:var(--font-mono);font-size:13px;border:1.5px solid var(--border);border-radius:var(--radius);resize:vertical;outline:none;color:var(--text-primary);line-height:1.6}
+.paste-textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,0.1)}
+.paste-actions{margin-top:8px;display:flex;gap:8px}
+.btn{padding:8px 16px;border:none;border-radius:6px;font-family:var(--font-sans);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s}
+.btn-primary{background:var(--accent);color:white}.btn-primary:hover{background:var(--accent-hover)}
+.btn-secondary{background:var(--bg-subtle);color:var(--text-secondary);border:1px solid var(--border)}.btn-secondary:hover{background:var(--bg-hover)}
+.main{max-width:1400px;margin:0 auto;padding:0 40px 60px}
+.zone1-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);margin-top:24px;overflow:hidden;display:none}
+.zone1-card.visible{display:block}
+.zone1-header{padding:20px 60px;border-bottom:1px solid var(--border-light);display:flex;align-items:center;justify-content:space-between}
+.protein-meta{display:flex;align-items:center;gap:24px;flex-wrap:wrap}
+.protein-meta-item{display:flex;align-items:center;gap:6px}
+.meta-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-tertiary)}
+.meta-value{font-size:14px;font-weight:600}
+.btn-change{padding:6px 12px;border:1px solid var(--border);background:var(--bg);font-family:var(--font-sans);font-size:12px;font-weight:500;color:var(--text-secondary);border-radius:6px;cursor:pointer;transition:all .15s}
+.btn-change:hover{border-color:#ef4444;color:#ef4444;background:#fef2f2}
+.zone1-body{padding:24px 60px 28px}
+.construct-bar-layout{display:flex;gap:20px;align-items:flex-start}
+.construct-bar-main{flex:1;min-width:0}
+.domain-legend-card{flex:0 0 220px;background:var(--bg-subtle);border:1px solid var(--border-light);border-radius:var(--radius);padding:10px 12px;max-height:240px;overflow-y:auto}
+.domain-legend-title{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-tertiary);margin-bottom:8px}
+.domain-legend-item{display:flex;align-items:center;gap:8px;padding:3px 4px;font-size:11px;border-radius:3px;cursor:default;transition:background .1s}
+.domain-legend-item:hover{background:var(--bg-hover)}
+.domain-legend-swatch{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.domain-legend-name{font-weight:500;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.domain-legend-range{font-family:var(--font-mono);font-size:10px;color:var(--text-tertiary);flex-shrink:0}
+.term-labels{display:flex;justify-content:space-between;margin-bottom:8px}
+.term-label{font-size:11px;font-weight:600;letter-spacing:.3px}
+.term-label-n{color:#16a34a}.term-label-c{color:#dc2626}
+.topo-track-wrapper{margin-bottom:4px}
+.topo-track{display:flex;width:100%;height:14px;border-radius:3px;overflow:hidden;border:1px solid var(--border-light)}
+.topo-segment{height:100%;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:600;letter-spacing:.3px;color:white;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 4px}
+.construct-bar{display:flex;width:100%;height:40px;border-radius:6px;overflow:visible;border:1px solid var(--border);background:var(--bg-subtle);position:relative}
+.construct-bar-segment{height:100%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;letter-spacing:.3px;color:white;overflow:visible;text-overflow:ellipsis;white-space:nowrap;padding:0 6px;position:relative;cursor:default;transition:opacity .15s}
+.construct-bar-segment:hover{opacity:.85}
+.construct-bar-segment.tm-segment{background-image:repeating-linear-gradient(45deg,transparent,transparent 3px,rgba(255,255,255,0.25) 3px,rgba(255,255,255,0.25) 6px)!important}
+.construct-bar-segment.unannotated-segment{background-image:repeating-linear-gradient(90deg,transparent,transparent 4px,rgba(255,255,255,0.3) 4px,rgba(255,255,255,0.3) 5px)!important}
+.bar-tooltip{display:none;position:absolute;bottom:calc(100% + 10px);left:50%;transform:translateX(-50%);background:var(--text-primary);color:white;padding:8px 12px;border-radius:6px;font-size:12px;white-space:nowrap;z-index:20;pointer-events:none;box-shadow:0 4px 12px rgba(0,0,0,0.15)}
+.bar-tooltip::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:var(--text-primary)}
+.bar-tooltip-name{font-weight:600;margin-bottom:2px}
+.bar-tooltip-range{font-family:var(--font-mono);font-size:11px;opacity:.8}
+.bar-tooltip-ss{font-size:10px;opacity:.7;margin-top:2px}
+.construct-bar-segment:hover .bar-tooltip{display:block}
+.ss-track-wrapper{margin-top:6px}
+.ss-track{display:flex;width:100%;height:12px;border-radius:3px;overflow:hidden}
+.ss-residue{height:100%;min-width:0}
+.ruler{position:relative;width:100%;height:20px;margin-top:2px}
+.ruler-tick{position:absolute;top:0;font-size:9px;font-family:var(--font-mono);color:var(--text-tertiary);transform:translateX(-50%)}
+.ruler-tick::before{content:'';position:absolute;top:-4px;left:50%;width:1px;height:4px;background:var(--border)}
+.legends-row{display:flex;gap:24px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border-light);align-items:center;flex-wrap:wrap}
+.legend-group{display:flex;gap:12px;align-items:center}
+.legend-group-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-tertiary);margin-right:4px}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-secondary)}
+.legend-swatch{width:14px;height:8px;border-radius:2px}
+.sequence-display-zone1{margin-top:16px;padding-top:16px;border-top:1px solid var(--border-light);font-family:var(--font-mono);font-size:12px;line-height:1.8;max-height:160px;overflow-y:auto;word-break:break-all}
+.sequence-display-zone1 .seq-residue{font-weight:500}
+.zone2{display:none;gap:20px;margin-top:20px}.zone2.visible{display:flex}
+.zone2-left{flex:0 0 70%;max-width:70%}
+.zone2-right{flex:0 0 calc(30% - 20px);max-width:calc(30% - 20px)}
+.card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+.card-header{padding:14px 20px;border-bottom:1px solid var(--border-light);display:flex;align-items:center;justify-content:space-between}
+.card-title{font-size:14px;font-weight:600}
+.card-body{padding:20px}
+.construct-strip{display:flex;align-items:center;gap:0;padding:16px;background:var(--bg-subtle);border-radius:var(--radius);border:1.5px dashed var(--border);min-height:100px;flex-wrap:wrap;position:relative}
+.construct-strip-empty{width:100%;text-align:center;color:var(--text-tertiary);font-size:13px;padding:20px}
+.strip-term-label{font-size:11px;font-weight:700;padding:4px 0;flex-shrink:0}
+.strip-term-n{color:#16a34a;margin-right:8px}.strip-term-c{color:#dc2626;margin-left:8px}
+.strip-arrow{color:var(--text-tertiary);font-size:16px;margin:0 4px;flex-shrink:0}
+.part-card{background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius);padding:10px 14px;min-width:120px;max-width:200px;position:relative;cursor:pointer;transition:all .15s;flex-shrink:0}
+.part-card:hover{box-shadow:var(--shadow);transform:translateY(-1px)}
+.part-card-remove{position:absolute;top:4px;right:4px;width:18px;height:18px;border:none;background:transparent;color:var(--text-tertiary);cursor:pointer;font-size:14px;line-height:1;border-radius:4px;display:flex;align-items:center;justify-content:center}
+.part-card-remove:hover{background:#fef2f2;color:#dc2626}
+.part-card-type{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px}
+.part-card-name{font-size:13px;font-weight:600;margin-bottom:2px}
+.part-card-range{font-size:10px;font-family:var(--font-mono);color:var(--text-tertiary);margin-bottom:2px}
+.part-card-seq{font-family:var(--font-mono);font-size:10px;color:var(--text-tertiary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.part-card-expand-icon{position:absolute;top:4px;left:4px;width:16px;height:16px;color:var(--text-tertiary);font-size:10px;display:flex;align-items:center;justify-content:center}
+.part-card-domains{display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--border-light)}
+.part-card.expanded{max-width:100%;flex-basis:100%}
+.part-card.expanded .part-card-domains{display:block}
+.domain-substrip{display:flex;gap:6px;flex-wrap:wrap}
+.domain-subcard{background:var(--bg-subtle);border:1px solid var(--border);border-radius:6px;padding:6px 10px;min-width:80px;cursor:default;transition:all .15s}
+.domain-subcard:hover{box-shadow:var(--shadow-sm)}
+.domain-subcard-name{font-size:11px;font-weight:600}
+.domain-subcard-range{font-size:10px;font-family:var(--font-mono);color:var(--text-tertiary);margin-top:2px}
+.domain-subcard-active{display:flex;align-items:center;gap:4px;margin-top:4px}
+.domain-toggle{width:14px;height:14px;cursor:pointer;accent-color:var(--accent)}
+.construct-stats{display:flex;gap:20px;margin-top:16px;padding:10px 0;border-top:1px solid var(--border-light)}
+.stat-item{font-size:13px;color:var(--text-secondary)}
+.stat-value{font-weight:600;color:var(--text-primary)}
+.sequence-viewer-header{display:flex;gap:12px;flex-wrap:wrap;margin-top:16px;margin-bottom:8px;padding:8px 12px;background:var(--bg-subtle);border-radius:6px;border:1px solid var(--border-light)}
+.seq-legend-item{display:flex;align-items:center;gap:5px;font-size:11px}
+.seq-legend-swatch{width:8px;height:8px;border-radius:2px}
+.seq-legend-name{color:var(--text-secondary);font-weight:500}
+.sequence-viewer{padding:16px;background:var(--bg-subtle);border-radius:var(--radius);border:1px solid var(--border-light);font-family:var(--font-mono);font-size:12px;line-height:2;max-height:400px;overflow-y:auto;white-space:pre}
+.seq-line-number{display:inline-block;width:50px;text-align:right;padding-right:12px;color:var(--text-tertiary);user-select:none;font-size:11px}
+.library-tabs{display:flex;border-bottom:1px solid var(--border-light)}
+.library-tab{flex:1;padding:10px 8px;border:none;background:transparent;font-family:var(--font-sans);font-size:12px;font-weight:500;color:var(--text-tertiary);cursor:pointer;text-align:center;transition:all .15s;border-bottom:2px solid transparent}
+.library-tab:hover{color:var(--text-secondary)}
+.library-tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+.library-content{padding:16px}
+.library-empty{text-align:center;padding:32px 16px;color:var(--text-tertiary);font-size:13px}
+.library-empty-icon{font-size:28px;margin-bottom:8px;opacity:.4}
+.zone3{display:none;margin-top:20px}.zone3.visible{display:block}
+.zone3-tabs{display:flex;border-bottom:1px solid var(--border)}
+.zone3-tab{padding:12px 20px;border:none;background:transparent;font-family:var(--font-sans);font-size:13px;font-weight:500;color:var(--text-tertiary);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s}
+.zone3-tab:hover{color:var(--text-secondary)}
+.zone3-tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+.zone3-panel{display:none;padding:20px}.zone3-panel.visible{display:block}
+.data-table{width:100%;border-collapse:collapse;font-size:13px}
+.data-table th{text-align:left;padding:8px 12px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-tertiary);border-bottom:1px solid var(--border);background:var(--bg-subtle)}
+.data-table td{padding:8px 12px;border-bottom:1px solid var(--border-light);color:var(--text-secondary)}
+.data-table tr:hover td{background:var(--bg-subtle)}
+.data-table .pos-badge{font-family:var(--font-mono);font-size:12px;font-weight:500;color:var(--accent)}
+.pub-item{padding:12px 0;border-bottom:1px solid var(--border-light)}.pub-item:last-child{border-bottom:none}
+.pub-title{font-size:13px;font-weight:500}
+.pub-authors{font-size:12px;color:var(--text-tertiary);margin-top:2px}
+.pub-journal{font-size:12px;color:var(--text-secondary);font-style:italic;margin-top:2px}
+.pub-link{font-size:12px;color:var(--accent);text-decoration:none;margin-top:4px;display:inline-block}
+.pub-link:hover{text-decoration:underline}
+.empty-state{text-align:center;padding:32px;color:var(--text-tertiary);font-size:13px}
+.landing-state{text-align:center;padding:80px 40px;max-width:500px;margin:0 auto}
+.landing-icon{width:64px;height:64px;background:var(--accent-light);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px}
+.landing-icon svg{width:32px;height:32px;color:var(--accent)}
+.landing-title{font-size:20px;font-weight:700;margin-bottom:8px}
+.landing-desc{font-size:14px;color:var(--text-secondary);line-height:1.6}
+::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}::-webkit-scrollbar-thumb:hover{background:var(--text-tertiary)}
+@media(max-width:1200px){.zone1-header,.zone1-body{padding-left:40px;padding-right:40px}}
+@media(max-width:900px){.zone2{flex-direction:column}.zone2-left,.zone2-right{flex:1;max-width:100%}.zone1-header,.zone1-body{padding-left:20px;padding-right:20px}.construct-bar-layout{flex-direction:column}.domain-legend-card{flex:1;max-height:150px}}
 </style>
 </head>
 <body>
-
-<!-- ===== HERO ===== -->
-<header class="hero">
-  <div class="hero-inner">
-    <div class="hero-brand">
-      <div class="hero-logo">
-        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
-      </div>
-      <div>
-        <span class="hero-title">ConstructAI</span>
-        <span class="hero-subtitle"> — Protein Construct Designer</span>
-      </div>
-    </div>
-
-    <div class="search-row">
-      <div class="search-container">
-        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-        </svg>
-        <input type="text" class="search-input" id="searchInput"
-          placeholder="Search by protein name, gene, UniProt ID, or PDB code…">
-        <div class="search-dropdown" id="searchDropdown"></div>
-      </div>
-
-      <div class="expression-group" id="expressionGroup">
-        <button class="expression-btn active" data-system="mammalian">Mammalian</button>
-        <button class="expression-btn" data-system="bacterial">Bacterial</button>
-        <button class="expression-btn" data-system="insect">Insect</button>
-        <button class="expression-btn" data-system="yeast">Yeast</button>
-        <button class="expression-btn" data-system="cell-free">Cell-free</button>
-      </div>
-    </div>
-
-    <div class="mode-toggle" id="modeToggle">
-      <button class="mode-btn active" data-mode="search">Search UniProt</button>
-      <button class="mode-btn" data-mode="paste">Paste sequence</button>
-    </div>
-
-    <div class="paste-area" id="pasteArea">
-      <textarea class="paste-textarea" id="pasteTextarea"
-        placeholder="Paste amino acid sequence (raw or FASTA format)…"></textarea>
-      <div class="paste-actions">
-        <button class="btn btn-primary" id="pasteLoadBtn">Load sequence</button>
-        <button class="btn btn-secondary" id="pasteClearBtn">Clear</button>
-      </div>
-    </div>
-  </div>
-</header>
-
-<!-- ===== MAIN CONTENT ===== -->
+<header class="hero"><div class="hero-inner">
+<div class="hero-brand"><div class="hero-logo"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg></div><div><span class="hero-title">ConstructAI</span><span class="hero-subtitle"> — Protein Construct Designer</span></div></div>
+<div class="search-row"><div class="search-container"><svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input type="text" class="search-input" id="searchInput" placeholder="Search by protein name, gene, UniProt ID, or PDB code…"><div class="search-dropdown" id="searchDropdown"></div></div>
+<div class="expression-group" id="expressionGroup"><button class="expression-btn active" data-system="mammalian">Mammalian</button><button class="expression-btn" data-system="bacterial">Bacterial</button><button class="expression-btn" data-system="insect">Insect</button><button class="expression-btn" data-system="yeast">Yeast</button><button class="expression-btn" data-system="cell-free">Cell-free</button></div></div>
+<div class="mode-toggle" id="modeToggle"><button class="mode-btn active" data-mode="search">Search UniProt</button><button class="mode-btn" data-mode="paste">Paste sequence</button></div>
+<div class="paste-area" id="pasteArea"><textarea class="paste-textarea" id="pasteTextarea" placeholder="Paste amino acid sequence (raw or FASTA format)…"></textarea><div class="paste-actions"><button class="btn btn-primary" id="pasteLoadBtn">Load sequence</button><button class="btn btn-secondary" id="pasteClearBtn">Clear</button></div></div>
+</div></header>
 <main class="main">
-
-  <!-- Landing state -->
-  <div id="landingState" class="landing-state">
-    <div class="landing-icon">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-        <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/>
-      </svg>
-    </div>
-    <h2 class="landing-title">Design your construct</h2>
-    <p class="landing-desc">
-      Search for a protein above or paste a sequence to get started.
-      Build expression-ready constructs with signals, tags, and linkers.
-    </p>
-  </div>
-
-  <!-- ZONE 1 — Top card -->
-  <div class="zone1-card" id="zone1Card">
-    <div class="zone1-header">
-      <div class="protein-meta" id="proteinMeta"></div>
-      <button class="btn-change" id="changeBtn">← Change</button>
-    </div>
-    <div class="zone1-body">
-      <div class="construct-bar-wrapper">
-        <div class="term-labels">
-          <span class="term-label term-label-n">N-term ←</span>
-          <span class="term-label term-label-c">→ C-term</span>
-        </div>
-        <div class="construct-bar" id="constructBar"></div>
-      </div>
-      <div class="ss-track-wrapper">
-        <div class="ss-track" id="ssTrack"></div>
-      </div>
-      <div class="ruler" id="ruler"></div>
-      <div class="ss-legend">
-        <div class="legend-item"><div class="legend-swatch" style="background:var(--ss-helix)"></div> α-helix</div>
-        <div class="legend-item"><div class="legend-swatch" style="background:var(--ss-strand)"></div> β-strand</div>
-        <div class="legend-item"><div class="legend-swatch" style="background:var(--ss-loop)"></div> Loop / Coil</div>
-      </div>
-      <div class="sequence-display-zone1" id="zone1Sequence"></div>
-    </div>
-  </div>
-
-  <!-- ZONE 2 -->
-  <div class="zone2" id="zone2">
-    <!-- Left: Construct Assembly -->
-    <div class="zone2-left">
-      <div class="card">
-        <div class="card-header">
-          <span class="card-title">Construct Assembly</span>
-          <div style="display:flex;gap:8px;">
-            <button class="btn btn-secondary" id="copyFastaBtn" style="font-size:12px;padding:5px 10px;">Copy FASTA</button>
-          </div>
-        </div>
-        <div class="card-body">
-          <div class="construct-strip" id="constructStrip">
-            <span class="strip-term-label strip-term-n">N-term ←</span>
-            <div class="construct-strip-empty" id="stripEmpty">
-              Load a protein to begin assembly
-            </div>
-            <span class="strip-term-label strip-term-c">→ C-term</span>
-          </div>
-
-          <div class="construct-stats" id="constructStats" style="display:none;">
-            <div class="stat-item">Length: <span class="stat-value" id="statLength">0</span> aa</div>
-            <div class="stat-item">MW: <span class="stat-value" id="statMW">0</span> kDa</div>
-            <div class="stat-item">ε<sub>280</sub>: <span class="stat-value" id="statExtCoeff">0</span> M⁻¹cm⁻¹</div>
-          </div>
-
-          <div class="sequence-viewer" id="sequenceViewer" style="display:none;"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Right: Parts Library -->
-    <div class="zone2-right">
-      <div class="card">
-        <div class="library-tabs">
-          <button class="library-tab active" data-libtab="signals">Signals</button>
-          <button class="library-tab" data-libtab="linkers">Linkers</button>
-          <button class="library-tab" data-libtab="tags">Tags</button>
-        </div>
-        <div class="library-content" id="libraryContent">
-          <div class="library-empty">
-            <div class="library-empty-icon">🧬</div>
-            Parts library loading…<br>
-            <span style="font-size:11px;color:var(--text-tertiary)">Will be populated in a future update</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ZONE 3 -->
-  <div class="zone3" id="zone3">
-    <div class="card">
-      <div class="zone3-tabs">
-        <button class="zone3-tab active" data-z3tab="mutations">Mutations</button>
-        <button class="zone3-tab" data-z3tab="features">Features</button>
-        <button class="zone3-tab" data-z3tab="publications">Publications</button>
-      </div>
-      <div class="zone3-panel visible" id="panelMutations"></div>
-      <div class="zone3-panel" id="panelFeatures"></div>
-      <div class="zone3-panel" id="panelPublications"></div>
-    </div>
-  </div>
-
+<div id="landingState" class="landing-state"><div class="landing-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/></svg></div><h2 class="landing-title">Design your construct</h2><p class="landing-desc">Search for a protein above or paste a sequence to get started. Build expression-ready constructs with signals, tags, and linkers.</p></div>
+<div class="zone1-card" id="zone1Card"><div class="zone1-header"><div class="protein-meta" id="proteinMeta"></div><button class="btn-change" id="changeBtn">← Clear construct</button></div>
+<div class="zone1-body"><div class="construct-bar-layout"><div class="construct-bar-main">
+<div class="term-labels"><span class="term-label term-label-n">N-term ←</span><span class="term-label term-label-c">→ C-term</span></div>
+<div class="topo-track-wrapper" id="topoTrackWrapper" style="display:none"><div class="topo-track" id="topoTrack"></div></div>
+<div class="construct-bar" id="constructBar"></div>
+<div class="ss-track-wrapper"><div class="ss-track" id="ssTrack"></div></div>
+<div class="ruler" id="ruler"></div>
+<div class="legends-row">
+<div class="legend-group"><span class="legend-group-label">SS</span><div class="legend-item"><div class="legend-swatch" style="background:var(--ss-helix)"></div>α-helix</div><div class="legend-item"><div class="legend-swatch" style="background:var(--ss-strand)"></div>β-strand</div><div class="legend-item"><div class="legend-swatch" style="background:var(--ss-loop)"></div>Loop</div></div>
+<div class="legend-group" id="topoLegend" style="display:none"><span class="legend-group-label">Topology</span><div class="legend-item"><div class="legend-swatch" style="background:var(--topo-extra)"></div>Extracellular</div><div class="legend-item"><div class="legend-swatch" style="background:var(--topo-cyto)"></div>Cytoplasmic</div><div class="legend-item"><div class="legend-swatch" style="background:var(--topo-membrane);background-image:repeating-linear-gradient(45deg,transparent,transparent 2px,rgba(255,255,255,0.3) 2px,rgba(255,255,255,0.3) 4px)"></div>TM</div></div>
+</div>
+<div class="sequence-display-zone1" id="zone1Sequence"></div>
+</div>
+<div class="domain-legend-card" id="domainLegendCard"><div class="domain-legend-title">Segments</div><div id="domainLegendList"></div></div>
+</div></div></div>
+<div class="zone2" id="zone2"><div class="zone2-left"><div class="card"><div class="card-header"><span class="card-title">Construct Assembly</span><div style="display:flex;gap:8px"><button class="btn btn-secondary" id="copyFastaBtn" style="font-size:12px;padding:5px 10px">Copy FASTA</button></div></div>
+<div class="card-body"><div class="construct-strip" id="constructStrip"><span class="strip-term-label strip-term-n">N-term ←</span><div class="construct-strip-empty" id="stripEmpty">Load a protein to begin assembly</div><span class="strip-term-label strip-term-c">→ C-term</span></div>
+<div class="construct-stats" id="constructStats" style="display:none"><div class="stat-item">Length: <span class="stat-value" id="statLength">0</span> aa</div><div class="stat-item">MW: <span class="stat-value" id="statMW">0</span> kDa</div><div class="stat-item">ε<sub>280</sub>: <span class="stat-value" id="statExtCoeff">0</span> M⁻¹cm⁻¹</div></div>
+<div class="sequence-viewer-header" id="seqViewerHeader" style="display:none"></div>
+<div class="sequence-viewer" id="sequenceViewer" style="display:none"></div>
+</div></div></div>
+<div class="zone2-right"><div class="card"><div class="library-tabs"><button class="library-tab active" data-libtab="signals">Signals</button><button class="library-tab" data-libtab="linkers">Linkers</button><button class="library-tab" data-libtab="tags">Tags</button></div>
+<div class="library-content" id="libraryContent"><div class="library-empty"><div class="library-empty-icon">🧬</div>Parts library loading…<br><span style="font-size:11px;color:var(--text-tertiary)">Will be populated in a future update</span></div></div></div></div></div>
+<div class="zone3" id="zone3"><div class="card"><div class="zone3-tabs"><button class="zone3-tab active" data-z3tab="mutations">Mutations</button><button class="zone3-tab" data-z3tab="features">Features</button><button class="zone3-tab" data-z3tab="publications">Publications</button></div>
+<div class="zone3-panel visible" id="panelMutations"></div><div class="zone3-panel" id="panelFeatures"></div><div class="zone3-panel" id="panelPublications"></div></div></div>
 </main>
-
 <script>
-// ========================================================
-// STATE
-// ========================================================
-const AppState = {
-  expressionSystem: 'mammalian',
-  searchMode: 'search', // 'search' | 'paste'
-  construct: {
-    parts: [] // ordered array of Part objects
-  },
-  uniprotCache: {}, // raw uniprot data keyed by accession
-  expandedParts: new Set(), // part indices that are expanded
-};
+const AppState={expressionSystem:'mammalian',searchMode:'search',construct:{parts:[]},uniprotCache:{},expandedParts:new Set(),topoData:[]};
+const DOMAIN_COLORS=[{main:'#0891b2',bg:'#cffafe',border:'#67e8f9'},{main:'#7c3aed',bg:'#ede9fe',border:'#c4b5fd'},{main:'#0d9488',bg:'#ccfbf1',border:'#5eead4'},{main:'#4f46e5',bg:'#e0e7ff',border:'#a5b4fc'},{main:'#be185d',bg:'#fce7f3',border:'#f9a8d4'},{main:'#ea580c',bg:'#fff7ed',border:'#fdba74'}];
+const PART_COLORS={signal:{main:'#16a34a',bg:'#dcfce7',border:'#86efac'},tag:{main:'#d97706',bg:'#fef3c7',border:'#fcd34d'},linker:{main:'#6b7280',bg:'#f3f4f6',border:'#d1d5db'},protease:{main:'#dc2626',bg:'#fef2f2',border:'#fca5a5'}};
 
-// Domain color cycling
-const DOMAIN_COLORS = [
-  { main: '#0891b2', bg: '#cffafe', border: '#67e8f9' },
-  { main: '#7c3aed', bg: '#ede9fe', border: '#c4b5fd' },
-  { main: '#0d9488', bg: '#ccfbf1', border: '#5eead4' },
-  { main: '#4f46e5', bg: '#e0e7ff', border: '#a5b4fc' },
-  { main: '#be185d', bg: '#fce7f3', border: '#f9a8d4' },
-  { main: '#ea580c', bg: '#fff7ed', border: '#fdba74' },
-];
-
-const PART_COLORS = {
-  signal:   { main: '#16a34a', bg: '#dcfce7', border: '#86efac' },
-  tag:      { main: '#d97706', bg: '#fef3c7', border: '#fcd34d' },
-  linker:   { main: '#6b7280', bg: '#f3f4f6', border: '#d1d5db' },
-  protease: { main: '#dc2626', bg: '#fef2f2', border: '#fca5a5' },
-};
-
-// ========================================================
-// UNIPROT API
-// ========================================================
-let searchDebounce = null;
-
-async function searchUniProt(query) {
-  if (!query || query.length < 2) return [];
-  const url = `https://rest.uniprot.org/uniprotkb/search?query=${encodeURIComponent(query)}&size=10&fields=accession,protein_name,gene_names,organism_name,length,reviewed`;
-  try {
-    const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    return (data.results || []).map(r => ({
-      accession: r.primaryAccession,
-      name: r.proteinDescription?.recommendedName?.fullName?.value
-            || r.proteinDescription?.submissionNames?.[0]?.fullName?.value
-            || 'Unknown',
-      gene: r.genes?.[0]?.geneName?.value || r.genes?.[0]?.orfNames?.[0]?.value || '—',
-      organism: r.organism?.scientificName || '—',
-      length: r.sequence?.length || 0,
-      reviewed: r.entryType === 'UniProtKB reviewed (Swiss-Prot)',
-    }));
-  } catch (e) {
-    console.error('UniProt search error:', e);
-    return [];
-  }
+let searchDebounce=null;
+async function searchUniProt(query){
+if(!query||query.length<2)return[];
+const url=`https://rest.uniprot.org/uniprotkb/search?query=${encodeURIComponent(query)}&size=10&fields=accession,protein_name,gene_names,organism_name,length,reviewed`;
+try{const res=await fetch(url,{headers:{'Accept':'application/json'}});if(!res.ok)throw new Error(`HTTP ${res.status}`);const data=await res.json();
+return(data.results||[]).map(r=>({accession:r.primaryAccession,name:r.proteinDescription?.recommendedName?.fullName?.value||r.proteinDescription?.submissionNames?.[0]?.fullName?.value||'Unknown',gene:r.genes?.[0]?.geneName?.value||r.genes?.[0]?.orfNames?.[0]?.value||'—',organism:r.organism?.scientificName||'—',length:r.sequence?.length||0,reviewed:r.entryType==='UniProtKB reviewed (Swiss-Prot)'}));}catch(e){console.error('UniProt search error:',e);return[];}
 }
 
-async function fetchUniProtEntry(accession) {
-  const url = `https://rest.uniprot.org/uniprotkb/${accession}.json`;
-  try {
-    const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.json();
-  } catch (e) {
-    console.error('UniProt fetch error:', e);
-    return null;
-  }
+async function fetchUniProtEntry(accession){
+const url=`https://rest.uniprot.org/uniprotkb/${accession}.json`;
+try{const res=await fetch(url,{headers:{'Accept':'application/json'}});if(!res.ok)throw new Error(`HTTP ${res.status}`);return await res.json();}catch(e){console.error('UniProt fetch error:',e);return null;}
 }
 
-// ========================================================
-// PARSE UNIPROT DATA INTO PARTS
-// ========================================================
-function parseUniProtToProteinPart(data) {
-  const accession = data.primaryAccession;
-  const name = data.proteinDescription?.recommendedName?.fullName?.value
-    || data.proteinDescription?.submissionNames?.[0]?.fullName?.value
-    || accession;
-  const gene = data.genes?.[0]?.geneName?.value || data.genes?.[0]?.orfNames?.[0]?.value || '—';
-  const organism = data.organism?.scientificName || '—';
-  const fullSeq = data.sequence?.value || '';
-  const length = fullSeq.length;
-  const mw = data.sequence?.molWeight || (length * 110); // avg 110 Da per AA fallback
-
-  // Extract features
-  const features = data.features || [];
-
-  // Get domain/region segments
-  const segmentTypes = new Set([
-    'Domain', 'Region', 'Repeat', 'Motif', 'Transmembrane',
-    'Intramembrane', 'Topological domain', 'Coiled coil',
-    'Compositional bias', 'Zinc finger', 'DNA binding',
-    'Propeptide', 'Transit peptide', 'Signal peptide'
-  ]);
-
-  // Separate signal peptide
-  let signalPeptide = null;
-  const domainFeatures = [];
-
-  features.forEach(f => {
-    if (f.type === 'Signal peptide' || f.type === 'Signal') {
-      const start = f.location?.start?.value;
-      const end = f.location?.end?.value;
-      if (start && end) {
-        signalPeptide = {
-          name: 'Signal peptide',
-          type: 'Signal peptide',
-          start, end,
-          sequence: fullSeq.slice(start - 1, end),
-          description: f.description || 'Native signal peptide',
-        };
-      }
-    } else if (segmentTypes.has(f.type) && f.type !== 'Signal peptide') {
-      const start = f.location?.start?.value;
-      const end = f.location?.end?.value;
-      if (start && end) {
-        domainFeatures.push({
-          uniprotType: f.type,
-          name: f.description || f.type,
-          start, end,
-          sequence: fullSeq.slice(start - 1, end),
-          description: f.description || '',
-        });
-      }
-    }
-  });
-
-  // Sort by start position
-  domainFeatures.sort((a, b) => a.start - b.start);
-
-  // Build segments: fill gaps between annotated domains
-  const segments = [];
-  let cursor = signalPeptide ? signalPeptide.end + 1 : 1;
-
-  domainFeatures.forEach((df, i) => {
-    // Gap before this domain?
-    if (df.start > cursor) {
-      segments.push({
-        name: `Region ${cursor}–${df.start - 1}`,
-        type: 'unannotated',
-        start: cursor,
-        end: df.start - 1,
-        sequence: fullSeq.slice(cursor - 1, df.start - 1),
-        description: 'Unannotated region',
-        active: true,
-      });
-    }
-    // Skip if overlapping (take the first)
-    if (df.start >= cursor) {
-      segments.push({
-        name: df.name,
-        type: df.uniprotType,
-        start: df.start,
-        end: df.end,
-        sequence: df.sequence,
-        description: df.description,
-        active: true,
-      });
-      cursor = df.end + 1;
-    }
-  });
-
-  // Trailing gap
-  if (cursor <= length) {
-    segments.push({
-      name: segments.length > 0 ? `Region ${cursor}–${length}` : name,
-      type: segments.length > 0 ? 'unannotated' : 'full',
-      start: cursor,
-      end: length,
-      sequence: fullSeq.slice(cursor - 1),
-      description: segments.length > 0 ? 'Unannotated region' : 'Full protein sequence',
-      active: true,
-    });
-  }
-
-  // If no domains found, make one full-length segment
-  if (segments.length === 0) {
-    segments.push({
-      name: name,
-      type: 'full',
-      start: 1,
-      end: length,
-      sequence: fullSeq,
-      description: 'Full protein sequence',
-      active: true,
-    });
-  }
-
-  // Extract SS annotations
-  const ssAnnotations = [];
-  features.forEach(f => {
-    const start = f.location?.start?.value;
-    const end = f.location?.end?.value;
-    if (!start || !end) return;
-    if (f.type === 'Helix') ssAnnotations.push({ type: 'helix', start, end });
-    else if (f.type === 'Beta strand') ssAnnotations.push({ type: 'strand', start, end });
-    else if (f.type === 'Turn') ssAnnotations.push({ type: 'turn', start, end });
-  });
-
-  // Map SS per residue for the full sequence
-  const ssPerResidue = new Array(length).fill('loop');
-  ssAnnotations.forEach(a => {
-    for (let i = a.start - 1; i < a.end && i < length; i++) {
-      ssPerResidue[i] = a.type === 'helix' ? 'helix' : a.type === 'strand' ? 'strand' : 'loop';
-    }
-  });
-
-  // Assign SS to each segment
-  segments.forEach(seg => {
-    seg.ss = ssPerResidue.slice(seg.start - 1, seg.end);
-  });
-
-  // Extract mutations, features, publications for Zone 3
-  const mutations = features
-    .filter(f => f.type === 'Natural variant' || f.type === 'Mutagenesis')
-    .map(f => ({
-      type: f.type,
-      position: f.location?.start?.value || '?',
-      change: f.description || '',
-      evidences: f.evidences?.map(e => e.source?.name).filter(Boolean) || [],
-    }));
-
-  const otherFeatures = features
-    .filter(f => !segmentTypes.has(f.type) && f.type !== 'Helix' && f.type !== 'Beta strand'
-      && f.type !== 'Turn' && f.type !== 'Natural variant' && f.type !== 'Mutagenesis')
-    .map(f => ({
-      type: f.type,
-      start: f.location?.start?.value || '?',
-      end: f.location?.end?.value || '?',
-      description: f.description || f.type,
-    }));
-
-  const publications = (data.references || []).map(ref => ({
-    title: ref.citation?.title || 'Untitled',
-    authors: (ref.citation?.authors || []).slice(0, 5).join(', ') + ((ref.citation?.authors || []).length > 5 ? ' et al.' : ''),
-    journal: ref.citation?.journal || '',
-    year: ref.citation?.publicationDate || '',
-    pubmedId: ref.citation?.citationCrossReferences?.find(x => x.database === 'PubMed')?.id || null,
-  }));
-
-  return {
-    part: {
-      type: 'protein',
-      name: name,
-      gene: gene,
-      organism: organism,
-      accession: accession,
-      source: 'uniprot',
-      fullSequence: fullSeq,
-      length: length,
-      mw: mw,
-      segments: segments,
-      expanded: false,
-    },
-    signalPeptide: signalPeptide,
-    mutations,
-    features: otherFeatures,
-    publications,
-    ssPerResidue,
-  };
-}
-
-// ========================================================
-// CONSTRUCT HELPERS
-// ========================================================
-function getAssembledSequence() {
-  let seq = '';
-  AppState.construct.parts.forEach(part => {
-    if (part.type === 'protein') {
-      part.segments.filter(s => s.active).forEach(s => { seq += s.sequence; });
-    } else {
-      seq += part.sequence || '';
-    }
-  });
-  return seq;
-}
-
-function getAssembledParts() {
-  // Returns flat array of { sequence, ss, color, name, type, partIndex, segIndex }
-  const result = [];
-  let domainColorIdx = 0;
-
-  AppState.construct.parts.forEach((part, pi) => {
-    if (part.type === 'protein') {
-      part.segments.filter(s => s.active).forEach((seg, si) => {
-        const color = seg.type === 'unannotated'
-          ? { main: '#94a3b8', bg: '#f1f5f9', border: '#cbd5e1' }
-          : DOMAIN_COLORS[domainColorIdx % DOMAIN_COLORS.length];
-        if (seg.type !== 'unannotated') domainColorIdx++;
-        result.push({
-          sequence: seg.sequence,
-          ss: seg.ss || [],
-          color: color,
-          name: seg.name,
-          type: seg.type,
-          partIndex: pi,
-          segIndex: si,
-          isProteinSegment: true,
-        });
-      });
-    } else {
-      const color = PART_COLORS[part.type] || PART_COLORS.tag;
-      const ss = new Array((part.sequence || '').length).fill('loop');
-      result.push({
-        sequence: part.sequence || '',
-        ss: ss,
-        color: color,
-        name: part.name,
-        type: part.type,
-        partIndex: pi,
-        segIndex: -1,
-        isProteinSegment: false,
-      });
-    }
-  });
-
-  return result;
-}
-
-function calculateMW(sequence) {
-  // Average amino acid MW ~110 Da (rough), or use actual values
-  const mwTable = {
-    A:71.08,R:156.19,N:114.10,D:115.09,C:103.14,E:129.12,Q:128.13,G:57.05,
-    H:137.14,I:113.16,L:113.16,K:128.17,M:131.20,F:147.18,P:97.12,S:87.08,
-    T:101.10,W:186.21,Y:163.18,V:99.13
-  };
-  let mw = 18.02; // water
-  for (const aa of sequence.toUpperCase()) {
-    mw += mwTable[aa] || 110;
-  }
-  return mw;
-}
-
-function calculateExtinctionCoeff(sequence) {
-  const s = sequence.toUpperCase();
-  const nY = (s.match(/Y/g) || []).length;
-  const nW = (s.match(/W/g) || []).length;
-  const nC = (s.match(/C/g) || []).length;
-  // Pace method (assumes all Cys form disulfides)
-  return nY * 1490 + nW * 5500 + Math.floor(nC / 2) * 125;
-}
-
-// ========================================================
-// RENDERING
-// ========================================================
-function renderAll() {
-  renderZone1();
-  renderZone2();
-  renderZone3();
-}
-
-function renderZone1() {
-  const card = document.getElementById('zone1Card');
-  const landing = document.getElementById('landingState');
-
-  if (AppState.construct.parts.length === 0) {
-    card.classList.remove('visible');
-    landing.style.display = '';
-    return;
-  }
-
-  landing.style.display = 'none';
-  card.classList.add('visible');
-
-  // Metadata — show first protein part info
-  const proteinPart = AppState.construct.parts.find(p => p.type === 'protein');
-  const metaEl = document.getElementById('proteinMeta');
-  if (proteinPart) {
-    const totalSeq = getAssembledSequence();
-    const totalMW = calculateMW(totalSeq);
-    metaEl.innerHTML = `
-      <div class="protein-meta-item">
-        <span class="meta-label">Protein</span>
-        <span class="meta-value">${proteinPart.name}</span>
-      </div>
-      <div class="protein-meta-item">
-        <span class="meta-label">Gene</span>
-        <span class="meta-value">${proteinPart.gene || '—'}</span>
-      </div>
-      <div class="protein-meta-item">
-        <span class="meta-label">Organism</span>
-        <span class="meta-value">${proteinPart.organism || '—'}</span>
-      </div>
-      <div class="protein-meta-item">
-        <span class="meta-label">Length</span>
-        <span class="meta-value">${totalSeq.length} aa</span>
-      </div>
-      <div class="protein-meta-item">
-        <span class="meta-label">MW</span>
-        <span class="meta-value">${(totalMW / 1000).toFixed(1)} kDa</span>
-      </div>
-    `;
-  }
-
-  // Construct bar
-  const assembled = getAssembledParts();
-  const totalLen = assembled.reduce((a, p) => a + p.sequence.length, 0);
-  const barEl = document.getElementById('constructBar');
-  barEl.innerHTML = '';
-
-  assembled.forEach(part => {
-    const pct = (part.sequence.length / totalLen * 100).toFixed(2);
-    const div = document.createElement('div');
-    div.className = 'construct-bar-segment';
-    div.style.width = `${pct}%`;
-    div.style.background = part.color.main;
-    div.title = `${part.name} (${part.sequence.length} aa)`;
-    div.innerHTML = `<span class="segment-tooltip">${part.name} · ${part.sequence.length} aa</span>`;
-    if (part.sequence.length / totalLen > 0.06) {
-      div.textContent = part.name.length > 12 ? part.name.slice(0, 10) + '…' : part.name;
-    }
-    barEl.appendChild(div);
-  });
-
-  // SS track
-  const ssTrackEl = document.getElementById('ssTrack');
-  ssTrackEl.innerHTML = '';
-  let allSS = [];
-  assembled.forEach(part => {
-    allSS = allSS.concat(part.ss);
-  });
-
-  // Compress SS runs for performance
-  if (allSS.length > 0) {
-    let runs = [];
-    let currentType = allSS[0];
-    let count = 1;
-    for (let i = 1; i < allSS.length; i++) {
-      if (allSS[i] === currentType) {
-        count++;
-      } else {
-        runs.push({ type: currentType, count });
-        currentType = allSS[i];
-        count = 1;
-      }
-    }
-    runs.push({ type: currentType, count });
-
-    runs.forEach(run => {
-      const div = document.createElement('div');
-      div.className = 'ss-residue';
-      div.style.width = `${(run.count / allSS.length * 100).toFixed(3)}%`;
-      div.style.background = run.type === 'helix' ? 'var(--ss-helix)'
-        : run.type === 'strand' ? 'var(--ss-strand)' : 'var(--ss-loop)';
-      ssTrackEl.appendChild(div);
-    });
-  }
-
-  // Ruler
-  const rulerEl = document.getElementById('ruler');
-  rulerEl.innerHTML = '';
-  if (totalLen > 0) {
-    const step = totalLen < 100 ? 10 : totalLen < 500 ? 50 : totalLen < 2000 ? 100 : 200;
-    for (let i = step; i <= totalLen; i += step) {
-      const tick = document.createElement('div');
-      tick.className = 'ruler-tick';
-      tick.style.left = `${(i / totalLen * 100).toFixed(2)}%`;
-      tick.textContent = i;
-      rulerEl.appendChild(tick);
-    }
-  }
-
-  // Sequence display (Zone 1 — compact)
-  const seqEl = document.getElementById('zone1Sequence');
-  seqEl.innerHTML = '';
-  assembled.forEach(part => {
-    for (const aa of part.sequence) {
-      const span = document.createElement('span');
-      span.className = 'seq-residue';
-      span.textContent = aa;
-      span.style.color = part.color.main;
-      seqEl.appendChild(span);
-    }
-  });
-}
-
-function renderZone2() {
-  const zone2 = document.getElementById('zone2');
-  if (AppState.construct.parts.length === 0) {
-    zone2.classList.remove('visible');
-    return;
-  }
-  zone2.classList.add('visible');
-
-  // Construct strip
-  const strip = document.getElementById('constructStrip');
-  const stripEmpty = document.getElementById('stripEmpty');
-
-  // Remove old part cards (keep term labels)
-  strip.querySelectorAll('.part-card, .strip-arrow').forEach(el => el.remove());
-
-  if (AppState.construct.parts.length === 0) {
-    stripEmpty.style.display = '';
-    return;
-  }
-
-  stripEmpty.style.display = 'none';
-  const cTermLabel = strip.querySelector('.strip-term-c');
-
-  AppState.construct.parts.forEach((part, idx) => {
-    if (idx > 0) {
-      const arrow = document.createElement('span');
-      arrow.className = 'strip-arrow';
-      arrow.textContent = '→';
-      strip.insertBefore(arrow, cTermLabel);
-    }
-
-    const card = document.createElement('div');
-    card.className = 'part-card' + (AppState.expandedParts.has(idx) ? ' expanded' : '');
-
-    const typeColor = part.type === 'protein'
-      ? DOMAIN_COLORS[0]
-      : (PART_COLORS[part.type] || PART_COLORS.tag);
-
-    card.style.borderColor = typeColor.border;
-    card.style.background = typeColor.bg;
-
-    const seq = part.type === 'protein'
-      ? part.segments.filter(s => s.active).map(s => s.sequence).join('')
-      : (part.sequence || '');
-
-    const typeLabel = part.type.toUpperCase();
-
-    let expandIcon = '';
-    if (part.type === 'protein' && part.segments.length > 1) {
-      expandIcon = `<div class="part-card-expand-icon">${AppState.expandedParts.has(idx) ? '▼' : '▶'}</div>`;
-    }
-
-    card.innerHTML = `
-      ${expandIcon}
-      <button class="part-card-remove" data-idx="${idx}" title="Remove">×</button>
-      <div class="part-card-type" style="color:${typeColor.main}">${typeLabel}</div>
-      <div class="part-card-name">${part.name}</div>
-      <div class="part-card-seq">${seq.slice(0, 16)}${seq.length > 16 ? '…' : ''}</div>
-    `;
-
-    // Domain expansion
-    if (part.type === 'protein' && part.segments.length > 1) {
-      const domainsDiv = document.createElement('div');
-      domainsDiv.className = 'part-card-domains';
-
-      const substrip = document.createElement('div');
-      substrip.className = 'domain-substrip';
-
-      let domColorIdx = 0;
-      part.segments.forEach((seg, si) => {
-        const sc = seg.type === 'unannotated'
-          ? { main: '#94a3b8', bg: '#f1f5f9', border: '#cbd5e1' }
-          : DOMAIN_COLORS[domColorIdx % DOMAIN_COLORS.length];
-        if (seg.type !== 'unannotated') domColorIdx++;
-
-        const subcard = document.createElement('div');
-        subcard.className = 'domain-subcard';
-        subcard.style.borderColor = sc.border;
-        subcard.style.background = seg.active ? sc.bg : '#f9fafb';
-        subcard.style.opacity = seg.active ? '1' : '0.5';
-
-        subcard.innerHTML = `
-          <div class="domain-subcard-name" style="color:${sc.main}">${seg.name}</div>
-          <div class="domain-subcard-range">${seg.start}–${seg.end} (${seg.sequence.length} aa)</div>
-          <div class="domain-subcard-active">
-            <input type="checkbox" class="domain-toggle" data-part="${idx}" data-seg="${si}"
-              ${seg.active ? 'checked' : ''}>
-            <span style="font-size:10px;color:var(--text-tertiary);">${seg.active ? 'Active' : 'Inactive'}</span>
-          </div>
-        `;
-        substrip.appendChild(subcard);
-      });
-
-      domainsDiv.appendChild(substrip);
-      card.appendChild(domainsDiv);
-
-      // Click to expand/collapse
-      card.addEventListener('click', (e) => {
-        if (e.target.classList.contains('domain-toggle') || e.target.classList.contains('part-card-remove')) return;
-        if (AppState.expandedParts.has(idx)) {
-          AppState.expandedParts.delete(idx);
-        } else {
-          AppState.expandedParts.add(idx);
-        }
-        renderAll();
-      });
-    }
-
-    strip.insertBefore(card, cTermLabel);
-  });
-
-  // Event: remove part
-  strip.querySelectorAll('.part-card-remove').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const idx = parseInt(btn.dataset.idx);
-      AppState.construct.parts.splice(idx, 1);
-      AppState.expandedParts.delete(idx);
-      // Re-index expanded parts
-      const newExpanded = new Set();
-      AppState.expandedParts.forEach(i => {
-        if (i < idx) newExpanded.add(i);
-        else if (i > idx) newExpanded.add(i - 1);
-      });
-      AppState.expandedParts = newExpanded;
-      renderAll();
-    });
-  });
-
-  // Event: domain toggle
-  strip.querySelectorAll('.domain-toggle').forEach(cb => {
-    cb.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const pi = parseInt(cb.dataset.part);
-      const si = parseInt(cb.dataset.seg);
-      AppState.construct.parts[pi].segments[si].active = cb.checked;
-      renderAll();
-    });
-  });
-
-  // Stats
-  const totalSeq = getAssembledSequence();
-  const statsEl = document.getElementById('constructStats');
-  if (totalSeq.length > 0) {
-    statsEl.style.display = '';
-    document.getElementById('statLength').textContent = totalSeq.length;
-    document.getElementById('statMW').textContent = (calculateMW(totalSeq) / 1000).toFixed(1);
-    document.getElementById('statExtCoeff').textContent = calculateExtinctionCoeff(totalSeq).toLocaleString();
-  } else {
-    statsEl.style.display = 'none';
-  }
-
-  // Sequence viewer (Zone 2)
-  const viewer = document.getElementById('sequenceViewer');
-  if (totalSeq.length > 0) {
-    viewer.style.display = '';
-    renderSequenceViewer(viewer);
-  } else {
-    viewer.style.display = 'none';
-  }
-}
-
-function renderSequenceViewer(container) {
-  container.innerHTML = '';
-  const assembled = getAssembledParts();
-  const totalSeq = getAssembledSequence();
-  const charsPerLine = 60;
-  const tickEvery = 10;
-
-  // Build color map
-  const colorMap = [];
-  assembled.forEach(part => {
-    for (let i = 0; i < part.sequence.length; i++) {
-      colorMap.push(part.color.main);
-    }
-  });
-
-  // Tick header
-  let tickLine = ' '.repeat(6);
-  for (let i = tickEvery; i <= charsPerLine; i += tickEvery) {
-    tickLine += String(i).padStart(tickEvery);
-  }
-
-  for (let start = 0; start < totalSeq.length; start += charsPerLine) {
-    const lineNum = start + 1;
-    const chunk = totalSeq.slice(start, start + charsPerLine);
-
-    // Number
-    const numSpan = document.createElement('span');
-    numSpan.className = 'seq-line-number';
-    numSpan.textContent = String(lineNum).padStart(5);
-    container.appendChild(numSpan);
-
-    // Residues with color + tick marks
-    for (let j = 0; j < chunk.length; j++) {
-      const globalIdx = start + j;
-      const span = document.createElement('span');
-      span.textContent = chunk[j];
-      span.style.color = colorMap[globalIdx] || 'var(--text-primary)';
-      span.style.fontWeight = '500';
-      container.appendChild(span);
-
-      // Space every 10 for readability
-      if ((j + 1) % 10 === 0 && j < chunk.length - 1) {
-        const space = document.createElement('span');
-        space.textContent = ' ';
-        container.appendChild(space);
-      }
-    }
-
-    // End position
-    const endSpan = document.createElement('span');
-    endSpan.style.color = 'var(--text-tertiary)';
-    endSpan.style.fontSize = '10px';
-    endSpan.textContent = ` ${Math.min(start + charsPerLine, totalSeq.length)}`;
-    container.appendChild(endSpan);
-
-    container.appendChild(document.createTextNode('\n'));
-  }
-}
-
-function renderZone3() {
-  const zone3 = document.getElementById('zone3');
-  if (AppState.construct.parts.length === 0) {
-    zone3.classList.remove('visible');
-    return;
-  }
-  zone3.classList.add('visible');
-
-  // Find the first protein part with cached data
-  const proteinPart = AppState.construct.parts.find(p => p.type === 'protein' && p.accession);
-  const cached = proteinPart ? AppState.uniprotCache[proteinPart.accession] : null;
-
-  // Mutations
-  const mutPanel = document.getElementById('panelMutations');
-  if (cached && cached.mutations.length > 0) {
-    let html = '<table class="data-table"><thead><tr><th>Type</th><th>Position</th><th>Description</th></tr></thead><tbody>';
-    cached.mutations.forEach(m => {
-      html += `<tr><td>${m.type}</td><td class="pos-badge">${m.position}</td><td>${m.change}</td></tr>`;
-    });
-    html += '</tbody></table>';
-    mutPanel.innerHTML = html;
-  } else {
-    mutPanel.innerHTML = '<div class="empty-state">No mutations annotated for this protein</div>';
-  }
-
-  // Features
-  const featPanel = document.getElementById('panelFeatures');
-  if (cached && cached.features.length > 0) {
-    let html = '<table class="data-table"><thead><tr><th>Type</th><th>Position</th><th>Description</th></tr></thead><tbody>';
-    cached.features.forEach(f => {
-      html += `<tr><td>${f.type}</td><td class="pos-badge">${f.start}${f.end !== f.start ? '–' + f.end : ''}</td><td>${f.description}</td></tr>`;
-    });
-    html += '</tbody></table>';
-    featPanel.innerHTML = html;
-  } else {
-    featPanel.innerHTML = '<div class="empty-state">No additional features annotated</div>';
-  }
-
-  // Publications
-  const pubPanel = document.getElementById('panelPublications');
-  if (cached && cached.publications.length > 0) {
-    let html = '';
-    cached.publications.slice(0, 20).forEach(p => {
-      html += `<div class="pub-item">
-        <div class="pub-title">${p.title}</div>
-        <div class="pub-authors">${p.authors}</div>
-        <div class="pub-journal">${p.journal} ${p.year}</div>
-        ${p.pubmedId ? `<a class="pub-link" href="https://pubmed.ncbi.nlm.nih.gov/${p.pubmedId}" target="_blank" rel="noopener">PubMed ↗</a>` : ''}
-      </div>`;
-    });
-    pubPanel.innerHTML = html;
-  } else {
-    pubPanel.innerHTML = '<div class="empty-state">No publications found</div>';
-  }
-}
-
-// ========================================================
-// LOAD PROTEIN
-// ========================================================
-async function loadProtein(accession) {
-  const data = await fetchUniProtEntry(accession);
-  if (!data) {
-    alert('Failed to fetch protein data. Please try again.');
-    return;
-  }
-
-  const parsed = parseUniProtToProteinPart(data);
-  AppState.uniprotCache[accession] = parsed;
-
-  // If there's a signal peptide, add it as a separate part first
-  if (parsed.signalPeptide) {
-    // Remove signal from protein segments if it's the first segment
-    // (we extracted it separately)
-  }
-
-  // Add signal peptide as its own part
-  if (parsed.signalPeptide) {
-    AppState.construct.parts.push({
-      type: 'signal',
-      name: `${parsed.part.gene || parsed.part.name} signal`,
-      source: 'uniprot',
-      sequence: parsed.signalPeptide.sequence,
-      description: parsed.signalPeptide.description,
-      ss: new Array(parsed.signalPeptide.sequence.length).fill('loop'),
-    });
-  }
-
-  // Add the protein part
-  AppState.construct.parts.push(parsed.part);
-
-  // Close dropdown
-  document.getElementById('searchDropdown').classList.remove('visible');
-  document.getElementById('searchInput').value = '';
-
-  renderAll();
-}
-
-// ========================================================
-// PASTE SEQUENCE HANDLER
-// ========================================================
-function loadPastedSequence(raw) {
-  let seq = raw.trim();
-
-  // Handle FASTA
-  if (seq.startsWith('>')) {
-    const lines = seq.split('\n');
-    seq = lines.slice(1).join('').trim();
-  }
-
-  // Remove whitespace, numbers
-  seq = seq.replace(/[\s\d]/g, '').toUpperCase();
-
-  // Validate AA characters
-  const validAA = /^[ACDEFGHIKLMNPQRSTVWY]+$/;
-  if (!validAA.test(seq)) {
-    alert('Invalid amino acid characters detected. Please check your sequence.');
-    return;
-  }
-
-  if (seq.length < 5) {
-    alert('Sequence too short. Please enter at least 5 amino acids.');
-    return;
-  }
-
-  // Create a custom protein part
-  AppState.construct.parts.push({
-    type: 'protein',
-    name: 'Custom protein',
-    gene: '—',
-    organism: '—',
-    accession: null,
-    source: 'custom',
-    fullSequence: seq,
-    length: seq.length,
-    mw: calculateMW(seq),
-    segments: [{
-      name: 'Custom protein',
-      type: 'full',
-      start: 1,
-      end: seq.length,
-      sequence: seq,
-      description: 'Pasted sequence',
-      active: true,
-      ss: new Array(seq.length).fill('loop'),
-    }],
-    expanded: false,
-  });
-
-  // Store minimal cache for Zone 3
-  AppState.uniprotCache['custom'] = {
-    mutations: [],
-    features: [],
-    publications: [],
-  };
-
-  document.getElementById('pasteTextarea').value = '';
-  document.getElementById('pasteArea').classList.remove('visible');
-
-  renderAll();
-}
-
-// ========================================================
-// EVENT LISTENERS
-// ========================================================
-document.addEventListener('DOMContentLoaded', () => {
-
-  // Expression system toggle
-  document.querySelectorAll('.expression-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.expression-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      AppState.expressionSystem = btn.dataset.system;
-    });
-  });
-
-  // Mode toggle (search / paste)
-  document.querySelectorAll('.mode-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      AppState.searchMode = btn.dataset.mode;
-      const pasteArea = document.getElementById('pasteArea');
-      const searchInput = document.getElementById('searchInput');
-      if (btn.dataset.mode === 'paste') {
-        pasteArea.classList.add('visible');
-        searchInput.disabled = true;
-        searchInput.style.opacity = '0.5';
-      } else {
-        pasteArea.classList.remove('visible');
-        searchInput.disabled = false;
-        searchInput.style.opacity = '1';
-      }
-    });
-  });
-
-  // Search input
-  const searchInput = document.getElementById('searchInput');
-  const dropdown = document.getElementById('searchDropdown');
-
-  searchInput.addEventListener('input', () => {
-    clearTimeout(searchDebounce);
-    const query = searchInput.value.trim();
-    if (query.length < 2) {
-      dropdown.classList.remove('visible');
-      return;
-    }
-    dropdown.innerHTML = '<div class="search-loading">Searching UniProt…</div>';
-    dropdown.classList.add('visible');
-
-    searchDebounce = setTimeout(async () => {
-      const results = await searchUniProt(query);
-      if (results.length === 0) {
-        dropdown.innerHTML = '<div class="search-loading">No results found</div>';
-        return;
-      }
-      dropdown.innerHTML = '';
-      results.forEach(r => {
-        const div = document.createElement('div');
-        div.className = 'search-result';
-        div.innerHTML = `
-          <div class="search-result-name">
-            ${r.name}
-            <span class="search-result-badge ${r.reviewed ? 'badge-reviewed' : 'badge-unreviewed'}">
-              ${r.reviewed ? '★ Reviewed' : 'Unreviewed'}
-            </span>
-          </div>
-          <div class="search-result-meta">
-            ${r.accession} · ${r.gene} · ${r.organism} · ${r.length} aa
-          </div>
-        `;
-        div.addEventListener('click', () => loadProtein(r.accession));
-        dropdown.appendChild(div);
-      });
-    }, 350);
-  });
-
-  // Close dropdown on outside click
-  document.addEventListener('click', (e) => {
-    if (!e.target.closest('.search-container')) {
-      dropdown.classList.remove('visible');
-    }
-  });
-
-  // Paste sequence
-  document.getElementById('pasteLoadBtn').addEventListener('click', () => {
-    const val = document.getElementById('pasteTextarea').value;
-    if (val.trim()) loadPastedSequence(val);
-  });
-
-  document.getElementById('pasteClearBtn').addEventListener('click', () => {
-    document.getElementById('pasteTextarea').value = '';
-  });
-
-  // Change button — removes the construct, returns to search
-  document.getElementById('changeBtn').addEventListener('click', () => {
-    if (confirm('Remove this construct and start over?')) {
-      AppState.construct.parts = [];
-      AppState.expandedParts.clear();
-      AppState.uniprotCache = {};
-      renderAll();
-    }
-  });
-
-  // Copy FASTA
-  document.getElementById('copyFastaBtn').addEventListener('click', () => {
-    const seq = getAssembledSequence();
-    const proteinPart = AppState.construct.parts.find(p => p.type === 'protein');
-    const header = `>${proteinPart?.name || 'Construct'} | ${seq.length} aa | Designed with ConstructAI`;
-    const fasta = header + '\n' + seq.match(/.{1,60}/g).join('\n');
-    navigator.clipboard.writeText(fasta).then(() => {
-      const btn = document.getElementById('copyFastaBtn');
-      btn.textContent = 'Copied!';
-      setTimeout(() => { btn.textContent = 'Copy FASTA'; }, 1500);
-    });
-  });
-
-  // Zone 3 tabs
-  document.querySelectorAll('.zone3-tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-      document.querySelectorAll('.zone3-tab').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.zone3-panel').forEach(p => p.classList.remove('visible'));
-      tab.classList.add('active');
-      const target = tab.dataset.z3tab;
-      const panelMap = { mutations: 'panelMutations', features: 'panelFeatures', publications: 'panelPublications' };
-      document.getElementById(panelMap[target]).classList.add('visible');
-    });
-  });
-
-  // Library tabs (placeholder for now)
-  document.querySelectorAll('.library-tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-      document.querySelectorAll('.library-tab').forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-    });
-  });
-
-  // Initial render
-  renderAll();
+function parseUniProtToProteinPart(data){
+const accession=data.primaryAccession;
+const name=data.proteinDescription?.recommendedName?.fullName?.value||data.proteinDescription?.submissionNames?.[0]?.fullName?.value||accession;
+const gene=data.genes?.[0]?.geneName?.value||data.genes?.[0]?.orfNames?.[0]?.value||'—';
+const organism=data.organism?.scientificName||'—';
+const fullSeq=data.sequence?.value||'';const length=fullSeq.length;const mw=data.sequence?.molWeight||(length*110);
+const features=data.features||[];
+const segmentTypes=new Set(['Domain','Region','Repeat','Motif','Transmembrane','Intramembrane','Topological domain','Coiled coil','Compositional bias','Zinc finger','DNA binding','Propeptide','Transit peptide']);
+let signalPeptide=null;const domainFeatures=[];const topoFeatures=[];
+features.forEach(f=>{const start=f.location?.start?.value;const end=f.location?.end?.value;if(!start||!end)return;
+if(f.type==='Signal peptide'||f.type==='Signal'){signalPeptide={name:'Signal peptide',type:'Signal peptide',start,end,sequence:fullSeq.slice(start-1,end),description:f.description||'Native signal peptide'};}
+else if(f.type==='Topological domain'){const desc=(f.description||'').toLowerCase();topoFeatures.push({type:desc.includes('cytoplasmic')?'cytoplasmic':desc.includes('extracellular')?'extracellular':desc.includes('lumenal')?'lumenal':'other',label:f.description||'Topological domain',start,end});}
+else if(f.type==='Transmembrane'){topoFeatures.push({type:'membrane',label:'TM',start,end});domainFeatures.push({uniprotType:'Transmembrane',name:f.description||'Transmembrane',start,end,sequence:fullSeq.slice(start-1,end),description:f.description||'Transmembrane domain',isTM:true});}
+else if(segmentTypes.has(f.type)&&f.type!=='Topological domain'){domainFeatures.push({uniprotType:f.type,name:f.description||f.type,start,end,sequence:fullSeq.slice(start-1,end),description:f.description||'',isTM:false});}
 });
+domainFeatures.sort((a,b)=>a.start-b.start);topoFeatures.sort((a,b)=>a.start-b.start);
+const segments=[];let cursor=signalPeptide?signalPeptide.end+1:1;
+domainFeatures.forEach(df=>{
+if(df.start>cursor){segments.push({name:`Region ${cursor}–${df.start-1}`,type:'unannotated',start:cursor,end:df.start-1,sequence:fullSeq.slice(cursor-1,df.start-1),description:'Unannotated region',active:true,isTM:false});}
+if(df.start>=cursor){segments.push({name:df.name,type:df.uniprotType,start:df.start,end:df.end,sequence:df.sequence,description:df.description,active:true,isTM:df.isTM||false});cursor=df.end+1;}
+});
+if(cursor<=length){segments.push({name:segments.length>0?`Region ${cursor}–${length}`:name,type:segments.length>0?'unannotated':'full',start:cursor,end:length,sequence:fullSeq.slice(cursor-1),description:segments.length>0?'Unannotated region':'Full protein sequence',active:true,isTM:false});}
+if(segments.length===0){segments.push({name,type:'full',start:1,end:length,sequence:fullSeq,description:'Full protein sequence',active:true,isTM:false});}
+const ssPerResidue=new Array(length).fill('loop');
+features.forEach(f=>{const start=f.location?.start?.value;const end=f.location?.end?.value;if(!start||!end)return;
+if(f.type==='Helix')for(let i=start-1;i<end&&i<length;i++)ssPerResidue[i]='helix';
+else if(f.type==='Beta strand')for(let i=start-1;i<end&&i<length;i++)ssPerResidue[i]='strand';});
+segments.forEach(seg=>{seg.ss=ssPerResidue.slice(seg.start-1,seg.end);});
+const mutations=features.filter(f=>f.type==='Natural variant'||f.type==='Mutagenesis').map(f=>({type:f.type,position:f.location?.start?.value||'?',change:f.description||''}));
+const otherFeatures=features.filter(f=>!segmentTypes.has(f.type)&&!['Signal peptide','Signal','Helix','Beta strand','Turn','Natural variant','Mutagenesis'].includes(f.type)).map(f=>({type:f.type,start:f.location?.start?.value||'?',end:f.location?.end?.value||'?',description:f.description||f.type}));
+const publications=(data.references||[]).map(ref=>({title:ref.citation?.title||'Untitled',authors:(ref.citation?.authors||[]).slice(0,5).join(', ')+((ref.citation?.authors||[]).length>5?' et al.':''),journal:ref.citation?.journal||'',year:ref.citation?.publicationDate||'',pubmedId:ref.citation?.citationCrossReferences?.find(x=>x.database==='PubMed')?.id||null}));
+return{part:{type:'protein',name,gene,organism,accession,source:'uniprot',fullSequence:fullSeq,length,mw,segments,expanded:false},signalPeptide,topoFeatures,mutations,features:otherFeatures,publications,ssPerResidue};
+}
+
+function getAssembledSequence(){let seq='';AppState.construct.parts.forEach(p=>{if(p.type==='protein')p.segments.filter(s=>s.active).forEach(s=>{seq+=s.sequence});else seq+=p.sequence||''});return seq;}
+
+function getAssembledParts(){
+const result=[];let dci=0;
+AppState.construct.parts.forEach((part,pi)=>{
+if(part.type==='protein'){part.segments.filter(s=>s.active).forEach((seg,si)=>{
+let color;if(seg.isTM)color={main:'#374151',bg:'#f3f4f6',border:'#9ca3af'};else if(seg.type==='unannotated')color={main:'#94a3b8',bg:'#f1f5f9',border:'#cbd5e1'};else{color=DOMAIN_COLORS[dci%DOMAIN_COLORS.length];dci++;}
+result.push({sequence:seg.sequence,ss:seg.ss||[],color,name:seg.name,type:seg.type,partIndex:pi,segIndex:si,isProteinSegment:true,isTM:seg.isTM||false,isUnannotated:seg.type==='unannotated',start:seg.start,end:seg.end});
+});}else{const color=PART_COLORS[part.type]||PART_COLORS.tag;result.push({sequence:part.sequence||'',ss:new Array((part.sequence||'').length).fill('loop'),color,name:part.name,type:part.type,partIndex:pi,segIndex:-1,isProteinSegment:false,isTM:false,isUnannotated:false,start:null,end:null});}
+});return result;}
+
+function calculateMW(seq){const t={A:71.08,R:156.19,N:114.10,D:115.09,C:103.14,E:129.12,Q:128.13,G:57.05,H:137.14,I:113.16,L:113.16,K:128.17,M:131.20,F:147.18,P:97.12,S:87.08,T:101.10,W:186.21,Y:163.18,V:99.13};let mw=18.02;for(const aa of seq.toUpperCase())mw+=t[aa]||110;return mw;}
+function calculateExtinctionCoeff(seq){const s=seq.toUpperCase();return(s.match(/Y/g)||[]).length*1490+(s.match(/W/g)||[]).length*5500+Math.floor((s.match(/C/g)||[]).length/2)*125;}
+function ssComposition(ssArr){if(!ssArr||ssArr.length===0)return'';const h=ssArr.filter(s=>s==='helix').length;const st=ssArr.filter(x=>x==='strand').length;const total=ssArr.length;const parts=[];if(h>0)parts.push(`${Math.round(h/total*100)}% α`);if(st>0)parts.push(`${Math.round(st/total*100)}% β`);return parts.length===0?'100% loop':parts.join(', ');}
+
+function renderAll(){renderZone1();renderZone2();renderZone3();}
+
+function renderZone1(){
+const card=document.getElementById('zone1Card');const landing=document.getElementById('landingState');
+if(AppState.construct.parts.length===0){card.classList.remove('visible');landing.style.display='';return;}
+landing.style.display='none';card.classList.add('visible');
+const proteinPart=AppState.construct.parts.find(p=>p.type==='protein');const metaEl=document.getElementById('proteinMeta');
+if(proteinPart){const totalSeq=getAssembledSequence();const totalMW=calculateMW(totalSeq);
+metaEl.innerHTML=`<div class="protein-meta-item"><span class="meta-label">Protein</span><span class="meta-value">${proteinPart.name}</span></div><div class="protein-meta-item"><span class="meta-label">Gene</span><span class="meta-value">${proteinPart.gene||'—'}</span></div><div class="protein-meta-item"><span class="meta-label">Organism</span><span class="meta-value">${proteinPart.organism||'—'}</span></div><div class="protein-meta-item"><span class="meta-label">Length</span><span class="meta-value">${totalSeq.length} aa</span></div><div class="protein-meta-item"><span class="meta-label">MW</span><span class="meta-value">${(totalMW/1000).toFixed(1)} kDa</span></div>`;}
+const assembled=getAssembledParts();const totalLen=assembled.reduce((a,p)=>a+p.sequence.length,0);
+// Topology track
+const topoW=document.getElementById('topoTrackWrapper');const topoT=document.getElementById('topoTrack');const topoL=document.getElementById('topoLegend');
+if(AppState.topoData.length>0){topoW.style.display='';topoL.style.display='';topoT.innerHTML='';
+const proteinP=AppState.construct.parts.find(p=>p.type==='protein');const pLen=proteinP?proteinP.fullSequence.length:totalLen;
+AppState.topoData.forEach(t=>{const pct=((t.end-t.start+1)/pLen*100).toFixed(2);const div=document.createElement('div');div.className='topo-segment';div.style.width=`${pct}%`;
+const colors={extracellular:'var(--topo-extra)',cytoplasmic:'var(--topo-cyto)',membrane:'var(--topo-membrane)',lumenal:'var(--topo-lumenal)',other:'#9ca3af'};
+div.style.background=colors[t.type]||'#9ca3af';if(t.type==='membrane')div.style.backgroundImage='repeating-linear-gradient(45deg,transparent,transparent 2px,rgba(255,255,255,0.3) 2px,rgba(255,255,255,0.3) 4px)';
+if((t.end-t.start+1)/pLen>0.06)div.textContent=t.label.length>14?t.label.slice(0,12)+'…':t.label;topoT.appendChild(div);});}
+else{topoW.style.display='none';topoL.style.display='none';}
+// Construct bar
+const barEl=document.getElementById('constructBar');barEl.innerHTML='';
+assembled.forEach(part=>{const pct=(part.sequence.length/totalLen*100).toFixed(2);const div=document.createElement('div');div.className='construct-bar-segment';if(part.isTM)div.classList.add('tm-segment');if(part.isUnannotated)div.classList.add('unannotated-segment');div.style.width=`${pct}%`;div.style.backgroundColor=part.color.main;
+if(part.sequence.length/totalLen>0.06){const label=document.createElement('span');label.style.position='relative';label.style.zIndex='1';label.textContent=part.name.length>14?part.name.slice(0,12)+'…':part.name;div.appendChild(label);}
+const tooltip=document.createElement('div');tooltip.className='bar-tooltip';const rangeText=part.start?`${part.start}–${part.end}`:`${part.sequence.length} aa`;
+tooltip.innerHTML=`<div class="bar-tooltip-name">${part.name}</div><div class="bar-tooltip-range">${rangeText} · ${part.sequence.length} aa</div><div class="bar-tooltip-ss">${ssComposition(part.ss)}</div>`;
+div.appendChild(tooltip);barEl.appendChild(div);});
+// Domain legend
+const legendList=document.getElementById('domainLegendList');legendList.innerHTML='';
+assembled.forEach(part=>{const item=document.createElement('div');item.className='domain-legend-item';const rng=part.start?`${part.start}–${part.end}`:`${part.sequence.length}aa`;
+item.innerHTML=`<div class="domain-legend-swatch" style="background:${part.color.main}${part.isTM?';background-image:repeating-linear-gradient(45deg,transparent,transparent 2px,rgba(255,255,255,0.4) 2px,rgba(255,255,255,0.4) 3px)':''}"></div><span class="domain-legend-name" title="${part.name}">${part.name}</span><span class="domain-legend-range">${rng}</span>`;legendList.appendChild(item);});
+// SS track
+const ssTrackEl=document.getElementById('ssTrack');ssTrackEl.innerHTML='';let allSS=[];assembled.forEach(p=>{allSS=allSS.concat(p.ss);});
+if(allSS.length>0){let runs=[],ct=allSS[0],cnt=1;for(let i=1;i<allSS.length;i++){if(allSS[i]===ct)cnt++;else{runs.push({type:ct,count:cnt});ct=allSS[i];cnt=1;}}runs.push({type:ct,count:cnt});
+runs.forEach(run=>{const div=document.createElement('div');div.className='ss-residue';div.style.width=`${(run.count/allSS.length*100).toFixed(3)}%`;div.style.background=run.type==='helix'?'var(--ss-helix)':run.type==='strand'?'var(--ss-strand)':'var(--ss-loop)';ssTrackEl.appendChild(div);});}
+// Ruler
+const rulerEl=document.getElementById('ruler');rulerEl.innerHTML='';
+if(totalLen>0){const step=totalLen<100?10:totalLen<500?50:totalLen<2000?100:200;for(let i=step;i<=totalLen;i+=step){const tick=document.createElement('div');tick.className='ruler-tick';tick.style.left=`${(i/totalLen*100).toFixed(2)}%`;tick.textContent=i;rulerEl.appendChild(tick);}}
+// Zone 1 sequence with spacing
+const seqEl=document.getElementById('zone1Sequence');seqEl.innerHTML='';let gpos=0;
+assembled.forEach(part=>{for(const aa of part.sequence){const span=document.createElement('span');span.className='seq-residue';span.textContent=aa;span.style.color=part.color.main;seqEl.appendChild(span);gpos++;if(gpos%10===0){const sp=document.createElement('span');sp.textContent=' ';seqEl.appendChild(sp);}}});
+}
+
+function renderZone2(){
+const zone2=document.getElementById('zone2');if(AppState.construct.parts.length===0){zone2.classList.remove('visible');return;}zone2.classList.add('visible');
+const strip=document.getElementById('constructStrip');const stripEmpty=document.getElementById('stripEmpty');strip.querySelectorAll('.part-card,.strip-arrow').forEach(el=>el.remove());
+if(AppState.construct.parts.length===0){stripEmpty.style.display='';return;}stripEmpty.style.display='none';
+const cTermLabel=strip.querySelector('.strip-term-c');
+AppState.construct.parts.forEach((part,idx)=>{
+if(idx>0){const arrow=document.createElement('span');arrow.className='strip-arrow';arrow.textContent='→';strip.insertBefore(arrow,cTermLabel);}
+const card=document.createElement('div');card.className='part-card'+(AppState.expandedParts.has(idx)?' expanded':'');
+const typeColor=part.type==='protein'?DOMAIN_COLORS[0]:(PART_COLORS[part.type]||PART_COLORS.tag);card.style.borderColor=typeColor.border;card.style.background=typeColor.bg;
+const seq=part.type==='protein'?part.segments.filter(s=>s.active).map(s=>s.sequence).join(''):(part.sequence||'');
+let rangeInfo='';if(part.type!=='protein'&&part.sequence){rangeInfo=`<div class="part-card-range">${part.originalRange||part.sequence.length+' aa'}</div>`;}
+let expandIcon='';if(part.type==='protein'&&part.segments.length>1)expandIcon=`<div class="part-card-expand-icon">${AppState.expandedParts.has(idx)?'▼':'▶'}</div>`;
+card.innerHTML=`${expandIcon}<button class="part-card-remove" data-idx="${idx}" title="Remove">×</button><div class="part-card-type" style="color:${typeColor.main}">${part.type.toUpperCase()}</div><div class="part-card-name">${part.name}</div>${rangeInfo}<div class="part-card-seq">${seq.slice(0,16)}${seq.length>16?'…':''}</div>`;
+if(part.type==='protein'&&part.segments.length>1){
+const domainsDiv=document.createElement('div');domainsDiv.className='part-card-domains';const substrip=document.createElement('div');substrip.className='domain-substrip';
+let dci=0;part.segments.forEach((seg,si)=>{let sc;if(seg.isTM)sc={main:'#374151',bg:'#f3f4f6',border:'#9ca3af'};else if(seg.type==='unannotated')sc={main:'#94a3b8',bg:'#f1f5f9',border:'#cbd5e1'};else{sc=DOMAIN_COLORS[dci%DOMAIN_COLORS.length];dci++;}
+const subcard=document.createElement('div');subcard.className='domain-subcard';subcard.style.borderColor=sc.border;subcard.style.background=seg.active?sc.bg:'#f9fafb';subcard.style.opacity=seg.active?'1':'0.5';
+subcard.innerHTML=`<div class="domain-subcard-name" style="color:${sc.main}">${seg.name}${seg.isTM?' 🔶':''}</div><div class="domain-subcard-range">${seg.start}–${seg.end} (${seg.sequence.length} aa)</div><div class="domain-subcard-active"><input type="checkbox" class="domain-toggle" data-part="${idx}" data-seg="${si}" ${seg.active?'checked':''}><span style="font-size:10px;color:var(--text-tertiary)">${seg.active?'Active':'Inactive'}</span></div>`;
+substrip.appendChild(subcard);});domainsDiv.appendChild(substrip);card.appendChild(domainsDiv);
+card.addEventListener('click',e=>{if(e.target.classList.contains('domain-toggle')||e.target.classList.contains('part-card-remove'))return;if(AppState.expandedParts.has(idx))AppState.expandedParts.delete(idx);else AppState.expandedParts.add(idx);renderAll();});
+}
+strip.insertBefore(card,cTermLabel);});
+strip.querySelectorAll('.part-card-remove').forEach(btn=>{btn.addEventListener('click',e=>{e.stopPropagation();const idx=parseInt(btn.dataset.idx);AppState.construct.parts.splice(idx,1);AppState.expandedParts.delete(idx);const nE=new Set();AppState.expandedParts.forEach(i=>{if(i<idx)nE.add(i);else if(i>idx)nE.add(i-1);});AppState.expandedParts=nE;renderAll();});});
+strip.querySelectorAll('.domain-toggle').forEach(cb=>{cb.addEventListener('click',e=>{e.stopPropagation();const pi=parseInt(cb.dataset.part);const si=parseInt(cb.dataset.seg);AppState.construct.parts[pi].segments[si].active=cb.checked;renderAll();});});
+// Stats
+const totalSeq=getAssembledSequence();const statsEl=document.getElementById('constructStats');
+if(totalSeq.length>0){statsEl.style.display='';document.getElementById('statLength').textContent=totalSeq.length;document.getElementById('statMW').textContent=(calculateMW(totalSeq)/1000).toFixed(1);document.getElementById('statExtCoeff').textContent=calculateExtinctionCoeff(totalSeq).toLocaleString();}else{statsEl.style.display='none';}
+// Sequence color legend
+const assembled=getAssembledParts();const headerEl=document.getElementById('seqViewerHeader');
+if(totalSeq.length>0){headerEl.style.display='';headerEl.innerHTML='';assembled.forEach(part=>{const item=document.createElement('div');item.className='seq-legend-item';item.innerHTML=`<div class="seq-legend-swatch" style="background:${part.color.main}"></div><span class="seq-legend-name">${part.name}</span>`;headerEl.appendChild(item);});}else{headerEl.style.display='none';}
+// Sequence viewer
+const viewer=document.getElementById('sequenceViewer');
+if(totalSeq.length>0){viewer.style.display='';viewer.innerHTML='';const colorMap=[];assembled.forEach(p=>{for(let i=0;i<p.sequence.length;i++)colorMap.push(p.color.main);});
+for(let start=0;start<totalSeq.length;start+=60){const numSpan=document.createElement('span');numSpan.className='seq-line-number';numSpan.textContent=String(start+1).padStart(5);viewer.appendChild(numSpan);
+const chunk=totalSeq.slice(start,start+60);for(let j=0;j<chunk.length;j++){const span=document.createElement('span');span.textContent=chunk[j];span.style.color=colorMap[start+j]||'var(--text-primary)';span.style.fontWeight='500';viewer.appendChild(span);if((j+1)%10===0&&j<chunk.length-1){const sp=document.createElement('span');sp.textContent=' ';viewer.appendChild(sp);}}
+const endSpan=document.createElement('span');endSpan.style.color='var(--text-tertiary)';endSpan.style.fontSize='10px';endSpan.textContent=` ${Math.min(start+60,totalSeq.length)}`;viewer.appendChild(endSpan);viewer.appendChild(document.createTextNode('\n'));}}else{viewer.style.display='none';}
+}
+
+function renderZone3(){
+const zone3=document.getElementById('zone3');if(AppState.construct.parts.length===0){zone3.classList.remove('visible');return;}zone3.classList.add('visible');
+const proteinPart=AppState.construct.parts.find(p=>p.type==='protein'&&p.accession);const cached=proteinPart?AppState.uniprotCache[proteinPart.accession]:null;
+const mutPanel=document.getElementById('panelMutations');
+if(cached&&cached.mutations.length>0){let html='<table class="data-table"><thead><tr><th>Type</th><th>Position</th><th>Description</th></tr></thead><tbody>';cached.mutations.forEach(m=>{html+=`<tr><td>${m.type}</td><td class="pos-badge">${m.position}</td><td>${m.change}</td></tr>`;});html+='</tbody></table>';mutPanel.innerHTML=html;}else{mutPanel.innerHTML='<div class="empty-state">No mutations annotated for this protein</div>';}
+const featPanel=document.getElementById('panelFeatures');
+if(cached&&cached.features.length>0){let html='<table class="data-table"><thead><tr><th>Type</th><th>Position</th><th>Description</th></tr></thead><tbody>';cached.features.forEach(f=>{html+=`<tr><td>${f.type}</td><td class="pos-badge">${f.start}${f.end!==f.start?'–'+f.end:''}</td><td>${f.description}</td></tr>`;});html+='</tbody></table>';featPanel.innerHTML=html;}else{featPanel.innerHTML='<div class="empty-state">No additional features annotated</div>';}
+const pubPanel=document.getElementById('panelPublications');
+if(cached&&cached.publications.length>0){let html='';cached.publications.slice(0,20).forEach(p=>{html+=`<div class="pub-item"><div class="pub-title">${p.title}</div><div class="pub-authors">${p.authors}</div><div class="pub-journal">${p.journal} ${p.year}</div>${p.pubmedId?`<a class="pub-link" href="https://pubmed.ncbi.nlm.nih.gov/${p.pubmedId}" target="_blank" rel="noopener">PubMed ↗</a>`:''}</div>`;});pubPanel.innerHTML=html;}else{pubPanel.innerHTML='<div class="empty-state">No publications found</div>';}
+}
+
+async function loadProtein(accession){
+const data=await fetchUniProtEntry(accession);if(!data){alert('Failed to fetch protein data.');return;}
+const parsed=parseUniProtToProteinPart(data);AppState.uniprotCache[accession]=parsed;
+if(parsed.topoFeatures.length>0)AppState.topoData=parsed.topoFeatures;
+if(parsed.signalPeptide){AppState.construct.parts.push({type:'signal',name:`${parsed.part.gene||parsed.part.name} signal`,source:'uniprot',sequence:parsed.signalPeptide.sequence,description:parsed.signalPeptide.description,originalRange:`${parsed.signalPeptide.start}–${parsed.signalPeptide.end}`,ss:new Array(parsed.signalPeptide.sequence.length).fill('loop')});}
+AppState.construct.parts.push(parsed.part);
+document.getElementById('searchDropdown').classList.remove('visible');document.getElementById('searchInput').value='';renderAll();}
+
+function loadPastedSequence(raw){let seq=raw.trim();if(seq.startsWith('>')){const lines=seq.split('\n');seq=lines.slice(1).join('').trim();}seq=seq.replace(/[\s\d]/g,'').toUpperCase();
+if(!/^[ACDEFGHIKLMNPQRSTVWY]+$/.test(seq)){alert('Invalid amino acid characters detected.');return;}if(seq.length<5){alert('Sequence too short (min 5 aa).');return;}
+AppState.construct.parts.push({type:'protein',name:'Custom protein',gene:'—',organism:'—',accession:null,source:'custom',fullSequence:seq,length:seq.length,mw:calculateMW(seq),segments:[{name:'Custom protein',type:'full',start:1,end:seq.length,sequence:seq,description:'Pasted sequence',active:true,isTM:false,ss:new Array(seq.length).fill('loop')}],expanded:false});
+AppState.uniprotCache['custom']={mutations:[],features:[],publications:[]};document.getElementById('pasteTextarea').value='';document.getElementById('pasteArea').classList.remove('visible');renderAll();}
+
+document.addEventListener('DOMContentLoaded',()=>{
+document.querySelectorAll('.expression-btn').forEach(btn=>{btn.addEventListener('click',()=>{document.querySelectorAll('.expression-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');AppState.expressionSystem=btn.dataset.system;});});
+document.querySelectorAll('.mode-btn').forEach(btn=>{btn.addEventListener('click',()=>{document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');const pa=document.getElementById('pasteArea');const si=document.getElementById('searchInput');if(btn.dataset.mode==='paste'){pa.classList.add('visible');si.disabled=true;si.style.opacity='0.5';}else{pa.classList.remove('visible');si.disabled=false;si.style.opacity='1';}});});
+const searchInput=document.getElementById('searchInput');const dropdown=document.getElementById('searchDropdown');
+searchInput.addEventListener('input',()=>{clearTimeout(searchDebounce);const query=searchInput.value.trim();if(query.length<2){dropdown.classList.remove('visible');return;}dropdown.innerHTML='<div class="search-loading">Searching UniProt…</div>';dropdown.classList.add('visible');
+searchDebounce=setTimeout(async()=>{const results=await searchUniProt(query);if(results.length===0){dropdown.innerHTML='<div class="search-loading">No results found</div>';return;}dropdown.innerHTML='';
+results.forEach(r=>{const div=document.createElement('div');div.className='search-result';div.innerHTML=`<div class="search-result-name">${r.name}<span class="search-result-badge ${r.reviewed?'badge-reviewed':'badge-unreviewed'}">${r.reviewed?'★ Reviewed':'Unreviewed'}</span></div><div class="search-result-meta">${r.accession} · ${r.gene} · ${r.organism} · ${r.length} aa</div>`;
+div.addEventListener('click',()=>loadProtein(r.accession));dropdown.appendChild(div);});},350);});
+document.addEventListener('click',e=>{if(!e.target.closest('.search-container'))dropdown.classList.remove('visible');});
+document.getElementById('pasteLoadBtn').addEventListener('click',()=>{const val=document.getElementById('pasteTextarea').value;if(val.trim())loadPastedSequence(val);});
+document.getElementById('pasteClearBtn').addEventListener('click',()=>{document.getElementById('pasteTextarea').value='';});
+document.getElementById('changeBtn').addEventListener('click',()=>{if(confirm('Clear entire construct and start over?')){AppState.construct.parts=[];AppState.expandedParts.clear();AppState.uniprotCache={};AppState.topoData=[];renderAll();}});
+document.getElementById('copyFastaBtn').addEventListener('click',()=>{const seq=getAssembledSequence();const pp=AppState.construct.parts.find(p=>p.type==='protein');const header=`>${pp?.name||'Construct'} | ${seq.length} aa | Designed with ConstructAI`;const fasta=header+'\n'+seq.match(/.{1,60}/g).join('\n');navigator.clipboard.writeText(fasta).then(()=>{const btn=document.getElementById('copyFastaBtn');btn.textContent='Copied!';setTimeout(()=>{btn.textContent='Copy FASTA';},1500);});});
+document.querySelectorAll('.zone3-tab').forEach(tab=>{tab.addEventListener('click',()=>{document.querySelectorAll('.zone3-tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.zone3-panel').forEach(p=>p.classList.remove('visible'));tab.classList.add('active');const m={mutations:'panelMutations',features:'panelFeatures',publications:'panelPublications'};document.getElementById(m[tab.dataset.z3tab]).classList.add('visible');});});
+document.querySelectorAll('.library-tab').forEach(tab=>{tab.addEventListener('click',()=>{document.querySelectorAll('.library-tab').forEach(t=>t.classList.remove('active'));tab.classList.add('active');});});
+renderAll();});
 </script>
 </body>
 </html>
