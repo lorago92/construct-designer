@@ -257,7 +257,7 @@ let signalPeptide=null;const domainFeatures=[];const topoFeatures=[];
 features.forEach(f=>{const start=f.location?.start?.value;const end=f.location?.end?.value;if(!start||!end)return;
 if(f.type==='Signal peptide'||f.type==='Signal'){signalPeptide={name:'Signal peptide',type:'Signal peptide',start,end,sequence:fullSeq.slice(start-1,end),description:f.description||'Native signal peptide'};}
 else if(f.type==='Topological domain'){const desc=(f.description||'').toLowerCase();topoFeatures.push({type:desc.includes('cytoplasmic')?'cytoplasmic':desc.includes('extracellular')?'extracellular':desc.includes('lumenal')?'lumenal':'other',label:f.description||'Topological domain',start,end});}
-else if(f.type==='Transmembrane'){topoFeatures.push({type:'membrane',label:'TM',start,end});domainFeatures.push({uniprotType:'Transmembrane',name:f.description||'Transmembrane',start,end,sequence:fullSeq.slice(start-1,end),description:f.description||'Transmembrane domain',isTM:true});}
+else if(f.type==='Transmembrane'){topoFeatures.push({type:'membrane',label:'TM',start,end});domainFeatures.push({uniprotType:'Transmembrane',name:'Transmembrane',start,end,sequence:fullSeq.slice(start-1,end),description:f.description?'Transmembrane ('+f.description+')':'Transmembrane domain',isTM:true});}
 else if(segmentTypes.has(f.type)&&f.type!=='Topological domain'){domainFeatures.push({uniprotType:f.type,name:f.description||f.type,start,end,sequence:fullSeq.slice(start-1,end),description:f.description||'',isTM:false});}
 });
 domainFeatures.sort((a,b)=>a.start-b.start);topoFeatures.sort((a,b)=>a.start-b.start);
@@ -292,6 +292,7 @@ result.push({sequence:seg.sequence,ss:seg.ss||[],color,name:seg.name,type:seg.ty
 
 function calculateMW(seq){const t={A:71.08,R:156.19,N:114.10,D:115.09,C:103.14,E:129.12,Q:128.13,G:57.05,H:137.14,I:113.16,L:113.16,K:128.17,M:131.20,F:147.18,P:97.12,S:87.08,T:101.10,W:186.21,Y:163.18,V:99.13};let mw=18.02;for(const aa of seq.toUpperCase())mw+=t[aa]||110;return mw;}
 function calculateExtinctionCoeff(seq){const s=seq.toUpperCase();return(s.match(/Y/g)||[]).length*1490+(s.match(/W/g)||[]).length*5500+Math.floor((s.match(/C/g)||[]).length/2)*125;}
+function shortName(name){if(!name)return'';const semi=name.indexOf(';');return semi>0?name.slice(0,semi):name;}
 function ssComposition(ssArr){if(!ssArr||ssArr.length===0)return'';const h=ssArr.filter(s=>s==='helix').length;const st=ssArr.filter(x=>x==='strand').length;const total=ssArr.length;const parts=[];if(h>0)parts.push(`${Math.round(h/total*100)}% α`);if(st>0)parts.push(`${Math.round(st/total*100)}% β`);return parts.length===0?'100% loop':parts.join(', ');}
 
 function renderAll(){renderZone1();renderZone2();renderZone3();}
@@ -316,14 +317,14 @@ else{topoW.style.display='none';topoL.style.display='none';}
 // Construct bar
 const barEl=document.getElementById('constructBar');barEl.innerHTML='';
 assembled.forEach(part=>{const pct=(part.sequence.length/totalLen*100).toFixed(2);const div=document.createElement('div');div.className='construct-bar-segment';if(part.isTM)div.classList.add('tm-segment');if(part.isUnannotated)div.classList.add('unannotated-segment');div.style.width=`${pct}%`;div.style.backgroundColor=part.color.main;
-if(part.sequence.length/totalLen>0.06){const label=document.createElement('span');label.style.position='relative';label.style.zIndex='1';label.textContent=part.name.length>14?part.name.slice(0,12)+'…':part.name;div.appendChild(label);}
+if(part.sequence.length/totalLen>0.06){const label=document.createElement('span');label.style.position='relative';label.style.zIndex='1';const sn=shortName(part.name);label.textContent=sn.length>14?sn.slice(0,12)+'…':sn;div.appendChild(label);}
 const tooltip=document.createElement('div');tooltip.className='bar-tooltip';const rangeText=part.start?`${part.start}–${part.end}`:`${part.sequence.length} aa`;
 tooltip.innerHTML=`<div class="bar-tooltip-name">${part.name}</div><div class="bar-tooltip-range">${rangeText} · ${part.sequence.length} aa</div><div class="bar-tooltip-ss">${ssComposition(part.ss)}</div>`;
 div.appendChild(tooltip);barEl.appendChild(div);});
 // Domain legend
 const legendList=document.getElementById('domainLegendList');legendList.innerHTML='';
 assembled.forEach(part=>{const item=document.createElement('div');item.className='domain-legend-item';const rng=part.start?`${part.start}–${part.end}`:`${part.sequence.length}aa`;
-item.innerHTML=`<div class="domain-legend-swatch" style="background:${part.color.main}${part.isTM?';background-image:repeating-linear-gradient(45deg,transparent,transparent 2px,rgba(255,255,255,0.4) 2px,rgba(255,255,255,0.4) 3px)':''}"></div><span class="domain-legend-name" title="${part.name}">${part.name}</span><span class="domain-legend-range">${rng}</span>`;legendList.appendChild(item);});
+item.innerHTML=`<div class="domain-legend-swatch" style="background:${part.color.main}${part.isTM?';background-image:repeating-linear-gradient(45deg,transparent,transparent 2px,rgba(255,255,255,0.4) 2px,rgba(255,255,255,0.4) 3px)':''}"></div><span class="domain-legend-name" title="${part.name}">${shortName(part.name)}</span><span class="domain-legend-range">${rng}</span>`;legendList.appendChild(item);});
 // SS track
 const ssTrackEl=document.getElementById('ssTrack');ssTrackEl.innerHTML='';let allSS=[];assembled.forEach(p=>{allSS=allSS.concat(p.ss);});
 if(allSS.length>0){let runs=[],ct=allSS[0],cnt=1;for(let i=1;i<allSS.length;i++){if(allSS[i]===ct)cnt++;else{runs.push({type:ct,count:cnt});ct=allSS[i];cnt=1;}}runs.push({type:ct,count:cnt});
@@ -365,7 +366,7 @@ const totalSeq=getAssembledSequence();const statsEl=document.getElementById('con
 if(totalSeq.length>0){statsEl.style.display='';document.getElementById('statLength').textContent=totalSeq.length;document.getElementById('statMW').textContent=(calculateMW(totalSeq)/1000).toFixed(1);document.getElementById('statExtCoeff').textContent=calculateExtinctionCoeff(totalSeq).toLocaleString();}else{statsEl.style.display='none';}
 // Sequence color legend
 const assembled=getAssembledParts();const headerEl=document.getElementById('seqViewerHeader');
-if(totalSeq.length>0){headerEl.style.display='';headerEl.innerHTML='';assembled.forEach(part=>{const item=document.createElement('div');item.className='seq-legend-item';item.innerHTML=`<div class="seq-legend-swatch" style="background:${part.color.main}"></div><span class="seq-legend-name">${part.name}</span>`;headerEl.appendChild(item);});}else{headerEl.style.display='none';}
+if(totalSeq.length>0){headerEl.style.display='';headerEl.innerHTML='';assembled.forEach(part=>{const item=document.createElement('div');item.className='seq-legend-item';item.innerHTML=`<div class="seq-legend-swatch" style="background:${part.color.main}"></div><span class="seq-legend-name">${shortName(part.name)}</span>`;headerEl.appendChild(item);});}else{headerEl.style.display='none';}
 // Sequence viewer
 const viewer=document.getElementById('sequenceViewer');
 if(totalSeq.length>0){viewer.style.display='';viewer.innerHTML='';const colorMap=[];assembled.forEach(p=>{for(let i=0;i<p.sequence.length;i++)colorMap.push(p.color.main);});
