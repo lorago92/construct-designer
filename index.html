@@ -20,7 +20,6 @@
 --color-linker:#6b7280;--color-linker-bg:#f3f4f6;--color-linker-border:#d1d5db;
 --color-protease:#dc2626;--color-protease-bg:#fef2f2;--color-protease-border:#fca5a5;
 --ss-helix:#ef4444;--ss-strand:#3b82f6;--ss-loop:#d1d5db;
---topo-extra:#3b82f6;--topo-cyto:#f59e0b;--topo-membrane:#374151;--topo-lumenal:#8b5cf6;
 --radius:8px;--radius-lg:12px;
 --shadow-sm:0 1px 2px rgba(0,0,0,0.05);
 --shadow:0 1px 3px rgba(0,0,0,0.08),0 1px 2px rgba(0,0,0,0.04);
@@ -77,21 +76,9 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text-primary)
 .btn-change{padding:6px 12px;border:1px solid var(--border);background:var(--bg);font-family:var(--font-sans);font-size:12px;font-weight:500;color:var(--text-secondary);border-radius:6px;cursor:pointer;transition:all .15s}
 .btn-change:hover{border-color:#ef4444;color:#ef4444;background:#fef2f2}
 .zone1-body{padding:24px 60px 28px}
-.construct-bar-layout{display:flex;gap:20px;align-items:flex-start}
-.construct-bar-main{flex:1;min-width:0}
-.domain-legend-card{flex:0 0 220px;background:var(--bg-subtle);border:1px solid var(--border-light);border-radius:var(--radius);padding:10px 12px;max-height:240px;overflow-y:auto}
-.domain-legend-title{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-tertiary);margin-bottom:8px}
-.domain-legend-item{display:flex;align-items:center;gap:8px;padding:3px 4px;font-size:11px;border-radius:3px;cursor:default;transition:background .1s}
-.domain-legend-item:hover{background:var(--bg-hover)}
-.domain-legend-swatch{width:10px;height:10px;border-radius:2px;flex-shrink:0}
-.domain-legend-name{font-weight:500;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
-.domain-legend-range{font-family:var(--font-mono);font-size:10px;color:var(--text-tertiary);flex-shrink:0}
 .term-labels{display:flex;justify-content:space-between;margin-bottom:8px}
 .term-label{font-size:11px;font-weight:600;letter-spacing:.3px}
 .term-label-n{color:#16a34a}.term-label-c{color:#dc2626}
-.topo-track-wrapper{margin-bottom:4px}
-.topo-track{display:flex;width:100%;height:14px;border-radius:3px;overflow:hidden;border:1px solid var(--border-light)}
-.topo-segment{height:100%;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:600;letter-spacing:.3px;color:white;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 4px}
 .construct-bar{display:flex;width:100%;height:40px;border-radius:6px;overflow:visible;border:1px solid var(--border);background:var(--bg-subtle);position:relative}
 .construct-bar-segment{height:100%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;letter-spacing:.3px;color:white;overflow:visible;text-overflow:ellipsis;white-space:nowrap;padding:0 6px;position:relative;cursor:default;transition:opacity .15s}
 .construct-bar-segment:hover{opacity:.85}
@@ -188,7 +175,7 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text-primary)
 .landing-desc{font-size:14px;color:var(--text-secondary);line-height:1.6}
 ::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}::-webkit-scrollbar-thumb:hover{background:var(--text-tertiary)}
 @media(max-width:1200px){.zone1-header,.zone1-body{padding-left:40px;padding-right:40px}}
-@media(max-width:900px){.zone2{flex-direction:column}.zone2-left,.zone2-right{flex:1;max-width:100%}.zone1-header,.zone1-body{padding-left:20px;padding-right:20px}.construct-bar-layout{flex-direction:column}.domain-legend-card{flex:1;max-height:150px}}
+@media(max-width:900px){.zone2{flex-direction:column}.zone2-left,.zone2-right{flex:1;max-width:100%}.zone1-header,.zone1-body{padding-left:20px;padding-right:20px}}
 </style>
 </head>
 <body>
@@ -202,20 +189,16 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text-primary)
 <main class="main">
 <div id="landingState" class="landing-state"><div class="landing-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/></svg></div><h2 class="landing-title">Design your construct</h2><p class="landing-desc">Search for a protein above or paste a sequence to get started. Build expression-ready constructs with signals, tags, and linkers.</p></div>
 <div class="zone1-card" id="zone1Card"><div class="zone1-header"><div class="protein-meta" id="proteinMeta"></div><button class="btn-change" id="changeBtn">← Clear construct</button></div>
-<div class="zone1-body"><div class="construct-bar-layout"><div class="construct-bar-main">
+<div class="zone1-body">
 <div class="term-labels"><span class="term-label term-label-n">N-term ←</span><span class="term-label term-label-c">→ C-term</span></div>
-<div class="topo-track-wrapper" id="topoTrackWrapper" style="display:none"><div class="topo-track" id="topoTrack"></div></div>
 <div class="construct-bar" id="constructBar"></div>
 <div class="ss-track-wrapper"><div class="ss-track" id="ssTrack"></div></div>
 <div class="ruler" id="ruler"></div>
 <div class="legends-row">
 <div class="legend-group"><span class="legend-group-label">SS</span><div class="legend-item"><div class="legend-swatch" style="background:var(--ss-helix)"></div>α-helix</div><div class="legend-item"><div class="legend-swatch" style="background:var(--ss-strand)"></div>β-strand</div><div class="legend-item"><div class="legend-swatch" style="background:var(--ss-loop)"></div>Loop</div></div>
-<div class="legend-group" id="topoLegend" style="display:none"><span class="legend-group-label">Topology</span><div class="legend-item"><div class="legend-swatch" style="background:var(--topo-extra)"></div>Extracellular</div><div class="legend-item"><div class="legend-swatch" style="background:var(--topo-cyto)"></div>Cytoplasmic</div><div class="legend-item"><div class="legend-swatch" style="background:var(--topo-membrane);background-image:repeating-linear-gradient(45deg,transparent,transparent 2px,rgba(255,255,255,0.3) 2px,rgba(255,255,255,0.3) 4px)"></div>TM</div></div>
 </div>
 <div class="sequence-display-zone1" id="zone1Sequence"></div>
-</div>
-<div class="domain-legend-card" id="domainLegendCard"><div class="domain-legend-title">Segments</div><div id="domainLegendList"></div></div>
-</div></div></div>
+</div></div>
 <div class="zone2" id="zone2"><div class="zone2-left"><div class="card"><div class="card-header"><span class="card-title">Construct Assembly</span><div style="display:flex;gap:8px"><button class="btn btn-secondary" id="copyFastaBtn" style="font-size:12px;padding:5px 10px">Copy FASTA</button></div></div>
 <div class="card-body"><div class="construct-strip" id="constructStrip"><span class="strip-term-label strip-term-n">N-term ←</span><div class="construct-strip-empty" id="stripEmpty">Load a protein to begin assembly</div><span class="strip-term-label strip-term-c">→ C-term</span></div>
 <div class="construct-stats" id="constructStats" style="display:none"><div class="stat-item">Length: <span class="stat-value" id="statLength">0</span> aa</div><div class="stat-item">MW: <span class="stat-value" id="statMW">0</span> kDa</div><div class="stat-item">ε<sub>280</sub>: <span class="stat-value" id="statExtCoeff">0</span> M⁻¹cm⁻¹</div></div>
@@ -228,7 +211,7 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text-primary)
 <div class="zone3-panel visible" id="panelMutations"></div><div class="zone3-panel" id="panelFeatures"></div><div class="zone3-panel" id="panelPublications"></div></div></div>
 </main>
 <script>
-const AppState={expressionSystem:'mammalian',searchMode:'search',construct:{parts:[]},uniprotCache:{},expandedParts:new Set(),topoData:[]};
+const AppState={expressionSystem:'mammalian',searchMode:'search',construct:{parts:[]},uniprotCache:{},expandedParts:new Set()};
 const DOMAIN_COLORS=[{main:'#0891b2',bg:'#cffafe',border:'#67e8f9'},{main:'#7c3aed',bg:'#ede9fe',border:'#c4b5fd'},{main:'#0d9488',bg:'#ccfbf1',border:'#5eead4'},{main:'#4f46e5',bg:'#e0e7ff',border:'#a5b4fc'},{main:'#be185d',bg:'#fce7f3',border:'#f9a8d4'},{main:'#ea580c',bg:'#fff7ed',border:'#fdba74'}];
 const PART_COLORS={signal:{main:'#16a34a',bg:'#dcfce7',border:'#86efac'},tag:{main:'#d97706',bg:'#fef3c7',border:'#fcd34d'},linker:{main:'#6b7280',bg:'#f3f4f6',border:'#d1d5db'},protease:{main:'#dc2626',bg:'#fef2f2',border:'#fca5a5'}};
 
@@ -305,15 +288,6 @@ const proteinPart=AppState.construct.parts.find(p=>p.type==='protein');const met
 if(proteinPart){const totalSeq=getAssembledSequence();const totalMW=calculateMW(totalSeq);
 metaEl.innerHTML=`<div class="protein-meta-item"><span class="meta-label">Protein</span><span class="meta-value">${proteinPart.name}</span></div><div class="protein-meta-item"><span class="meta-label">Gene</span><span class="meta-value">${proteinPart.gene||'—'}</span></div><div class="protein-meta-item"><span class="meta-label">Organism</span><span class="meta-value">${proteinPart.organism||'—'}</span></div><div class="protein-meta-item"><span class="meta-label">Length</span><span class="meta-value">${totalSeq.length} aa</span></div><div class="protein-meta-item"><span class="meta-label">MW</span><span class="meta-value">${(totalMW/1000).toFixed(1)} kDa</span></div>`;}
 const assembled=getAssembledParts();const totalLen=assembled.reduce((a,p)=>a+p.sequence.length,0);
-// Topology track
-const topoW=document.getElementById('topoTrackWrapper');const topoT=document.getElementById('topoTrack');const topoL=document.getElementById('topoLegend');
-if(AppState.topoData.length>0){topoW.style.display='';topoL.style.display='';topoT.innerHTML='';
-const proteinP=AppState.construct.parts.find(p=>p.type==='protein');const pLen=proteinP?proteinP.fullSequence.length:totalLen;
-AppState.topoData.forEach(t=>{const pct=((t.end-t.start+1)/pLen*100).toFixed(2);const div=document.createElement('div');div.className='topo-segment';div.style.width=`${pct}%`;
-const colors={extracellular:'var(--topo-extra)',cytoplasmic:'var(--topo-cyto)',membrane:'var(--topo-membrane)',lumenal:'var(--topo-lumenal)',other:'#9ca3af'};
-div.style.background=colors[t.type]||'#9ca3af';if(t.type==='membrane')div.style.backgroundImage='repeating-linear-gradient(45deg,transparent,transparent 2px,rgba(255,255,255,0.3) 2px,rgba(255,255,255,0.3) 4px)';
-if((t.end-t.start+1)/pLen>0.06)div.textContent=t.label.length>14?t.label.slice(0,12)+'…':t.label;topoT.appendChild(div);});}
-else{topoW.style.display='none';topoL.style.display='none';}
 // Construct bar
 const barEl=document.getElementById('constructBar');barEl.innerHTML='';
 assembled.forEach(part=>{const pct=(part.sequence.length/totalLen*100).toFixed(2);const div=document.createElement('div');div.className='construct-bar-segment';if(part.isTM)div.classList.add('tm-segment');if(part.isUnannotated)div.classList.add('unannotated-segment');div.style.width=`${pct}%`;div.style.backgroundColor=part.color.main;
@@ -321,10 +295,6 @@ if(part.sequence.length/totalLen>0.06){const label=document.createElement('span'
 const tooltip=document.createElement('div');tooltip.className='bar-tooltip';const rangeText=part.start?`${part.start}–${part.end}`:`${part.sequence.length} aa`;
 tooltip.innerHTML=`<div class="bar-tooltip-name">${part.name}</div><div class="bar-tooltip-range">${rangeText} · ${part.sequence.length} aa</div><div class="bar-tooltip-ss">${ssComposition(part.ss)}</div>`;
 div.appendChild(tooltip);barEl.appendChild(div);});
-// Domain legend
-const legendList=document.getElementById('domainLegendList');legendList.innerHTML='';
-assembled.forEach(part=>{const item=document.createElement('div');item.className='domain-legend-item';const rng=part.start?`${part.start}–${part.end}`:`${part.sequence.length}aa`;
-item.innerHTML=`<div class="domain-legend-swatch" style="background:${part.color.main}${part.isTM?';background-image:repeating-linear-gradient(45deg,transparent,transparent 2px,rgba(255,255,255,0.4) 2px,rgba(255,255,255,0.4) 3px)':''}"></div><span class="domain-legend-name" title="${part.name}">${shortName(part.name)}</span><span class="domain-legend-range">${rng}</span>`;legendList.appendChild(item);});
 // SS track
 const ssTrackEl=document.getElementById('ssTrack');ssTrackEl.innerHTML='';let allSS=[];assembled.forEach(p=>{allSS=allSS.concat(p.ss);});
 if(allSS.length>0){let runs=[],ct=allSS[0],cnt=1;for(let i=1;i<allSS.length;i++){if(allSS[i]===ct)cnt++;else{runs.push({type:ct,count:cnt});ct=allSS[i];cnt=1;}}runs.push({type:ct,count:cnt});
@@ -389,7 +359,6 @@ if(cached&&cached.publications.length>0){let html='';cached.publications.slice(0
 async function loadProtein(accession){
 const data=await fetchUniProtEntry(accession);if(!data){alert('Failed to fetch protein data.');return;}
 const parsed=parseUniProtToProteinPart(data);AppState.uniprotCache[accession]=parsed;
-if(parsed.topoFeatures.length>0)AppState.topoData=parsed.topoFeatures;
 if(parsed.signalPeptide){AppState.construct.parts.push({type:'signal',name:`${parsed.part.gene||parsed.part.name} signal`,source:'uniprot',sequence:parsed.signalPeptide.sequence,description:parsed.signalPeptide.description,originalRange:`${parsed.signalPeptide.start}–${parsed.signalPeptide.end}`,ss:new Array(parsed.signalPeptide.sequence.length).fill('loop')});}
 AppState.construct.parts.push(parsed.part);
 document.getElementById('searchDropdown').classList.remove('visible');document.getElementById('searchInput').value='';renderAll();}
@@ -410,7 +379,7 @@ div.addEventListener('click',()=>loadProtein(r.accession));dropdown.appendChild(
 document.addEventListener('click',e=>{if(!e.target.closest('.search-container'))dropdown.classList.remove('visible');});
 document.getElementById('pasteLoadBtn').addEventListener('click',()=>{const val=document.getElementById('pasteTextarea').value;if(val.trim())loadPastedSequence(val);});
 document.getElementById('pasteClearBtn').addEventListener('click',()=>{document.getElementById('pasteTextarea').value='';});
-document.getElementById('changeBtn').addEventListener('click',()=>{if(confirm('Clear entire construct and start over?')){AppState.construct.parts=[];AppState.expandedParts.clear();AppState.uniprotCache={};AppState.topoData=[];renderAll();}});
+document.getElementById('changeBtn').addEventListener('click',()=>{if(confirm('Clear entire construct and start over?')){AppState.construct.parts=[];AppState.expandedParts.clear();AppState.uniprotCache={};renderAll();}});
 document.getElementById('copyFastaBtn').addEventListener('click',()=>{const seq=getAssembledSequence();const pp=AppState.construct.parts.find(p=>p.type==='protein');const header=`>${pp?.name||'Construct'} | ${seq.length} aa | Designed with ConstructAI`;const fasta=header+'\n'+seq.match(/.{1,60}/g).join('\n');navigator.clipboard.writeText(fasta).then(()=>{const btn=document.getElementById('copyFastaBtn');btn.textContent='Copied!';setTimeout(()=>{btn.textContent='Copy FASTA';},1500);});});
 document.querySelectorAll('.zone3-tab').forEach(tab=>{tab.addEventListener('click',()=>{document.querySelectorAll('.zone3-tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.zone3-panel').forEach(p=>p.classList.remove('visible'));tab.classList.add('active');const m={mutations:'panelMutations',features:'panelFeatures',publications:'panelPublications'};document.getElementById(m[tab.dataset.z3tab]).classList.add('visible');});});
 document.querySelectorAll('.library-tab').forEach(tab=>{tab.addEventListener('click',()=>{document.querySelectorAll('.library-tab').forEach(t=>t.classList.remove('active'));tab.classList.add('active');});});
