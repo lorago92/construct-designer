@@ -286,25 +286,54 @@ if(AppState.construct.parts.length===0){card.classList.remove('visible');landing
 landing.style.display='none';card.classList.add('visible');
 const proteinPart=AppState.construct.parts.find(p=>p.type==='protein');const metaEl=document.getElementById('proteinMeta');
 if(proteinPart){const totalSeq=getAssembledSequence();const totalMW=calculateMW(totalSeq);
-metaEl.innerHTML=`<div class="protein-meta-item"><span class="meta-label">Protein</span><span class="meta-value">${proteinPart.name}</span></div><div class="protein-meta-item"><span class="meta-label">Gene</span><span class="meta-value">${proteinPart.gene||'—'}</span></div><div class="protein-meta-item"><span class="meta-label">Organism</span><span class="meta-value">${proteinPart.organism||'—'}</span></div><div class="protein-meta-item"><span class="meta-label">Length</span><span class="meta-value">${totalSeq.length} aa</span></div><div class="protein-meta-item"><span class="meta-label">MW</span><span class="meta-value">${(totalMW/1000).toFixed(1)} kDa</span></div>`;}
-const assembled=getAssembledParts();const totalLen=assembled.reduce((a,p)=>a+p.sequence.length,0);
+metaEl.innerHTML=`<div class="protein-meta-item"><span class="meta-label">Protein</span><span class="meta-value">${proteinPart.name}</span></div><div class="protein-meta-item"><span class="meta-label">UniProt</span><span class="meta-value">${proteinPart.accession||'Custom'}</span></div><div class="protein-meta-item"><span class="meta-label">Gene</span><span class="meta-value">${proteinPart.gene||'—'}</span></div><div class="protein-meta-item"><span class="meta-label">Organism</span><span class="meta-value">${proteinPart.organism||'—'}</span></div><div class="protein-meta-item"><span class="meta-label">Length</span><span class="meta-value">${totalSeq.length} aa</span></div><div class="protein-meta-item"><span class="meta-label">MW</span><span class="meta-value">${(totalMW/1000).toFixed(1)} kDa</span></div>`;}
+// Build part-level view for Zone 1 (one block per part, not per domain)
+const partLevelView=[];
+let proteinColorIdx=0;
+const PROTEIN_COLORS=['#0891b2','#7c3aed','#0d9488','#4f46e5','#be185d','#ea580c'];
+AppState.construct.parts.forEach((part,pi)=>{
+  let seq='',ss=[];
+  if(part.type==='protein'){
+    part.segments.filter(s=>s.active).forEach(s=>{seq+=s.sequence;ss=ss.concat(s.ss||[]);});
+  } else {seq=part.sequence||'';ss=new Array(seq.length).fill('loop');}
+  const color=part.type==='protein'?{main:PROTEIN_COLORS[proteinColorIdx%PROTEIN_COLORS.length],bg:'#cffafe'}:(PART_COLORS[part.type]||PART_COLORS.tag);
+  if(part.type==='protein')proteinColorIdx++;
+  // Build domain summary for tooltip
+  let domainSummary='';
+  if(part.type==='protein'&&part.segments){
+    const activeSegs=part.segments.filter(s=>s.active);
+    domainSummary=activeSegs.map(s=>`${shortName(s.name)} (${s.start}–${s.end})`).join(' → ');
+  }
+  partLevelView.push({sequence:seq,ss,color,name:part.name,type:part.type,partIndex:pi,accession:part.accession||null,domainSummary});
+});
+const totalLen=partLevelView.reduce((a,p)=>a+p.sequence.length,0);
 // Construct bar
 const barEl=document.getElementById('constructBar');barEl.innerHTML='';
-assembled.forEach(part=>{const pct=(part.sequence.length/totalLen*100).toFixed(2);const div=document.createElement('div');div.className='construct-bar-segment';if(part.isTM)div.classList.add('tm-segment');if(part.isUnannotated)div.classList.add('unannotated-segment');div.style.width=`${pct}%`;div.style.backgroundColor=part.color.main;
-if(part.sequence.length/totalLen>0.06){const label=document.createElement('span');label.style.position='relative';label.style.zIndex='1';const sn=shortName(part.name);label.textContent=sn.length>14?sn.slice(0,12)+'…':sn;div.appendChild(label);}
-const tooltip=document.createElement('div');tooltip.className='bar-tooltip';const rangeText=part.start?`${part.start}–${part.end}`:`${part.sequence.length} aa`;
-tooltip.innerHTML=`<div class="bar-tooltip-name">${part.name}</div><div class="bar-tooltip-range">${rangeText} · ${part.sequence.length} aa</div><div class="bar-tooltip-ss">${ssComposition(part.ss)}</div>`;
-div.appendChild(tooltip);barEl.appendChild(div);});
+partLevelView.forEach(part=>{
+  if(part.sequence.length===0)return;
+  const pct=(part.sequence.length/totalLen*100).toFixed(2);
+  const div=document.createElement('div');div.className='construct-bar-segment';
+  div.style.width=`${pct}%`;div.style.backgroundColor=part.color.main;
+  if(part.sequence.length/totalLen>0.08){
+    const label=document.createElement('span');label.style.position='relative';label.style.zIndex='1';
+    const sn=shortName(part.name);label.textContent=sn.length>18?sn.slice(0,16)+'…':sn;div.appendChild(label);
+  }
+  const tooltip=document.createElement('div');tooltip.className='bar-tooltip';
+  let tooltipHTML=`<div class="bar-tooltip-name">${part.type.toUpperCase()}: ${shortName(part.name)}</div><div class="bar-tooltip-range">${part.sequence.length} aa · ${ssComposition(part.ss)}</div>`;
+  if(part.domainSummary)tooltipHTML+=`<div class="bar-tooltip-ss" style="margin-top:4px;max-width:300px;white-space:normal;line-height:1.4">${part.domainSummary}</div>`;
+  tooltip.innerHTML=tooltipHTML;
+  div.appendChild(tooltip);barEl.appendChild(div);
+});
 // SS track
-const ssTrackEl=document.getElementById('ssTrack');ssTrackEl.innerHTML='';let allSS=[];assembled.forEach(p=>{allSS=allSS.concat(p.ss);});
+const ssTrackEl=document.getElementById('ssTrack');ssTrackEl.innerHTML='';let allSS=[];partLevelView.forEach(p=>{allSS=allSS.concat(p.ss);});
 if(allSS.length>0){let runs=[],ct=allSS[0],cnt=1;for(let i=1;i<allSS.length;i++){if(allSS[i]===ct)cnt++;else{runs.push({type:ct,count:cnt});ct=allSS[i];cnt=1;}}runs.push({type:ct,count:cnt});
 runs.forEach(run=>{const div=document.createElement('div');div.className='ss-residue';div.style.width=`${(run.count/allSS.length*100).toFixed(3)}%`;div.style.background=run.type==='helix'?'var(--ss-helix)':run.type==='strand'?'var(--ss-strand)':'var(--ss-loop)';ssTrackEl.appendChild(div);});}
 // Ruler
 const rulerEl=document.getElementById('ruler');rulerEl.innerHTML='';
 if(totalLen>0){const step=totalLen<100?10:totalLen<500?50:totalLen<2000?100:200;for(let i=step;i<=totalLen;i+=step){const tick=document.createElement('div');tick.className='ruler-tick';tick.style.left=`${(i/totalLen*100).toFixed(2)}%`;tick.textContent=i;rulerEl.appendChild(tick);}}
-// Zone 1 sequence with spacing
+// Zone 1 sequence — one color per part
 const seqEl=document.getElementById('zone1Sequence');seqEl.innerHTML='';let gpos=0;
-assembled.forEach(part=>{for(const aa of part.sequence){const span=document.createElement('span');span.className='seq-residue';span.textContent=aa;span.style.color=part.color.main;seqEl.appendChild(span);gpos++;if(gpos%10===0){const sp=document.createElement('span');sp.textContent=' ';seqEl.appendChild(sp);}}});
+partLevelView.forEach(part=>{for(const aa of part.sequence){const span=document.createElement('span');span.className='seq-residue';span.textContent=aa;span.style.color=part.color.main;seqEl.appendChild(span);gpos++;if(gpos%10===0){const sp=document.createElement('span');sp.textContent=' ';seqEl.appendChild(sp);}}});
 }
 
 function renderZone2(){
@@ -359,6 +388,12 @@ if(cached&&cached.publications.length>0){let html='';cached.publications.slice(0
 async function loadProtein(accession){
 const data=await fetchUniProtEntry(accession);if(!data){alert('Failed to fetch protein data.');return;}
 const parsed=parseUniProtToProteinPart(data);AppState.uniprotCache[accession]=parsed;
+// Integrity check: verify assembled sequence matches original
+const sigLen=parsed.signalPeptide?parsed.signalPeptide.sequence.length:0;
+const segLen=parsed.part.segments.reduce((a,s)=>a+s.sequence.length,0);
+if(sigLen+segLen!==parsed.part.fullSequence.length){
+  console.warn(`⚠️ Sequence integrity: signal(${sigLen})+segments(${segLen})=${sigLen+segLen} ≠ original(${parsed.part.fullSequence.length}). Missing ${parsed.part.fullSequence.length-sigLen-segLen} residues.`);
+}
 if(parsed.signalPeptide){AppState.construct.parts.push({type:'signal',name:`${parsed.part.gene||parsed.part.name} signal`,source:'uniprot',sequence:parsed.signalPeptide.sequence,description:parsed.signalPeptide.description,originalRange:`${parsed.signalPeptide.start}–${parsed.signalPeptide.end}`,ss:new Array(parsed.signalPeptide.sequence.length).fill('loop')});}
 AppState.construct.parts.push(parsed.part);
 document.getElementById('searchDropdown').classList.remove('visible');document.getElementById('searchInput').value='';renderAll();}
