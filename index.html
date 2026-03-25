@@ -410,7 +410,17 @@ AppState.construct.parts.forEach((part,pi)=>{
   let domainSummary='';
   if(part.type==='protein'&&part.segments){
     const activeSegs=part.segments.filter(s=>s.active);
-    domainSummary=activeSegs.map(s=>`${shortName(s.name)} (${s.start}–${s.end})`).join(' → ');
+    const named=activeSegs.filter(s=>s.type!=='unannotated');
+    const tmCount=named.filter(s=>s.isTM).length;
+    const otherNamed=named.filter(s=>!s.isTM);
+    const parts=[];
+    if(otherNamed.length>0){
+      const shown=otherNamed.slice(0,4).map(s=>shortName(s.name));
+      if(otherNamed.length>4)shown.push(`+${otherNamed.length-4} more`);
+      parts.push(shown.join(', '));
+    }
+    if(tmCount>0)parts.push(`${tmCount} TM domain${tmCount>1?'s':''}`);
+    domainSummary=parts.join(' · ')+` · ${activeSegs.length} segments total`;
   }
   partLevelView.push({sequence:seq,ss,color,name:part.name,type:part.type,partIndex:pi,accession:part.accession||null,domainSummary});
 });
