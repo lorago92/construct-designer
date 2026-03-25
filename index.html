@@ -387,8 +387,11 @@ if(cached&&cached.publications.length>0){let html='';cached.publications.slice(0
 
 async function loadProtein(accession){
 const data=await fetchUniProtEntry(accession);if(!data){alert('Failed to fetch protein data.');return;}
-const parsed=parseUniProtToProteinPart(data);AppState.uniprotCache[accession]=parsed;
-// Integrity check: verify assembled sequence matches original
+const parsed=parseUniProtToProteinPart(data);
+// Always replace: clear existing construct
+AppState.construct.parts=[];AppState.expandedParts.clear();AppState.uniprotCache={};
+AppState.uniprotCache[accession]=parsed;
+// Integrity check
 const sigLen=parsed.signalPeptide?parsed.signalPeptide.sequence.length:0;
 const segLen=parsed.part.segments.reduce((a,s)=>a+s.sequence.length,0);
 if(sigLen+segLen!==parsed.part.fullSequence.length){
@@ -400,6 +403,8 @@ document.getElementById('searchDropdown').classList.remove('visible');document.g
 
 function loadPastedSequence(raw){let seq=raw.trim();if(seq.startsWith('>')){const lines=seq.split('\n');seq=lines.slice(1).join('').trim();}seq=seq.replace(/[\s\d]/g,'').toUpperCase();
 if(!/^[ACDEFGHIKLMNPQRSTVWY]+$/.test(seq)){alert('Invalid amino acid characters detected.');return;}if(seq.length<5){alert('Sequence too short (min 5 aa).');return;}
+// Always replace
+AppState.construct.parts=[];AppState.expandedParts.clear();AppState.uniprotCache={};
 AppState.construct.parts.push({type:'protein',name:'Custom protein',gene:'—',organism:'—',accession:null,source:'custom',fullSequence:seq,length:seq.length,mw:calculateMW(seq),segments:[{name:'Custom protein',type:'full',start:1,end:seq.length,sequence:seq,description:'Pasted sequence',active:true,isTM:false,ss:new Array(seq.length).fill('loop')}],expanded:false});
 AppState.uniprotCache['custom']={mutations:[],features:[],publications:[]};document.getElementById('pasteTextarea').value='';document.getElementById('pasteArea').classList.remove('visible');renderAll();}
 
