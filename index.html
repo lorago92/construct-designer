@@ -462,11 +462,17 @@ document.querySelectorAll('.template-btn').forEach(function(btn){btn.addEventLis
 var emptyBtn=document.getElementById('startEmptyBtn');
 if(emptyBtn)emptyBtn.addEventListener('click',function(){
 AppState.construct.parts=[];AppState.expandedParts.clear();AppState.uniprotCache={};AppState.rawDataCache={};
-renderAll();
+AppState.mutSelectedPart=-1;AppState.zone3SelectedPart=0;
 document.getElementById('landingState').style.display='none';
 document.getElementById('zone1Card').classList.add('visible');
+document.getElementById('proteinMeta').innerHTML='<div style="color:var(--text-tertiary);font-size:13px">Add a protein or paste a sequence to begin</div>';
+document.getElementById('constructBar').innerHTML='';
+document.getElementById('ssTrack').innerHTML='';
+document.getElementById('ruler').innerHTML='';
+document.getElementById('zone1Sequence').innerHTML='';
 document.getElementById('zone2').classList.add('visible');
 document.getElementById('zone3').classList.add('visible');
+renderAll();
 });
 renderAll();});
 // Amino acid rain animation
