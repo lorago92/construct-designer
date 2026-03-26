@@ -388,23 +388,16 @@ const ssEl=document.getElementById('ssTrack');let allSS=[];partLevelView.forEach
 // Ruler
 const rulerEl=document.getElementById('ruler');rulerEl.innerHTML='';if(totalLen>0){const step=totalLen<100?10:totalLen<500?50:totalLen<2000?100:200;for(let i=step;i<=totalLen;i+=step){const tick=document.createElement('div');tick.className='ruler-tick';tick.style.left=`${(i/totalLen*100).toFixed(2)}%`;tick.textContent=i;rulerEl.appendChild(tick);}}
 // Sequence - clickable
-const seqEl=document.getElementById('zone1Sequence');seqEl.innerHTML='';let gpos=0;const mutMap=getMutationMap();
-const RESIDUES_PER_ROW=50;const totalSeqStr=getAssembledSequence();
-for(let rowStart=0;rowStart<totalSeqStr.length;rowStart+=RESIDUES_PER_ROW){
-const rowDiv=document.createElement('div');rowDiv.style.cssText='display:flex;align-items:baseline;gap:8px';
-const leftNum=document.createElement('span');leftNum.style.cssText='font-size:9px;color:var(--text-tertiary);min-width:36px;text-align:right;flex-shrink:0;user-select:none';leftNum.textContent=rowStart+1;rowDiv.appendChild(leftNum);
-const seqSpan=document.createElement('span');seqSpan.style.cssText='flex:1';
-for(let i=rowStart;i<Math.min(rowStart+RESIDUES_PER_ROW,totalSeqStr.length);i++){
+const seqEl=document.getElementById('zone1Sequence');seqEl.innerHTML='';const mutMap=getMutationMap();
+const totalSeqStr=getAssembledSequence();
+const partColorMap=[];partLevelView.forEach(pv=>{for(let i=0;i<pv.sequence.length;i++)partColorMap.push(pv.color);});
+for(let i=0;i<totalSeqStr.length;i++){
 const span=document.createElement('span');const isMut=mutMap[i];
-// Find which part color to use
-let partColor=null;let pos2=0;for(const pv of partLevelView){if(i<pos2+pv.sequence.length){partColor=pv.color;break;}pos2+=pv.sequence.length;}
-if(isMut){span.className='seq-residue seq-mutated seq-clickable';span.textContent=isMut.mutant;span.title=`${isMut.original}${isMut.position}${isMut.mutant}`;}else{span.className='seq-residue seq-clickable';span.textContent=totalSeqStr[i];if(partColor)span.style.color=partColor.main;}
-span.dataset.globalpos=i;span.addEventListener('click',e=>{showMutationPopup(i,e);});seqSpan.appendChild(span);
-if((i+1)%10===0&&i<rowStart+RESIDUES_PER_ROW-1){const sp=document.createElement('span');sp.textContent=' ';seqSpan.appendChild(sp);}
-}
-rowDiv.appendChild(seqSpan);
-const rightNum=document.createElement('span');rightNum.style.cssText='font-size:9px;color:var(--text-tertiary);min-width:36px;text-align:left;flex-shrink:0;user-select:none';rightNum.textContent=Math.min(rowStart+RESIDUES_PER_ROW,totalSeqStr.length);rowDiv.appendChild(rightNum);
-seqEl.appendChild(rowDiv);
+if(isMut){span.className='seq-residue seq-mutated seq-clickable';span.textContent=isMut.mutant;span.title=`${isMut.original}${isMut.position}${isMut.mutant}`;}else{span.className='seq-residue seq-clickable';span.textContent=totalSeqStr[i];if(partColorMap[i])span.style.color=partColorMap[i].main;}
+span.dataset.globalpos=i;span.addEventListener('click',e=>{showMutationPopup(i,e);});seqEl.appendChild(span);
+if((i+1)%10===0){const sp=document.createElement('span');sp.textContent=' ';seqEl.appendChild(sp);
+// Position marker every 100 residues
+if((i+1)%100===0){const tag=document.createElement('span');tag.style.cssText='font-size:8px;color:var(--text-tertiary);vertical-align:super;margin:0 1px;user-select:none';tag.textContent=i+1;seqEl.appendChild(tag);}}
 }}
 function renderZone2(){const zone2=document.getElementById('zone2');if(AppState.construct.parts.length===0){zone2.classList.remove('visible');return;}zone2.classList.add('visible');const strip=document.getElementById('constructStrip');const stripEmpty=document.getElementById('stripEmpty');strip.querySelectorAll('.part-card,.strip-arrow').forEach(el=>el.remove());if(AppState.construct.parts.length===0){stripEmpty.style.display='';return;}stripEmpty.style.display='none';const cTermLabel=strip.querySelector('.strip-term-c');
 AppState.construct.parts.forEach((part,idx)=>{if(idx>0){const arrow=document.createElement('span');arrow.className='strip-arrow';arrow.textContent='\u2192';strip.insertBefore(arrow,cTermLabel);}const card=document.createElement('div');card.className='part-card'+(AppState.expandedParts.has(idx)?' expanded':'');card.draggable=true;card.dataset.partIdx=idx;const typeColor=getPartColor(part,idx);card.style.borderColor=typeColor.border||typeColor.main;card.style.background=typeColor.bg||(typeColor.main+'15');const seq=part.type==='protein'?part.segments.filter(s=>s.active).map(s=>s.sequence).join(''):(part.sequence||'');const displayName=part.entryName||part.name;let rangeInfo='';if(part.type!=='protein'&&part.sequence)rangeInfo=`<div class="part-card-range">${part.originalRange||part.sequence.length+' aa'}</div>`;let expandIcon='';if(part.type==='protein'&&part.segments.length>1)expandIcon=`<div class="part-card-expand-icon">${AppState.expandedParts.has(idx)?'\u25BC':'\u25B6'}</div>`;card.innerHTML=`${expandIcon}<div class="part-card-actions"><button class="part-card-action action-copy" data-idx="${idx}" title="Copy sequence"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button><button class="part-card-action action-insert" data-idx="${idx}" title="Insert residue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></button><button class="part-card-action action-delete" data-idx="${idx}" title="Remove part"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14"/></svg></button></div><div class="part-card-type" style="color:${part.type==='protein'?'#0891b2':typeColor.main}">${part.type.toUpperCase()}</div><div class="part-card-name">${displayName}</div>${rangeInfo}<div class="part-card-seq">${seq.slice(0,16)}${seq.length>16?'\u2026':''}</div>`;
