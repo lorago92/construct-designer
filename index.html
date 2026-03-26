@@ -338,10 +338,15 @@ return ss;
 async function fetchAlphaFoldPDB(accession){
 if(AppState.alphaFoldCache[accession])return AppState.alphaFoldCache[accession];
 try{
-const url='https://alphafold.ebi.ac.uk/files/AF-'+accession+'-F1-model_v4.pdb';
-const res=await fetch(url);
-if(!res.ok)throw new Error(res.status);
-const pdbText=await res.text();
+const apiRes=await fetch('https://alphafold.ebi.ac.uk/api/prediction/'+accession);
+if(!apiRes.ok)return null;
+const apiData=await apiRes.json();
+const entry=Array.isArray(apiData)?apiData[0]:apiData;
+const pdbUrl=entry?.pdbUrl;
+if(!pdbUrl)return null;
+const pdbRes=await fetch(pdbUrl);
+if(!pdbRes.ok)return null;
+const pdbText=await pdbRes.text();
 AppState.alphaFoldCache[accession]=pdbText;
 return pdbText;
 }catch(e){console.warn('AlphaFold fetch failed for '+accession+':',e);return null;}
