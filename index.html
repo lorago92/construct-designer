@@ -308,26 +308,18 @@ else if(tab==='structure'){const pdb=xrefs.filter(x=>x.database==='PDB');if(pdb.
 else if(tab==='family'){const domC=comments.filter(c=>c.commentType==='DOMAIN');const simC=comments.filter(c=>c.commentType==='SIMILARITY');const famF=features.filter(f=>['Domain','Repeat','Zinc finger','Coiled coil','Compositional bias','Motif'].includes(f.type));domC.forEach(d=>{html+=`<div class="info-block"><div class="info-block-title">Domain</div><div class="info-block-text">${d.texts?.map(t=>t.value).join(' ')||'\u2014'}</div></div>`;});simC.forEach(s=>{html+=`<div class="info-block"><div class="info-block-title">Similarity</div><div class="info-block-text">${s.texts?.map(t=>t.value).join(' ')||'\u2014'}</div></div>`;});if(famF.length>0){html+='<table class="data-table"><thead><tr><th>Type</th><th>Position</th><th>Description</th></tr></thead><tbody>';famF.forEach(f=>{html+=`<tr class="domain-clickable-row" data-start="${f.location?.start?.value||''}" data-end="${f.location?.end?.value||''}" data-desc="${(f.description||'').replace(/"/g,'&quot;')}" style="cursor:pointer"><td>${f.type}</td><td class="pos-badge">${f.location?.start?.value||'?'}\u2013${f.location?.end?.value||'?'}</td><td>${f.description||'\u2014'}</td></tr>`;});html+='</tbody></table>';}if(domC.length===0&&simC.length===0&&famF.length===0)html+='<div class="empty-state">No family/domain data</div>';}
 else if(tab==='publications'){if(cached&&cached.publications.length>0){const pubs=[...cached.publications];const sortAsc=AppState.pubSortAsc||false;pubs.sort((a,b)=>{const ya=parseInt(a.year)||0;const yb=parseInt(b.year)||0;return sortAsc?(ya-yb):(yb-ya);});html+=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><span style="font-size:12px;color:var(--text-tertiary)">${pubs.length} publications</span><button class="sort-toggle" id="pubSortBtn">${sortAsc?'\u2191 Oldest first':'\u2193 Newest first'}</button></div>`;pubs.slice(0,30).forEach(p=>{html+=`<div class="pub-item"><div class="pub-title">${p.title}</div><div class="pub-authors">${p.authors}</div><div class="pub-journal">${p.journal} ${p.year}</div>${p.pubmedId?`<a class="pub-link" href="https://pubmed.ncbi.nlm.nih.gov/${p.pubmedId}" target="_blank">PubMed \u2197</a>`:''}</div>`;});}else html+='<div class="empty-state">No publications found</div>';}
 contentEl.innerHTML=html;contentEl.querySelectorAll('.disease-variant-row').forEach(row=>{row.addEventListener('click',()=>{const pos=parseInt(row.dataset.pos);const orig=row.dataset.orig;const altAA=row.dataset.alt;const desc=row.dataset.desc;if(!pos||orig==='?'||altAA==='?')return;if(!selPart)return;if(confirm('Apply mutation '+orig+pos+altAA+' to '+( selPart.entryName||selPart.name)+'?\n\n'+(desc||''))){saveUndo();for(const seg of selPart.segments){if(pos>=seg.start&&pos<=seg.end){applyMutation(seg,pos,orig,altAA,'uniprot',desc);return;}}}});});
-// PTM row click - offer to mutate single-position residues
-contentEl.querySelectorAll('.ptm-clickable-row').forEach(function(row){row.addEventListener('click',function(){
-var pos=parseInt(row.dataset.start);var end=parseInt(row.dataset.end);var desc=row.dataset.desc;var type=row.dataset.type;
-if(!pos||!selPart)return;
-if(pos===end||!end){
-var seg=null;for(var i=0;i<selPart.segments.length;i++){if(pos>=selPart.segments[i].start&&pos<=selPart.segments[i].end){seg=selPart.segments[i];break;}}
-if(!seg)return;
-var origAA=seg.sequence[pos-seg.start];
-var newAA=prompt(type+' at position '+pos+' ('+origAA+')\n'+desc+'\n\nEnter new amino acid (or cancel):');
-if(newAA&&newAA.length===1&&/^[ACDEFGHIKLMNPQRSTVWY]$/.test(newAA.toUpperCase())){saveUndo();applyMutation(seg,pos,origAA,newAA.toUpperCase(),'manual',desc);}
-}else{alert(type+' at positions '+pos+'\u2013'+end+'\n'+desc);}
+// PTM row click - show region popup with interactive sequence
+contentEl.querySelectorAll('.ptm-clickable-row').forEach(function(row){row.addEventListener('click',function(e){
+var start=parseInt(row.dataset.start);var end=parseInt(row.dataset.end);var desc=row.dataset.desc;var type=row.dataset.type;
+if(!start)return;
+if(!end||end===start)end=start;
+showRegionPopup(type+': '+(desc||'Position '+start),start,end,e);
 });});
-// Family & Domains row click - show region sequence
-contentEl.querySelectorAll('.domain-clickable-row').forEach(function(row){row.addEventListener('click',function(){
+// Family & Domains row click - show region popup with interactive sequence
+contentEl.querySelectorAll('.domain-clickable-row').forEach(function(row){row.addEventListener('click',function(e){
 var start=parseInt(row.dataset.start);var end=parseInt(row.dataset.end);var desc=row.dataset.desc;
-if(!start||!end||!selPart)return;
-var seq=selPart.fullSequence?.slice(start-1,end)||'';
-if(!seq)return;
-var msg=desc+' ('+start+'\u2013'+end+', '+seq.length+' aa)\n\n'+seq.match(/.{1,60}/g).join('\n');
-alert(msg);
+if(!start||!end)return;
+showRegionPopup(desc||'Region',start,end,e);
 });});
 const z3sel=document.getElementById('zone3PartSelector');if(z3sel)z3sel.addEventListener('change',()=>{AppState.zone3SelectedPart=parseInt(z3sel.value);renderZone3();});
 contentEl.querySelectorAll('.pdb-row').forEach(row=>{row.addEventListener('click',()=>{const pdbId=row.dataset.pdb;contentEl.querySelectorAll('.pdb-row').forEach(r=>r.classList.remove('pdb-active'));row.classList.add('pdb-active');loadPdbStructure(pdbId);});});
@@ -394,6 +386,60 @@ saveUndo();
 AppState.construct.parts.push({type:type,name:name,entryName:name,source:'library',sequence:sequence,description:name,originalRange:'1\u2013'+sequence.length,ss:new Array(sequence.length).fill('loop'),mutations:[]});
 renderAll();
 }
+function showRegionPopup(title,start,end,event){
+if(!start||!end)return;
+var selIdx=AppState.zone3SelectedPart;
+var parts=AppState.construct.parts.filter(function(p){return p.type==='protein'&&p.accession;});
+var selPart=parts.length>0?(AppState.construct.parts[selIdx]||parts[0]):null;
+if(!selPart||!selPart.fullSequence)return;
+var seq=selPart.fullSequence.slice(start-1,end);
+var popup=document.getElementById('regionPopup');
+document.getElementById('regionPopupTitle').textContent=title;
+document.getElementById('regionPopupRange').textContent='Positions '+start+'\u2013'+end+' ('+seq.length+' aa)';
+var seqEl=document.getElementById('regionPopupSeq');seqEl.innerHTML='';
+// Find global offset for this protein
+var globalOffset=0;
+for(var pi=0;pi<AppState.construct.parts.length;pi++){
+var pp=AppState.construct.parts[pi];
+if(pp===selPart)break;
+if(pp.type==='protein')pp.segments.filter(function(s){return s.active;}).forEach(function(s){globalOffset+=s.sequence.length;});
+else globalOffset+=(pp.sequence||'').length;
+}
+// Add signal offset if signal is separate
+var sigOffset=0;
+if(selPart.segments.length>0)sigOffset=selPart.segments[0].start-1;
+var mutMap=getMutationMap();
+for(var i=0;i<seq.length;i++){
+var uniprotPos=start+i;
+var span=document.createElement('span');
+// Find global position
+var gPos=globalOffset;
+var found=false;
+for(var si=0;si<selPart.segments.length;si++){
+var seg=selPart.segments[si];
+if(!seg.active)continue;
+if(uniprotPos>=seg.start&&uniprotPos<=seg.end){
+gPos+=uniprotPos-seg.start;
+found=true;
+var mut=mutMap[gPos];
+if(mut){span.className='seq-residue seq-mutated seq-clickable';span.textContent=mut.mutant;span.title=mut.original+mut.position+mut.mutant;}
+else{span.className='seq-residue seq-clickable';span.textContent=seq[i];span.style.color='var(--accent)';}
+span.dataset.globalpos=gPos;
+span.addEventListener('click',function(e){showMutationPopup(parseInt(this.dataset.globalpos),e);});
+break;
+}
+gPos+=seg.sequence.length;
+}
+if(!found){span.textContent=seq[i];span.style.color='var(--text-tertiary)';}
+seqEl.appendChild(span);
+if((i+1)%10===0){var sp=document.createElement('span');sp.textContent=' ';seqEl.appendChild(sp);}
+}
+// Position popup
+var rect=event.target.closest('tr').getBoundingClientRect();
+popup.style.left=Math.max(10,Math.min(rect.left,window.innerWidth-580))+'px';
+popup.style.top=Math.min(rect.bottom+4,window.innerHeight-420)+'px';
+popup.style.display='block';
+}
 function openEmptyWorkspace(){
 AppState.construct.parts=[];AppState.expandedParts.clear();AppState.uniprotCache={};AppState.rawDataCache={};
 AppState.mutSelectedPart=-1;AppState.zone3SelectedPart=0;
@@ -443,7 +489,7 @@ document.querySelectorAll('.zone3-tab').forEach(tab=>{tab.addEventListener('clic
 document.querySelectorAll('.library-tab').forEach(tab=>{tab.addEventListener('click',()=>{document.querySelectorAll('.library-tab').forEach(t=>t.classList.remove('active'));tab.classList.add('active');const target=tab.dataset.libtab;['libMutations','libSignals','libLinkers','libConjugation','libTags'].forEach(id=>{document.getElementById(id).style.display='none';});document.getElementById({mutations:'libMutations',signals:'libSignals',linkers:'libLinkers',conjugation:'libConjugation',tags:'libTags'}[target]).style.display='';});});
 document.getElementById('mutPopApply').addEventListener('click',()=>{const popup=document.getElementById('mutationPopup');const globalPos=parseInt(popup.dataset.globalPos);const uniprotPos=parseInt(popup.dataset.uniprotPos);const original=popup.dataset.original;const mutant=document.getElementById('mutPopSelect').value;saveUndo();const info=findSegmentAtGlobalPos(globalPos);if(info)applyMutation(info.seg,uniprotPos,original,mutant,'manual','');popup.style.display='none';});
 document.getElementById('mutPopCancel').addEventListener('click',()=>{document.getElementById('mutationPopup').style.display='none';});
-document.addEventListener('click',e=>{const popup=document.getElementById('mutationPopup');if(popup.style.display==='block'&&!popup.contains(e.target)&&!e.target.classList.contains('seq-clickable'))popup.style.display='none';});
+document.addEventListener('click',e=>{var rp=document.getElementById('regionPopup');if(rp.style.display==='block'&&!rp.contains(e.target)&&!e.target.closest('.ptm-clickable-row')&&!e.target.closest('.domain-clickable-row'))rp.style.display='none';const popup=document.getElementById('mutationPopup');if(popup.style.display==='block'&&!popup.contains(e.target)&&!e.target.classList.contains('seq-clickable'))popup.style.display='none';});
 const addPartPopup=document.getElementById('addPartPopup');
 function showAddPartPopup(e){
 const rect=e.target.getBoundingClientRect();
