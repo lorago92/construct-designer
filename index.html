@@ -26,8 +26,8 @@
 --shadow-lg:0 4px 12px rgba(0,0,0,0.08);
 }
 body{font-family:var(--font-sans);background:var(--bg);color:var(--text-primary);line-height:1.5;-webkit-font-smoothing:antialiased}
-.hero{padding:32px 40px 24px;border-bottom:1px solid var(--border-light)}.hero-inner{max-width:1400px;margin:0 auto}
-.hero-brand{display:flex;align-items:center;gap:10px;margin-bottom:20px}.hero-logo{width:32px;height:32px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center}.hero-logo svg{width:20px;height:20px;fill:white}.hero-title{font-size:18px;font-weight:700;letter-spacing:-0.3px}.hero-subtitle{font-size:12px;color:var(--text-tertiary);font-weight:400;margin-left:2px}
+.hero{padding:28px 40px 20px;border-bottom:1px solid var(--border-light);position:relative;overflow:hidden;background:var(--bg)}.hero-inner{max-width:1400px;margin:0 auto}
+.hero-title{font-size:18px;font-weight:700;letter-spacing:-0.3px}.hero-subtitle{font-size:12px;color:var(--text-tertiary);font-weight:400;margin-left:2px}
 .search-row{display:flex;align-items:center;gap:12px}.search-container{flex:1;position:relative}
 .search-input{width:100%;height:44px;padding:0 16px 0 40px;border:1.5px solid var(--border);border-radius:var(--radius);font-family:var(--font-sans);font-size:14px;color:var(--text-primary);background:var(--bg);transition:border-color .15s,box-shadow .15s;outline:none}.search-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,0.1)}.search-input::placeholder{color:var(--text-tertiary)}
 .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--text-tertiary)}
@@ -35,7 +35,7 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text-primary)
 .search-result{padding:10px 16px;cursor:pointer;border-bottom:1px solid var(--border-light);transition:background .1s}.search-result:last-child{border-bottom:none}.search-result:hover{background:var(--bg-subtle)}.search-result-name{font-size:14px;font-weight:600}.search-result-meta{font-size:12px;color:var(--text-secondary);margin-top:2px}
 .search-result-badge{display:inline-block;font-size:10px;font-weight:600;padding:1px 6px;border-radius:4px;margin-left:6px}.badge-reviewed{background:#dcfce7;color:#16a34a}.badge-unreviewed{background:#fef3c7;color:#d97706}.search-loading{padding:16px;text-align:center;color:var(--text-tertiary);font-size:13px}
 .mode-toggle{display:flex;gap:8px;margin-top:12px}.mode-btn{padding:6px 14px;border:1.5px solid var(--border);background:var(--bg);font-family:var(--font-sans);font-size:13px;font-weight:500;color:var(--text-secondary);border-radius:6px;cursor:pointer;transition:all .15s}.mode-btn:hover{border-color:var(--accent);color:var(--accent)}.mode-btn.active{border-color:var(--accent);background:var(--accent-light);color:var(--accent)}
-.paste-area{margin-top:12px;display:none}.paste-area.visible{display:block}.paste-textarea{width:100%;max-width:600px;height:120px;padding:12px;font-family:var(--font-mono);font-size:13px;border:1.5px solid var(--border);border-radius:var(--radius);resize:vertical;outline:none;color:var(--text-primary);line-height:1.6}.paste-textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,0.1)}.paste-actions{margin-top:8px;display:flex;gap:8px}
+.paste-textarea{width:100%;max-width:600px;height:120px;padding:12px;font-family:var(--font-mono);font-size:13px;border:1.5px solid var(--border);border-radius:var(--radius);resize:vertical;outline:none;color:var(--text-primary);line-height:1.6}.paste-textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,0.1)}.paste-actions{margin-top:8px;display:flex;gap:8px}
 .btn{padding:8px 16px;border:none;border-radius:6px;font-family:var(--font-sans);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s}.btn-primary{background:var(--accent);color:white}.btn-primary:hover{background:var(--accent-hover)}.btn-secondary{background:var(--bg-subtle);color:var(--text-secondary);border:1px solid var(--border)}.btn-secondary:hover{background:var(--bg-hover)}.btn-sm{padding:4px 10px;font-size:11px}
 .main{max-width:1400px;margin:0 auto;padding:0 40px 60px}
 .zone1-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);margin-top:24px;overflow:hidden;display:none}.zone1-card.visible{display:block}
@@ -78,15 +78,26 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text-primary)
 @media(max-width:1200px){.zone1-header,.zone1-body{padding-left:40px;padding-right:40px}}
 @media(max-width:900px){.zone2{flex-direction:column}.zone2-left,.zone2-right{flex:1;max-width:100%}.zone1-header,.zone1-body{padding-left:20px;padding-right:20px}}
 </style>
-<script src="https://unpkg.com/3dmol/build/3Dmol-min.js"></script>
+<script src="https://unpkg.com/3dmol/build/3Dmol-min.js">
 </head>
 <body>
-<header class="hero"><div class="hero-inner">
-<div class="hero-brand"><div class="hero-logo"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg></div><div><span class="hero-title">ConstructAI</span><span class="hero-subtitle"> — Protein Construct Designer</span></div></div>
-<div class="search-row"><div class="search-container"><svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input type="text" class="search-input" id="searchInput" placeholder="Search by protein name, gene, UniProt ID…"><div class="search-dropdown" id="searchDropdown"></div></div></div>
-<div class="mode-toggle" id="modeToggle"><button class="mode-btn active" data-mode="search">Search UniProt</button><button class="mode-btn" data-mode="paste">Paste sequence</button></div>
-<div class="paste-area" id="pasteArea"><input type="text" id="pasteNameInput" class="paste-textarea" placeholder="Sequence name (e.g., My nanobody, Fc region)…" style="height:40px;resize:none;padding:0 12px;line-height:40px"><textarea class="paste-textarea" id="pasteTextarea" placeholder="Paste amino acid sequence (raw or FASTA format)…"></textarea><div class="paste-actions"><button class="btn btn-primary" id="pasteLoadBtn">Load sequence</button><button class="btn btn-secondary" id="pasteClearBtn">Clear</button></div></div>
+<header class="hero">
+<canvas id="aaRainCanvas" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0"></canvas>
+<div class="hero-inner" style="position:relative;z-index:1">
+<div style="text-align:center;margin-bottom:16px"><span class="hero-title">ConstructAI</span><span class="hero-subtitle"> — Protein Construct Designer</span></div>
+<div style="display:flex;justify-content:center"><div style="width:100%;max-width:520px">
+<div class="search-container"><svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input type="text" class="search-input" id="searchInput" placeholder="Search protein name, gene, or UniProt ID…"><div class="search-dropdown" id="searchDropdown"></div></div>
+<div style="display:flex;justify-content:center;margin-top:10px"><button class="mode-btn" id="pasteSeqBtn" style="font-size:12px">or paste a sequence</button></div>
+</div></div>
 </div></header>
+<div class="add-part-popup" id="pastePopup" style="display:none;width:480px">
+<div style="padding:16px 20px;border-bottom:1px solid var(--border-light);font-weight:600;font-size:14px">Paste sequence</div>
+<div style="padding:16px">
+<input type="text" class="add-part-name-input" id="pasteNameInput" placeholder="Sequence name (e.g., My nanobody, Fc region)…">
+<textarea class="add-part-paste-area" id="pasteTextarea" placeholder="Paste amino acid sequence (raw or FASTA format)…" style="height:120px"></textarea>
+<div style="display:flex;gap:8px"><button class="btn btn-primary" id="pasteLoadBtn" style="flex:1">Load sequence</button><button class="btn btn-secondary" id="pasteClearBtn">Cancel</button></div>
+</div>
+</div>
 <main class="main">
 <div id="landingState" class="landing-state"><div class="landing-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/></svg></div><h2 class="landing-title">Design your construct</h2><p class="landing-desc">Search for a protein above or paste a sequence to get started.</p></div>
 <div class="zone1-card" id="zone1Card"><div class="zone1-header"><div class="protein-meta" id="proteinMeta"></div><div style="display:flex;gap:6px;flex-shrink:0;align-items:center"><button class="btn btn-secondary btn-sm" id="undoBtn" title="Undo" style="display:none">↩ Undo</button><button class="btn btn-primary btn-sm" id="addPartBtn">+ Add</button><button class="btn-change" id="changeBtn">Clear</button></div></div>
@@ -345,12 +356,21 @@ CONJ_SEQUENCES=lib.conjugation||[];
 COMMON_TAGS=(lib.tags||[]).map(t=>({...t,cat:t.category}));
 renderSignalsList();renderLinkersList();renderConjList();renderTagsList();
 }).catch(e=>console.warn('Parts library not loaded:',e));
-document.querySelectorAll('.mode-btn').forEach(btn=>{btn.addEventListener('click',()=>{document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');const pa=document.getElementById('pasteArea');const si=document.getElementById('searchInput');if(btn.dataset.mode==='paste'){pa.classList.add('visible');si.disabled=true;si.style.opacity='0.5';}else{pa.classList.remove('visible');si.disabled=false;si.style.opacity='1';}});});
+// Paste sequence popup
+document.getElementById('pasteSeqBtn').addEventListener('click',e=>{
+const popup=document.getElementById('pastePopup');
+const rect=e.target.getBoundingClientRect();
+popup.style.left=Math.max(10,Math.min(rect.left-180,window.innerWidth-500))+'px';
+popup.style.top=(rect.bottom+8)+'px';
+popup.style.display=popup.style.display==='block'?'none':'block';
+if(popup.style.display==='block'){document.getElementById('pasteNameInput').focus();}
+});
+document.addEventListener('click',e=>{const popup=document.getElementById('pastePopup');if(popup.style.display==='block'&&!popup.contains(e.target)&&e.target.id!=='pasteSeqBtn')popup.style.display='none';});
 const searchInput=document.getElementById('searchInput');const dropdown=document.getElementById('searchDropdown');
 searchInput.addEventListener('input',()=>{clearTimeout(searchDebounce);const query=searchInput.value.trim();if(query.length<2){dropdown.classList.remove('visible');return;}dropdown.innerHTML='<div class="search-loading">Searching UniProt\u2026</div>';dropdown.classList.add('visible');searchDebounce=setTimeout(async()=>{const results=await searchUniProt(query);if(results.length===0){dropdown.innerHTML='<div class="search-loading">No results found</div>';return;}dropdown.innerHTML='';results.forEach(r=>{const div=document.createElement('div');div.className='search-result';div.innerHTML=`<div class="search-result-name">${r.entryName}<span class="search-result-badge ${r.reviewed?'badge-reviewed':'badge-unreviewed'}">${r.reviewed?'\u2605 Reviewed':'Unreviewed'}</span></div><div class="search-result-meta">${r.accession} \u00B7 ${r.gene} \u00B7 ${r.organism} \u00B7 ${r.length} aa</div>`;div.addEventListener('click',()=>loadProtein(r.accession));dropdown.appendChild(div);});},350);});
 document.addEventListener('click',e=>{if(!e.target.closest('.search-container'))dropdown.classList.remove('visible');});
-document.getElementById('pasteLoadBtn').addEventListener('click',()=>{const val=document.getElementById('pasteTextarea').value;if(val.trim())loadPastedSequence(val);});
-document.getElementById('pasteClearBtn').addEventListener('click',()=>{document.getElementById('pasteTextarea').value='';document.getElementById('pasteNameInput').value='';});
+document.getElementById('pasteLoadBtn').addEventListener('click',()=>{const val=document.getElementById('pasteTextarea').value;if(val.trim()){loadPastedSequence(val);document.getElementById('pastePopup').style.display='none';}});
+document.getElementById('pasteClearBtn').addEventListener('click',()=>{document.getElementById('pastePopup').style.display='none';});
 document.getElementById('changeBtn').addEventListener('click',()=>{if(confirm('Clear entire construct?')){saveUndo();AppState.construct.parts=[];AppState.expandedParts.clear();AppState.uniprotCache={};AppState.rawDataCache={};renderAll();}});
 document.getElementById('undoBtn').addEventListener('click',()=>{performUndo();});
 document.getElementById('copyFastaBtn').addEventListener('click',()=>{const seq=getAssembledSequence();if(!seq)return;const partNames=AppState.construct.parts.map(p=>p.entryName||p.name).join('-');const header=`>${partNames} | ${seq.length} aa | ConstructAI`;const fasta=header+'\n'+seq.match(/.{1,60}/g).join('\n');navigator.clipboard.writeText(fasta).then(()=>{const btn=document.getElementById('copyFastaBtn');btn.textContent='Copied!';setTimeout(()=>{btn.textContent='Copy FASTA';},1500);});});
@@ -412,6 +432,23 @@ res.appendChild(d);
 },400);
 });
 renderAll();});
+// Amino acid rain animation
+(function(){
+const canvas=document.getElementById('aaRainCanvas');if(!canvas)return;
+const ctx=canvas.getContext('2d');
+const AAs='ACDEFGHIKLMNPQRSTVWY';
+const drops=[];
+const NUM=40;
+function resize(){canvas.width=canvas.offsetWidth*2;canvas.height=canvas.offsetHeight*2;ctx.scale(2,2);}
+resize();window.addEventListener('resize',resize);
+for(let i=0;i<NUM;i++){drops.push({x:Math.random()*1600,y:Math.random()*200-200,speed:0.3+Math.random()*0.6,size:12+Math.random()*8,opacity:0.04+Math.random()*0.06,char:AAs[Math.floor(Math.random()*20)]});}
+function draw(){const w=canvas.offsetWidth,h=canvas.offsetHeight;ctx.clearRect(0,0,w,h);
+drops.forEach(d=>{d.y+=d.speed;if(d.y>h+20){d.y=-20;d.x=Math.random()*w;d.char=AAs[Math.floor(Math.random()*20)];d.opacity=0.04+Math.random()*0.06;}
+ctx.fillStyle='rgba(37,99,235,'+d.opacity+')';ctx.font='500 '+d.size+'px IBM Plex Mono,monospace';ctx.fillText(d.char,d.x,d.y);});
+requestAnimationFrame(draw);}
+draw();
+})();
+
 </script>
 </body>
 </html>
