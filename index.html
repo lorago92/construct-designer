@@ -355,7 +355,11 @@ function getAssembledSequence(){let seq='';AppState.construct.parts.forEach(p=>{
   let segSeq=s.sequence.split('');
   (s.mutations||[]).forEach(m=>{const idx=m.position-s.start;if(idx>=0&&idx<segSeq.length)segSeq[idx]=m.mutant;});
   seq+=segSeq.join('');
-});else seq+=p.sequence||''});return seq;}
+});else{
+  let partSeq=(p.sequence||'').split('');
+  (p.mutations||[]).forEach(m=>{const idx=m.position-1;if(idx>=0&&idx<partSeq.length)partSeq[idx]=m.mutant;});
+  seq+=partSeq.join('');
+}});return seq;}
 
 // Get mutation map: globalPosition -> mutation object
 function getMutationMap(){
@@ -364,7 +368,10 @@ function getMutationMap(){
     if(p.type==='protein'){p.segments.filter(s=>s.active).forEach(s=>{
       (s.mutations||[]).forEach(m=>{const idx=m.position-s.start;if(idx>=0&&idx<s.sequence.length)map[gpos+idx]=m;});
       gpos+=s.sequence.length;});
-    }else{gpos+=(p.sequence||'').length;}
+    }else{
+      (p.mutations||[]).forEach(m=>{const idx=m.position-1;if(idx>=0&&idx<(p.sequence||'').length)map[gpos+idx]=m;});
+      gpos+=(p.sequence||'').length;
+    }
   });return map;
 }
 
@@ -389,7 +396,16 @@ function findSegmentAtGlobalPos(globalPos){
         }
         gpos+=seg.sequence.length;
       }
-    }else{gpos+=(part.sequence||'').length;}
+    }else{
+      const seq=part.sequence||'';
+      if(globalPos>=gpos&&globalPos<gpos+seq.length){
+        if(!part.mutations)part.mutations=[];
+        // Treat non-protein part as a virtual segment (1-based positions)
+        const virtualSeg={name:part.name,type:part.type,start:1,end:seq.length,sequence:seq,mutations:part.mutations,active:true,isTM:false,_isVirtualSeg:true,_partRef:part};
+        return{part,seg:virtualSeg,localIdx:globalPos-gpos,uniprotPos:1+(globalPos-gpos)};
+      }
+      gpos+=seq.length;
+    }
   }
   return null;
 }
@@ -402,6 +418,8 @@ function applyMutation(seg,uniprotPos,original,mutant,source,description){
   if(original!==mutant){
     seg.mutations.push({position:uniprotPos,original,mutant,source:source||'manual',description:description||''});
   }
+  // Sync back to parent part for non-protein parts
+  if(seg._isVirtualSeg&&seg._partRef){seg._partRef.mutations=seg.mutations;}
   renderAll();
 }
 
@@ -409,6 +427,7 @@ function applyMutation(seg,uniprotPos,original,mutant,source,description){
 function removeMutation(seg,uniprotPos){
   if(!seg.mutations)return;
   seg.mutations=seg.mutations.filter(m=>m.position!==uniprotPos);
+  if(seg._isVirtualSeg&&seg._partRef){seg._partRef.mutations=seg.mutations;}
   renderAll();
 }
 
@@ -570,6 +589,7 @@ function showMutationPopup(globalPos,event){
   popup.style.display='block';
   
   // Store context for apply
+  popup.dataset.globalPos=globalPos;
   popup.dataset.partType=info.part.type;
   popup.dataset.segStart=info.seg.start;
   popup.dataset.uniprotPos=info.uniprotPos;
@@ -588,7 +608,9 @@ function renderRightPanel(){
   AppState.construct.parts.forEach(part=>{
     if(part.type==='protein'){part.segments.forEach(seg=>{
       (seg.mutations||[]).forEach(m=>{appliedMuts.push({...m,segName:seg.name,seg});});
-    });}
+    });}else{
+      (part.mutations||[]).forEach(m=>{appliedMuts.push({...m,segName:part.name,seg:{start:1,_isVirtualSeg:true,_partRef:part,mutations:part.mutations}});});
+    }
   });
   
   if(appliedMuts.length>0){
@@ -601,7 +623,7 @@ function renderRightPanel(){
         </div>
         <div class="mutation-list-actions">
           <span class="mutation-list-source ${m.source==='uniprot'?'mutation-src-uniprot':'mutation-src-manual'}">${m.source==='uniprot'?'UniProt':'Manual'}</span>
-          <button class="mutation-remove-btn" data-seg-start="${m.seg.start}" data-pos="${m.position}" title="Remove">×</button>
+          <button class="mutation-remove-btn" data-seg-start="${m.seg.start}" data-pos="${m.position}" data-is-virtual="${m.seg._isVirtualSeg?'1':'0'}" data-part-name="${m.segName}" title="Remove">×</button>
         </div>
       </div>`;
     });
@@ -639,10 +661,20 @@ function renderRightPanel(){
   mutPanel.querySelectorAll('.mutation-remove-btn').forEach(btn=>{
     btn.addEventListener('click',()=>{
       const segStart=parseInt(btn.dataset.segStart);const pos=parseInt(btn.dataset.pos);
-      // Find the segment
-      AppState.construct.parts.forEach(part=>{if(part.type==='protein'){part.segments.forEach(seg=>{
-        if(seg.start===segStart)removeMutation(seg,pos);
-      });}});
+      const isVirtual=btn.dataset.isVirtual==='1';
+      if(isVirtual){
+        // Non-protein part
+        AppState.construct.parts.forEach(part=>{
+          if(part.type!=='protein'&&part.mutations){
+            part.mutations=part.mutations.filter(m=>m.position!==pos);
+          }
+        });
+        renderAll();
+      }else{
+        AppState.construct.parts.forEach(part=>{if(part.type==='protein'){part.segments.forEach(seg=>{
+          if(seg.start===segStart)removeMutation(seg,pos);
+        });}});
+      }
     });
   });
 }
@@ -703,12 +735,10 @@ document.querySelectorAll('.library-tab').forEach(tab=>{tab.addEventListener('cl
 // Mutation popup handlers
 document.getElementById('mutPopApply').addEventListener('click',()=>{
   const popup=document.getElementById('mutationPopup');
-  const segStart=parseInt(popup.dataset.segStart);const uniprotPos=parseInt(popup.dataset.uniprotPos);
+  const globalPos=parseInt(popup.dataset.globalPos);const uniprotPos=parseInt(popup.dataset.uniprotPos);
   const original=popup.dataset.original;const mutant=document.getElementById('mutPopSelect').value;
-  // Find the segment
-  for(const part of AppState.construct.parts){if(part.type==='protein'){for(const seg of part.segments){
-    if(seg.start===segStart){applyMutation(seg,uniprotPos,original,mutant,'manual','');popup.style.display='none';return;}
-  }}}
+  const info=findSegmentAtGlobalPos(globalPos);
+  if(info){applyMutation(info.seg,uniprotPos,original,mutant,'manual','');}
   popup.style.display='none';
 });
 document.getElementById('mutPopCancel').addEventListener('click',()=>{document.getElementById('mutationPopup').style.display='none';});
