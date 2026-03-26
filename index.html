@@ -126,12 +126,32 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text-primary)
 <div id="sigCommonEntries"></div>
 </div>
 </div>
-<div id="libLinkers" style="display:none"><div class="library-empty"><div class="library-empty-icon">🔗</div>Parts library — coming soon</div></div>
+<div id="libLinkers" style="display:none">
+<div style="display:flex;gap:4px;margin-bottom:8px;flex-wrap:wrap" id="linkerCatFilter">
+<button class="linker-cat-btn active" data-cat="all" style="padding:3px 8px;border:1px solid var(--border);background:var(--accent);color:white;border-radius:4px;font-size:10px;font-weight:600;cursor:pointer;font-family:var(--font-sans)">All</button>
+<button class="linker-cat-btn" data-cat="flexible" style="padding:3px 8px;border:1px solid var(--border);background:var(--bg);color:var(--text-secondary);border-radius:4px;font-size:10px;font-weight:500;cursor:pointer;font-family:var(--font-sans)">Flexible</button>
+<button class="linker-cat-btn" data-cat="rigid" style="padding:3px 8px;border:1px solid var(--border);background:var(--bg);color:var(--text-secondary);border-radius:4px;font-size:10px;font-weight:500;cursor:pointer;font-family:var(--font-sans)">Rigid</button>
+<button class="linker-cat-btn" data-cat="cleavable" style="padding:3px 8px;border:1px solid var(--border);background:var(--bg);color:var(--text-secondary);border-radius:4px;font-size:10px;font-weight:500;cursor:pointer;font-family:var(--font-sans)">Cleavable</button>
+<button class="linker-cat-btn" data-cat="2a" style="padding:3px 8px;border:1px solid var(--border);background:var(--bg);color:var(--text-secondary);border-radius:4px;font-size:10px;font-weight:500;cursor:pointer;font-family:var(--font-sans)">2A</button>
+<button class="linker-cat-btn" data-cat="hinge" style="padding:3px 8px;border:1px solid var(--border);background:var(--bg);color:var(--text-secondary);border-radius:4px;font-size:10px;font-weight:500;cursor:pointer;font-family:var(--font-sans)">Hinge</button>
+</div>
+<div class="right-panel-section-title">Linkers <span style="font-weight:400;text-transform:none;letter-spacing:0;font-style:italic">— click to add</span></div>
+<div id="linkerEntries"></div>
+</div>
 <div id="libConjugation" style="display:none">
 <div class="right-panel-section-title">Conjugation sequences <span style="font-weight:400;text-transform:none;letter-spacing:0;font-style:italic">— click to add</span></div>
 <div id="conjEntries"></div>
 </div>
-<div id="libTags" style="display:none"><div class="library-empty"><div class="library-empty-icon">🏷️</div>Parts library — coming soon</div></div>
+<div id="libTags" style="display:none">
+<div style="display:flex;gap:4px;margin-bottom:8px;flex-wrap:wrap" id="tagCatFilter">
+<button class="tag-cat-btn active" data-cat="all" style="padding:3px 8px;border:1px solid var(--border);background:var(--accent);color:white;border-radius:4px;font-size:10px;font-weight:600;cursor:pointer;font-family:var(--font-sans)">All</button>
+<button class="tag-cat-btn" data-cat="purification" style="padding:3px 8px;border:1px solid var(--border);background:var(--bg);color:var(--text-secondary);border-radius:4px;font-size:10px;font-weight:500;cursor:pointer;font-family:var(--font-sans)">Purification</button>
+<button class="tag-cat-btn" data-cat="detection" style="padding:3px 8px;border:1px solid var(--border);background:var(--bg);color:var(--text-secondary);border-radius:4px;font-size:10px;font-weight:500;cursor:pointer;font-family:var(--font-sans)">Detection</button>
+<button class="tag-cat-btn" data-cat="solubility" style="padding:3px 8px;border:1px solid var(--border);background:var(--bg);color:var(--text-secondary);border-radius:4px;font-size:10px;font-weight:500;cursor:pointer;font-family:var(--font-sans)">Solubility</button>
+</div>
+<div class="right-panel-section-title">Tags <span style="font-weight:400;text-transform:none;letter-spacing:0;font-style:italic">— click to add</span></div>
+<div id="tagEntries"></div>
+</div>
 </div></div></div></div>
 <div class="mutation-popup" id="mutationPopup" style="display:none"><div class="mutation-popup-title" id="mutPopTitle">Mutate residue</div><div class="mutation-popup-pos" id="mutPopPos"></div><div class="mutation-popup-row"><span id="mutPopOriginal" style="font-family:var(--font-mono);font-size:16px;font-weight:700"></span><span class="arrow">→</span><select id="mutPopSelect"></select></div><div class="mutation-popup-actions"><button class="btn btn-primary btn-sm" id="mutPopApply">Apply</button><button class="btn btn-secondary btn-sm" id="mutPopCancel">Cancel</button></div></div>
 <div class="variant-tooltip" id="variantTooltip" style="display:none"></div>
