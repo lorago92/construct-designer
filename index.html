@@ -293,23 +293,7 @@ var legend=document.createElement('div');legend.style.cssText='position:absolute
 async function loadProtein(accession){const data=await fetchUniProtEntry(accession);if(!data){alert('Failed to fetch protein data.');return;}const parsed=parseUniProtToProteinPart(data);saveUndo();AppState.construct.parts=[];AppState.expandedParts.clear();AppState.uniprotCache={};AppState.rawDataCache={};AppState.uniprotCache[accession]=parsed;AppState.rawDataCache[accession]=data;const sigLen=parsed.signalPeptide?parsed.signalPeptide.sequence.length:0;const segLen=parsed.part.segments.reduce((a,s)=>a+s.sequence.length,0);if(sigLen+segLen!==parsed.part.fullSequence.length)console.warn('Sequence integrity mismatch');if(parsed.signalPeptide){AppState.construct.parts.push({type:'signal',name:`${parsed.part.gene||parsed.part.name} signal`,entryName:`${parsed.part.gene||parsed.part.entryName} signal`,source:'uniprot',sequence:parsed.signalPeptide.sequence,description:parsed.signalPeptide.description,originalRange:`${parsed.signalPeptide.start}\u2013${parsed.signalPeptide.end}`,ss:new Array(parsed.signalPeptide.sequence.length).fill('loop'),mutations:[]});}AppState.construct.parts.push(parsed.part);AppState.mutSelectedPart=AppState.construct.parts.length-1;AppState.zone3SelectedPart=AppState.construct.parts.length-1;document.getElementById('searchDropdown').classList.remove('visible');document.getElementById('searchInput').value='';renderAll();}
 function loadPastedSequence(raw){let seq=raw.trim();if(seq.startsWith('>')){const lines=seq.split('\n');seq=lines.slice(1).join('').trim();}seq=seq.replace(/[\s\d]/g,'').toUpperCase();if(!/^[ACDEFGHIKLMNPQRSTVWY]+$/.test(seq)){alert('Invalid amino acid characters.');return;}if(seq.length<5){alert('Sequence too short.');return;}saveUndo();AppState.construct.parts=[];AppState.expandedParts.clear();AppState.uniprotCache={};AppState.rawDataCache={};AppState.construct.parts.push({type:'protein',name:'Custom protein',entryName:'Custom',gene:'\u2014',organism:'\u2014',accession:null,source:'custom',fullSequence:seq,length:seq.length,mw:calculateMW(seq),segments:[{name:'Custom protein',type:'full',start:1,end:seq.length,sequence:seq,description:'Pasted sequence',active:true,isTM:false,mutations:[],ss:new Array(seq.length).fill('loop')}],expanded:false});AppState.uniprotCache['custom']={mutations:[],features:[],publications:[]};document.getElementById('pasteTextarea').value='';document.getElementById('pasteArea').classList.remove('visible');renderAll();}
 
-const COMMON_SIGNALS=[
-{name:'IgK leader',sequence:'METDTLLLWVLLLWVPGSTGD',organism:'Homo sapiens (synthetic)',system:['mammalian'],use:'High-yield secretion in HEK293/CHO'},
-{name:'IL-2 signal',sequence:'MYRMQLLSCIALSLALVTNS',organism:'Homo sapiens',system:['mammalian'],use:'Secreted proteins, cytokines'},
-{name:'Gaussia Luc signal',sequence:'MGVKVLFALICIAVAEA',organism:'Gaussia princeps',system:['mammalian'],use:'Very efficient secretion'},
-{name:'CD33 signal',sequence:'MPLLLLLPLLWAGALA',organism:'Homo sapiens',system:['mammalian'],use:'Type I membrane proteins'},
-{name:'Azurocidin signal',sequence:'MTRLTVLALLAGLLASSRA',organism:'Homo sapiens',system:['mammalian'],use:'High secretion efficiency'},
-{name:'PelB',sequence:'MKYLLPTAAAGLLLLAAQPAMA',organism:'Erwinia carotovora',system:['bacterial'],use:'Periplasmic expression, Fab fragments'},
-{name:'OmpA',sequence:'MKKTAIAIAVALAGFATVAQA',organism:'Escherichia coli',system:['bacterial'],use:'Periplasmic secretion'},
-{name:'MalE',sequence:'MKIKTGARILALSALTTMMFSASALA',organism:'Escherichia coli',system:['bacterial'],use:'Periplasmic, fusion tag'},
-{name:'DsbA',sequence:'MKKIWLALAGLVLAFSASA',organism:'Escherichia coli',system:['bacterial'],use:'Fast Sec-dependent secretion'},
-{name:'TorA',sequence:'MNNNDLFQASRRRFLAQLGGLTVAGMLGPSLLTPRRATA',organism:'Escherichia coli',system:['bacterial'],use:'Tat pathway, folded protein export'},
-{name:'gp67',sequence:'MVSAIVLYVLLAAAAHSAFA',organism:'AcMNPV',system:['insect'],use:'Baculovirus secretion in Sf9/Hi5'},
-{name:'Melittin',sequence:'MKFLVNVALVFMVVYISYIYA',organism:'Apis mellifera',system:['insect'],use:'High-level secretion in insect cells'},
-{name:'\u03B1-mating factor',sequence:'MRFPSIFTAVLFAASSALAAPVNTTTEDETAQIPAEAVIGYSDLEGDFDVAVLPFSNSTNNGLLFINTTIASIAAKEEGVSLEKREAEA',organism:'Saccharomyces cerevisiae',system:['yeast'],use:'Pichia/S. cerevisiae secretion (prepro)'},
-{name:'\u03B1-MF (pre only)',sequence:'MRFPSIFTAVLFAASSALA',organism:'Saccharomyces cerevisiae',system:['yeast'],use:'Short pre-signal for yeast'},
-{name:'Ost1',sequence:'MRQVWFSWIVGLFLCFFNVSSA',organism:'Saccharomyces cerevisiae',system:['yeast'],use:'Alternative yeast signal, co-translational'},
-];
+let COMMON_SIGNALS=[];
 let sigFilterSystem='all';
 function renderSignalsList(){
 const list=document.getElementById('sigCommonEntries');if(!list)return;
@@ -332,59 +316,14 @@ saveUndo();
 AppState.construct.parts.unshift({type:'signal',name:name,entryName:name,source:'library',sequence:sequence,organism:organism||'',description:name+' signal peptide',originalRange:'1\u2013'+sequence.length,ss:new Array(sequence.length).fill('loop'),mutations:[]});
 renderAll();
 }
-const COMMON_LINKERS=[
-{name:'(GGGGS)x1',sequence:'GGGGS',cat:'flexible',use:'Short flexible, minimal spacing'},
-{name:'(GGGGS)x2',sequence:'GGGGSGGGGS',cat:'flexible',use:'Medium flexible linker'},
-{name:'(GGGGS)x3',sequence:'GGGGSGGGGSGGGGS',cat:'flexible',use:'Standard flexible linker'},
-{name:'(GGGGS)x4',sequence:'GGGGSGGGGSGGGGSGGGGS',cat:'flexible',use:'Long flexible linker'},
-{name:'(GGS)x2',sequence:'GGSGGS',cat:'flexible',use:'Short flexible alternative'},
-{name:'GSGSGS',sequence:'GSGSGS',cat:'flexible',use:'Ser-Gly flexible linker'},
-{name:'(EAAAK)x1',sequence:'EAAAK',cat:'rigid',use:'Short helical rigid linker'},
-{name:'(EAAAK)x2',sequence:'EAAAKEAAAK',cat:'rigid',use:'Medium helical rigid linker'},
-{name:'(EAAAK)x3',sequence:'EAAAKEAAAKEAAAK',cat:'rigid',use:'Long helical rigid linker'},
-{name:'(AP)x10',sequence:'APAPAPAPAPAPAPAPAPAP',cat:'rigid',use:'Proline-rich rigid linker'},
-{name:'PAPAP',sequence:'PAPAP',cat:'rigid',use:'Short proline rigid linker'},
-{name:'TEV site',sequence:'ENLYFQS',cat:'cleavable',use:'TEV protease — most common lab protease'},
-{name:'HRV 3C site',sequence:'LEVLFQGP',cat:'cleavable',use:'HRV 3C / PreScission protease'},
-{name:'Thrombin site',sequence:'LVPRGS',cat:'cleavable',use:'Thrombin cleavage'},
-{name:'Factor Xa site',sequence:'IEGR',cat:'cleavable',use:'Factor Xa cleavage'},
-{name:'Enterokinase site',sequence:'DDDDK',cat:'cleavable',use:'Enterokinase cleavage'},
-{name:'T2A',sequence:'EGRGSLLTCGDVEENPGP',cat:'2a',use:'Thosea asigna virus 2A — most efficient'},
-{name:'P2A',sequence:'GSGATNFSLLKQAGDVEENPGP',cat:'2a',use:'Porcine teschovirus 2A — widely used'},
-{name:'E2A',sequence:'QCTNYALLKLAGDVESNPGP',cat:'2a',use:'Equine rhinitis A virus 2A'},
-{name:'F2A',sequence:'VKQTLNFDLLKLAGDVESNPGP',cat:'2a',use:'Foot-and-mouth disease virus 2A'},
-{name:'IgG1 hinge',sequence:'EPKSCDKTHTCPPCP',cat:'hinge',use:'Human IgG1 hinge — Fc fusions, flexibility + dimerization'},
-{name:'IgG4 hinge',sequence:'ESKYGPPCPSCP',cat:'hinge',use:'Human IgG4 hinge — reduced Fab-arm exchange'},
-];
+let COMMON_LINKERS=[];
 let linkerCatFilter='all';
 function renderLinkersList(){const list=document.getElementById('linkerEntries');if(!list)return;const filtered=linkerCatFilter==='all'?COMMON_LINKERS:COMMON_LINKERS.filter(l=>l.cat===linkerCatFilter);list.innerHTML='';filtered.forEach(lnk=>{const div=document.createElement('div');div.style.cssText='padding:8px 10px;border-bottom:1px solid var(--border-light);cursor:pointer;transition:background .1s;border-radius:4px';div.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center"><div><span style="font-weight:600;font-size:12px;color:var(--color-linker)">'+lnk.name+'</span><span style="font-size:10px;color:var(--text-tertiary);margin-left:6px">'+lnk.sequence.length+' aa</span></div><span style="font-size:9px;padding:1px 5px;border-radius:3px;background:var(--bg-subtle);color:var(--text-tertiary);font-weight:500">'+lnk.cat+'</span></div><div style="font-size:10px;color:var(--text-tertiary);margin-top:2px">'+lnk.use+'</div><div style="font-family:var(--font-mono);font-size:9px;color:var(--text-tertiary);margin-top:2px;opacity:.7">'+lnk.sequence+'</div>';div.addEventListener('mouseenter',function(){this.style.background='var(--bg-subtle)';});div.addEventListener('mouseleave',function(){this.style.background='';});div.addEventListener('click',function(){addPartToConstruct('linker',lnk.name,lnk.sequence);});list.appendChild(div);});}
 
-const CONJ_SEQUENCES=[
-{name:'LPETG (Sortase A)',sequence:'LPETG',use:'C-terminal sortase tag — ligate to GGG-payload'},
-{name:'GGG (Sortase nucleophile)',sequence:'GGG',use:'N-terminal — pairs with LPETG for sortase ligation'},
-{name:'Single Cys',sequence:'C',use:'Maleimide conjugation — ADCs, PEGylation, fluorophores'},
-{name:'Avi-tag',sequence:'GLNDIFEAQKIEWHE',use:'BirA biotin ligase — site-specific biotinylation'},
-{name:'SpyTag',sequence:'AHIVMVDAYKPTK',use:'SpyTag/SpyCatcher — irreversible isopeptide bond'},
-{name:'SnoopTag',sequence:'KLGDIEFIKVNK',use:'SnoopTag/SnoopCatcher — orthogonal to SpyTag'},
-{name:'ybbR tag',sequence:'DSLEFIASKLA',use:'Sfp transferase — CoA-substrate labeling'},
-{name:'Q-tag',sequence:'LLQG',use:'Transglutaminase — site-specific amine conjugation'},
-];
+let CONJ_SEQUENCES=[];
 function renderConjList(){const list=document.getElementById('conjEntries');if(!list)return;list.innerHTML='';CONJ_SEQUENCES.forEach(c=>{const div=document.createElement('div');div.style.cssText='padding:8px 10px;border-bottom:1px solid var(--border-light);cursor:pointer;transition:background .1s;border-radius:4px';div.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center"><div><span style="font-weight:600;font-size:12px;color:#d97706">'+c.name+'</span><span style="font-size:10px;color:var(--text-tertiary);margin-left:6px">'+c.sequence.length+' aa</span></div></div><div style="font-size:10px;color:var(--text-tertiary);margin-top:2px">'+c.use+'</div><div style="font-family:var(--font-mono);font-size:9px;color:var(--text-tertiary);margin-top:2px;opacity:.7">'+c.sequence+'</div>';div.addEventListener('mouseenter',function(){this.style.background='var(--bg-subtle)';});div.addEventListener('mouseleave',function(){this.style.background='';});div.addEventListener('click',function(){addPartToConstruct('tag',c.name,c.sequence);});list.appendChild(div);});}
 
-const COMMON_TAGS=[
-{name:'His6',sequence:'HHHHHH',cat:'purification',use:'IMAC purification — most common'},
-{name:'His10',sequence:'HHHHHHHHHH',cat:'purification',use:'IMAC — stronger binding than His6'},
-{name:'Strep-tag II',sequence:'WSHPQFEK',cat:'purification',use:'Strep-Tactin purification — high purity'},
-{name:'Twin-Strep',sequence:'WSHPQFEKGGGSGGGSWSHPQFEK',cat:'purification',use:'Twin Strep-Tactin — enhanced affinity'},
-{name:'FLAG',sequence:'DYKDDDDK',cat:'purification',use:'Anti-FLAG purification & detection'},
-{name:'Calmodulin-binding',sequence:'KRRWKKNFIAVSAANRFKKISSSGAL',cat:'purification',use:'Calmodulin affinity purification'},
-{name:'HA tag',sequence:'YPYDVPDYA',cat:'detection',use:'Anti-HA detection — Western, IF, IP'},
-{name:'Myc tag',sequence:'EQKLISEEDL',cat:'detection',use:'Anti-Myc (9E10) detection'},
-{name:'V5 tag',sequence:'GKPIPNPLLGLD',cat:'detection',use:'Anti-V5 detection'},
-{name:'E-tag',sequence:'GAPVPYPDPLEPR',cat:'detection',use:'Anti-E-tag detection'},
-{name:'SUMO',sequence:'MSDSEVNQEAKPEVKPEVKPETHINLKVSDGSSEIFFKIKKTTPLRRLMEAFAKRQGKEMDSLRFLYDGIRIQADQTPEDLDMEDNDIIEAHREQIGG',cat:'solubility',use:'SUMO fusion — solubility + ULP1 cleavable'},
-{name:'GB1',sequence:'MQYKLILNGKTLKGETTTEAVDAATAEKVFKQYANDNGVDGEWTYDDATKTFTVTE',cat:'solubility',use:'Protein G B1 domain — small solubility enhancer'},
-];
+let COMMON_TAGS=[];
 let tagCatFilter='all';
 function renderTagsList(){const list=document.getElementById('tagEntries');if(!list)return;const filtered=tagCatFilter==='all'?COMMON_TAGS:COMMON_TAGS.filter(t=>t.cat===tagCatFilter);list.innerHTML='';filtered.forEach(tag=>{const div=document.createElement('div');div.style.cssText='padding:8px 10px;border-bottom:1px solid var(--border-light);cursor:pointer;transition:background .1s;border-radius:4px';div.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center"><div><span style="font-weight:600;font-size:12px;color:#d97706">'+tag.name+'</span><span style="font-size:10px;color:var(--text-tertiary);margin-left:6px">'+tag.sequence.length+' aa</span></div><span style="font-size:9px;padding:1px 5px;border-radius:3px;background:var(--bg-subtle);color:var(--text-tertiary);font-weight:500">'+tag.cat+'</span></div><div style="font-size:10px;color:var(--text-tertiary);margin-top:2px">'+tag.use+'</div><div style="font-family:var(--font-mono);font-size:9px;color:var(--text-tertiary);margin-top:2px;opacity:.7">'+tag.sequence.slice(0,35)+(tag.sequence.length>35?'\u2026':'')+'</div>';div.addEventListener('mouseenter',function(){this.style.background='var(--bg-subtle)';});div.addEventListener('mouseleave',function(){this.style.background='';});div.addEventListener('click',function(){addPartToConstruct('tag',tag.name,tag.sequence);});list.appendChild(div);});}
 
@@ -398,6 +337,14 @@ AppState.construct.parts.push({type:type,name:name,entryName:name,source:'librar
 renderAll();
 }
 document.addEventListener('DOMContentLoaded',()=>{
+// Load parts library from JSON
+fetch('./data/parts_library.json').then(r=>r.json()).then(lib=>{
+COMMON_SIGNALS=lib.signals||[];
+COMMON_LINKERS=(lib.linkers||[]).map(l=>({...l,cat:l.category}));
+CONJ_SEQUENCES=lib.conjugation||[];
+COMMON_TAGS=(lib.tags||[]).map(t=>({...t,cat:t.category}));
+renderSignalsList();renderLinkersList();renderConjList();renderTagsList();
+}).catch(e=>console.warn('Parts library not loaded:',e));
 document.querySelectorAll('.mode-btn').forEach(btn=>{btn.addEventListener('click',()=>{document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');const pa=document.getElementById('pasteArea');const si=document.getElementById('searchInput');if(btn.dataset.mode==='paste'){pa.classList.add('visible');si.disabled=true;si.style.opacity='0.5';}else{pa.classList.remove('visible');si.disabled=false;si.style.opacity='1';}});});
 const searchInput=document.getElementById('searchInput');const dropdown=document.getElementById('searchDropdown');
 searchInput.addEventListener('input',()=>{clearTimeout(searchDebounce);const query=searchInput.value.trim();if(query.length<2){dropdown.classList.remove('visible');return;}dropdown.innerHTML='<div class="search-loading">Searching UniProt\u2026</div>';dropdown.classList.add('visible');searchDebounce=setTimeout(async()=>{const results=await searchUniProt(query);if(results.length===0){dropdown.innerHTML='<div class="search-loading">No results found</div>';return;}dropdown.innerHTML='';results.forEach(r=>{const div=document.createElement('div');div.className='search-result';div.innerHTML=`<div class="search-result-name">${r.entryName}<span class="search-result-badge ${r.reviewed?'badge-reviewed':'badge-unreviewed'}">${r.reviewed?'\u2605 Reviewed':'Unreviewed'}</span></div><div class="search-result-meta">${r.accession} \u00B7 ${r.gene} \u00B7 ${r.organism} \u00B7 ${r.length} aa</div>`;div.addEventListener('click',()=>loadProtein(r.accession));dropdown.appendChild(div);});},350);});
