@@ -65,6 +65,7 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text-primary)
 .pub-item{padding:12px 0;border-bottom:1px solid var(--border-light)}.pub-item:last-child{border-bottom:none}.pub-title{font-size:13px;font-weight:500}.pub-authors{font-size:12px;color:var(--text-tertiary);margin-top:2px}.pub-journal{font-size:12px;color:var(--text-secondary);font-style:italic;margin-top:2px}.pub-link{font-size:12px;color:var(--accent);text-decoration:none;margin-top:4px;display:inline-block}.pub-link:hover{text-decoration:underline}
 .info-block{margin-bottom:16px;padding:12px;background:var(--bg-subtle);border-radius:var(--radius);border:1px solid var(--border-light)}.info-block-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-tertiary);margin-bottom:6px}.info-block-text{font-size:13px;color:var(--text-secondary);line-height:1.6}
 .empty-state{text-align:center;padding:32px;color:var(--text-tertiary);font-size:13px}.landing-state{text-align:center;padding:80px 40px;max-width:500px;margin:0 auto}.landing-icon{width:64px;height:64px;background:var(--accent-light);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px}.landing-icon svg{width:32px;height:32px;color:var(--accent)}.landing-title{font-size:20px;font-weight:700;margin-bottom:8px}.landing-desc{font-size:14px;color:var(--text-secondary);line-height:1.6}
+.ptm-clickable-row:hover,.domain-clickable-row:hover,.disease-variant-row:hover{background:var(--accent-light) !important;}
 .template-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:12px 16px;border:1.5px solid var(--border);background:var(--bg);border-radius:var(--radius-lg);cursor:pointer;transition:all .15s;font-family:var(--font-sans);min-width:80px}.template-btn:hover{border-color:var(--accent);box-shadow:var(--shadow);transform:translateY(-2px);background:var(--accent-light)}
 .part-card[draggable="true"]{cursor:grab}.part-card[draggable="true"]:active{cursor:grabbing}.part-card.dragging{opacity:0.4;transform:scale(0.95)}.part-card.drag-over{border-color:var(--accent)!important;box-shadow:0 0 0 2px rgba(37,99,235,0.2)!important}
 .construct-bar-segment[draggable="true"]{cursor:grab}.construct-bar-segment[draggable="true"]:active{cursor:grabbing}.construct-bar-segment.dragging{opacity:0.4}.construct-bar-segment.drag-over{outline:2px solid var(--accent);outline-offset:-2px}
@@ -97,6 +98,26 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text-primary)
 <input type="text" class="add-part-name-input" id="pasteNameInput" placeholder="Sequence name (e.g., My nanobody, Fc region)…">
 <textarea class="add-part-paste-area" id="pasteTextarea" placeholder="Paste amino acid sequence (raw or FASTA format)…" style="height:120px"></textarea>
 <div style="display:flex;gap:8px"><button class="btn btn-primary" id="pasteLoadBtn" style="flex:1">Load sequence</button><button class="btn btn-secondary" id="pasteClearBtn">Cancel</button></div>
+</div>
+</div>
+<div class="add-part-popup" id="regionPopup" style="display:none;width:560px;max-height:420px;z-index:300">
+<div style="padding:12px 20px;border-bottom:1px solid var(--border-light);display:flex;justify-content:space-between;align-items:center">
+<div><span style="font-weight:600;font-size:14px" id="regionPopupTitle"></span><span style="font-size:11px;color:var(--text-tertiary);margin-left:8px" id="regionPopupRange"></span></div>
+<button onclick="document.getElementById('regionPopup').style.display='none'" style="border:none;background:none;cursor:pointer;font-size:18px;color:var(--text-tertiary);line-height:1">&times;</button>
+</div>
+<div style="padding:16px;font-family:var(--font-mono);font-size:12px;line-height:2;word-break:break-all;max-height:320px;overflow-y:auto" id="regionPopupSeq"></div>
+</div>
+<div id="confirmPopup" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:500">
+<div style="position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.3)" onclick="document.getElementById('confirmPopup').style.display='none';"></div>
+<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--bg);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);width:420px;max-width:90vw;overflow:hidden">
+<div style="padding:20px 24px;border-bottom:1px solid var(--border-light)">
+<div style="font-weight:600;font-size:15px" id="confirmTitle"></div>
+<div style="font-size:13px;color:var(--text-secondary);margin-top:6px" id="confirmDesc"></div>
+</div>
+<div style="padding:16px 24px;display:flex;gap:10px;justify-content:flex-end">
+<button class="btn btn-secondary" id="confirmCancel" style="padding:8px 20px">Cancel</button>
+<button class="btn btn-primary" id="confirmOk" style="padding:8px 20px">Apply</button>
+</div>
 </div>
 </div>
 <main class="main">
@@ -292,8 +313,8 @@ if(cached&&cached.mutations.length>0){html+='<div class="right-panel-section"><d
 if(!html)html='<div class="library-empty"><div class="library-empty-icon">\uD83E\uDDEC</div>Load a protein to see known variants</div>';mutPanel.innerHTML=html;
 const selector=document.getElementById('mutPartSelector');if(selector)selector.addEventListener('change',()=>{AppState.mutSelectedPart=parseInt(selector.value);renderRightPanel();});
 mutPanel.querySelectorAll('.mutation-remove-btn').forEach(btn=>{btn.addEventListener('click',e=>{e.stopPropagation();saveUndo();const segStart=parseInt(btn.dataset.segStart);const pos=parseInt(btn.dataset.pos);const isVirtual=btn.dataset.isVirtual==='1';if(isVirtual){AppState.construct.parts.forEach(part=>{if(part.type!=='protein'&&part.mutations)part.mutations=part.mutations.filter(m=>m.position!==pos);});renderAll();}else{AppState.construct.parts.forEach(part=>{if(part.type==='protein')part.segments.forEach(seg=>{if(seg.start===segStart)removeMutation(seg,pos);});});}});});
-mutPanel.querySelectorAll('.variant-item').forEach(item=>{item.addEventListener('click',()=>{const mi=parseInt(item.dataset.mutIdx);if(!cached)return;const m=cached.mutations[mi];if(!m||m.original==='?'||m.alternatives.length===0)return;const altAA=m.alternatives[0];if(confirm(`Apply variant ${m.original}${m.position}${altAA} to ${selPart.entryName||selPart.name}?\n\n${m.change||'No description'}`)){saveUndo();for(const seg of selPart.segments){if(m.position>=seg.start&&m.position<=seg.end){applyMutation(seg,m.position,m.original,altAA,'uniprot',m.change);return;}}}});item.addEventListener('mouseenter',e=>{const mi=parseInt(item.dataset.mutIdx);if(!cached)return;const m=cached.mutations[mi];if(!m.change)return;const tt=document.getElementById('variantTooltip');tt.textContent=m.change;const rect=item.getBoundingClientRect();tt.style.left=rect.left+'px';tt.style.top=(rect.bottom+4)+'px';tt.style.display='block';});item.addEventListener('mouseleave',()=>{document.getElementById('variantTooltip').style.display='none';});});}
-function renderZone3(){const zone3=document.getElementById('zone3');if(AppState.construct.parts.length===0){zone3.classList.remove('visible');return;}zone3.classList.add('visible');const contentEl=document.getElementById('zone3Content');const proteinParts=AppState.construct.parts.filter(p=>p.type==='protein'&&p.accession);const selPart=proteinParts.length>0?(AppState.construct.parts[AppState.zone3SelectedPart]||proteinParts[0]):null;const cached=selPart&&selPart.accession?AppState.uniprotCache[selPart.accession]:null;const rawData=selPart&&selPart.accession?AppState.rawDataCache[selPart.accession]:null;let html='';
+mutPanel.querySelectorAll('.variant-item').forEach(item=>{item.addEventListener('click',async()=>{const mi=parseInt(item.dataset.mutIdx);if(!cached)return;const m=cached.mutations[mi];if(!m||m.original==='?'||m.alternatives.length===0)return;const altAA=m.alternatives[0];var ok=await customConfirm('Apply variant '+m.original+m.position+altAA+' to '+(selPart.entryName||selPart.name)+'?',m.change||'');if(ok){saveUndo();for(const seg of selPart.segments){if(m.position>=seg.start&&m.position<=seg.end){applyMutation(seg,m.position,m.original,altAA,'uniprot',m.change);return;}}}});item.addEventListener('mouseenter',e=>{const mi=parseInt(item.dataset.mutIdx);if(!cached)return;const m=cached.mutations[mi];if(!m.change)return;const tt=document.getElementById('variantTooltip');tt.textContent=m.change;const rect=item.getBoundingClientRect();tt.style.left=rect.left+'px';tt.style.top=(rect.bottom+4)+'px';tt.style.display='block';});item.addEventListener('mouseleave',()=>{document.getElementById('variantTooltip').style.display='none';});});}
+function renderZone3(){const zone3=document.getElementById('zone3');if(AppState.construct.parts.length===0){zone3.classList.remove('visible');return;}zone3.classList.add('visible');const contentEl=document.getElementById('zone3Content');const proteinParts=AppState.construct.parts.filter(p=>p.type==='protein'&&p.accession);const selPart=proteinParts.length>0?(function(){var sp=AppState.construct.parts[AppState.zone3SelectedPart];return(sp&&sp.type==='protein'&&sp.accession)?sp:proteinParts[0];}()):null;const cached=selPart&&selPart.accession?AppState.uniprotCache[selPart.accession]:null;const rawData=selPart&&selPart.accession?AppState.rawDataCache[selPart.accession]:null;let html='';
 if(proteinParts.length>1){html+='<select class="zone3-part-selector" id="zone3PartSelector">';AppState.construct.parts.forEach((p,i)=>{if(p.type==='protein'&&p.accession)html+=`<option value="${i}" ${i===AppState.zone3SelectedPart?'selected':''}>${p.entryName||p.name}</option>`;});html+='</select>';}
 const tab=AppState.zone3Tab;if(!rawData&&tab!=='publications'){html+='<div class="empty-state">No data available for this part</div>';contentEl.innerHTML=html;return;}
 const comments=(rawData?.comments||[]);const features=(rawData?.features||[]);const xrefs=(rawData?.uniProtKBCrossReferences||[]);
@@ -307,7 +328,7 @@ else if(tab==='interaction'){const subunit=comments.filter(c=>c.commentType==='S
 else if(tab==='structure'){const pdb=xrefs.filter(x=>x.database==='PDB');if(pdb.length>0){html+='<div class="structure-layout"><div class="structure-table-wrap"><table class="data-table"><thead><tr><th>PDB</th><th>Method</th><th>Res.</th><th>Chains</th></tr></thead><tbody>';pdb.forEach(p=>{const pr=p.properties||[];html+=`<tr class="pdb-row" data-pdb="${p.id}" style="cursor:pointer"><td class="pdb-link">${p.id} <a href="https://www.rcsb.org/structure/${p.id}" target="_blank" onclick="event.stopPropagation()" style="font-size:9px;color:var(--text-tertiary);text-decoration:none" title="Open in RCSB">\u2197</a></td><td>${pr.find(x=>x.key==='Method')?.value||'\u2014'}</td><td>${pr.find(x=>x.key==='Resolution')?.value||'\u2014'}</td><td style="font-size:11px">${pr.find(x=>x.key==='Chains')?.value||'\u2014'}</td></tr>`;});html+='</tbody></table></div><div class="structure-viewer-wrap"><div class="structure-viewer" id="pdbViewer"><div style="display:flex;align-items:center;justify-content:center;height:100%;color:#666;font-size:13px">Click a PDB to view</div></div></div></div>';}else html+='<div class="empty-state">No structure data</div>';}
 else if(tab==='family'){const domC=comments.filter(c=>c.commentType==='DOMAIN');const simC=comments.filter(c=>c.commentType==='SIMILARITY');const famF=features.filter(f=>['Domain','Repeat','Zinc finger','Coiled coil','Compositional bias','Motif'].includes(f.type));domC.forEach(d=>{html+=`<div class="info-block"><div class="info-block-title">Domain</div><div class="info-block-text">${d.texts?.map(t=>t.value).join(' ')||'\u2014'}</div></div>`;});simC.forEach(s=>{html+=`<div class="info-block"><div class="info-block-title">Similarity</div><div class="info-block-text">${s.texts?.map(t=>t.value).join(' ')||'\u2014'}</div></div>`;});if(famF.length>0){html+='<table class="data-table"><thead><tr><th>Type</th><th>Position</th><th>Description</th></tr></thead><tbody>';famF.forEach(f=>{html+=`<tr class="domain-clickable-row" data-start="${f.location?.start?.value||''}" data-end="${f.location?.end?.value||''}" data-desc="${(f.description||'').replace(/"/g,'&quot;')}" style="cursor:pointer"><td>${f.type}</td><td class="pos-badge">${f.location?.start?.value||'?'}\u2013${f.location?.end?.value||'?'}</td><td>${f.description||'\u2014'}</td></tr>`;});html+='</tbody></table>';}if(domC.length===0&&simC.length===0&&famF.length===0)html+='<div class="empty-state">No family/domain data</div>';}
 else if(tab==='publications'){if(cached&&cached.publications.length>0){const pubs=[...cached.publications];const sortAsc=AppState.pubSortAsc||false;pubs.sort((a,b)=>{const ya=parseInt(a.year)||0;const yb=parseInt(b.year)||0;return sortAsc?(ya-yb):(yb-ya);});html+=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><span style="font-size:12px;color:var(--text-tertiary)">${pubs.length} publications</span><button class="sort-toggle" id="pubSortBtn">${sortAsc?'\u2191 Oldest first':'\u2193 Newest first'}</button></div>`;pubs.slice(0,30).forEach(p=>{html+=`<div class="pub-item"><div class="pub-title">${p.title}</div><div class="pub-authors">${p.authors}</div><div class="pub-journal">${p.journal} ${p.year}</div>${p.pubmedId?`<a class="pub-link" href="https://pubmed.ncbi.nlm.nih.gov/${p.pubmedId}" target="_blank">PubMed \u2197</a>`:''}</div>`;});}else html+='<div class="empty-state">No publications found</div>';}
-contentEl.innerHTML=html;contentEl.querySelectorAll('.disease-variant-row').forEach(row=>{row.addEventListener('click',()=>{const pos=parseInt(row.dataset.pos);const orig=row.dataset.orig;const altAA=row.dataset.alt;const desc=row.dataset.desc;if(!pos||orig==='?'||altAA==='?')return;if(!selPart)return;if(confirm('Apply mutation '+orig+pos+altAA+' to '+( selPart.entryName||selPart.name)+'?\n\n'+(desc||''))){saveUndo();for(const seg of selPart.segments){if(pos>=seg.start&&pos<=seg.end){applyMutation(seg,pos,orig,altAA,'uniprot',desc);return;}}}});});
+contentEl.innerHTML=html;contentEl.querySelectorAll('.disease-variant-row').forEach(row=>{row.addEventListener('click',async()=>{const pos=parseInt(row.dataset.pos);const orig=row.dataset.orig;const altAA=row.dataset.alt;const desc=row.dataset.desc;if(!pos||orig==='?'||altAA==='?')return;if(!selPart)return;var ok=await customConfirm('Apply mutation '+orig+pos+altAA+' to '+(selPart.entryName||selPart.name)+'?',desc||'');if(ok){saveUndo();for(const seg of selPart.segments){if(pos>=seg.start&&pos<=seg.end){applyMutation(seg,pos,orig,altAA,'uniprot',desc);return;}}}});});
 // PTM row click - show region popup with interactive sequence
 contentEl.querySelectorAll('.ptm-clickable-row').forEach(function(row){row.addEventListener('click',function(e){
 var start=parseInt(row.dataset.start);var end=parseInt(row.dataset.end);var desc=row.dataset.desc;var type=row.dataset.type;
@@ -360,8 +381,8 @@ div.addEventListener('click',()=>{addSignalToConstruct(sig.name,sig.sequence,sig
 list.appendChild(div);
 });
 }
-function addSignalToConstruct(name,sequence,organism){
-if(!confirm('Add '+name+' signal ('+sequence.length+' aa) to the N-terminus of your construct?'))return;
+async function addSignalToConstruct(name,sequence,organism){
+var ok=await customConfirm('Add '+name+' signal ('+sequence.length+' aa) to N-terminus?','Signal peptide will be added before all other parts.');if(!ok)return;
 saveUndo();
 AppState.construct.parts.unshift({type:'signal',name:name,entryName:name,source:'library',sequence:sequence,organism:organism||'',description:name+' signal peptide',originalRange:'1\u2013'+sequence.length,ss:new Array(sequence.length).fill('loop'),mutations:[]});
 renderAll();
@@ -377,20 +398,35 @@ let COMMON_TAGS=[];
 let tagCatFilter='all';
 function renderTagsList(){const list=document.getElementById('tagEntries');if(!list)return;const filtered=tagCatFilter==='all'?COMMON_TAGS:COMMON_TAGS.filter(t=>t.cat===tagCatFilter);list.innerHTML='';filtered.forEach(tag=>{const div=document.createElement('div');div.style.cssText='padding:8px 10px;border-bottom:1px solid var(--border-light);cursor:pointer;transition:background .1s;border-radius:4px';div.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center"><div><span style="font-weight:600;font-size:12px;color:#d97706">'+tag.name+'</span><span style="font-size:10px;color:var(--text-tertiary);margin-left:6px">'+tag.sequence.length+' aa</span></div><span style="font-size:9px;padding:1px 5px;border-radius:3px;background:var(--bg-subtle);color:var(--text-tertiary);font-weight:500">'+tag.cat+'</span></div><div style="font-size:10px;color:var(--text-tertiary);margin-top:2px">'+tag.use+'</div><div style="font-family:var(--font-mono);font-size:9px;color:var(--text-tertiary);margin-top:2px;opacity:.7">'+tag.sequence.slice(0,35)+(tag.sequence.length>35?'\u2026':'')+'</div>';div.addEventListener('mouseenter',function(){this.style.background='var(--bg-subtle)';});div.addEventListener('mouseleave',function(){this.style.background='';});div.addEventListener('click',function(){addPartToConstruct('tag',tag.name,tag.sequence);});list.appendChild(div);});}
 
-function addPartToConstruct(type,name,sequence){
+async function addPartToConstruct(type,name,sequence){
 var position=AppState.construct.parts.length>0?'end':'start';
 if(AppState.construct.parts.length>0){
-if(!confirm('Add '+name+' ('+sequence.length+' aa) to the C-terminus of your construct?\nYou can drag to reorder after adding.'))return;
+var ok=await customConfirm('Add '+name+' ('+sequence.length+' aa) to C-terminus?','You can drag to reorder after adding.');if(!ok)return;
 }
 saveUndo();
 AppState.construct.parts.push({type:type,name:name,entryName:name,source:'library',sequence:sequence,description:name,originalRange:'1\u2013'+sequence.length,ss:new Array(sequence.length).fill('loop'),mutations:[]});
 renderAll();
 }
+function customConfirm(title,desc){
+return new Promise(function(resolve){
+document.getElementById('confirmTitle').textContent=title;
+document.getElementById('confirmDesc').textContent=desc||'';
+document.getElementById('confirmPopup').style.display='block';
+var okBtn=document.getElementById('confirmOk');
+var cancelBtn=document.getElementById('confirmCancel');
+function cleanup(){document.getElementById('confirmPopup').style.display='none';okBtn.removeEventListener('click',onOk);cancelBtn.removeEventListener('click',onCancel);}
+function onOk(){cleanup();resolve(true);}
+function onCancel(){cleanup();resolve(false);}
+okBtn.addEventListener('click',onOk);
+cancelBtn.addEventListener('click',onCancel);
+});
+}
 function showRegionPopup(title,start,end,event){
 if(!start||!end)return;
-var selIdx=AppState.zone3SelectedPart;
-var parts=AppState.construct.parts.filter(function(p){return p.type==='protein'&&p.accession;});
-var selPart=parts.length>0?(AppState.construct.parts[selIdx]||parts[0]):null;
+var selPart=null;
+for(var i=0;i<AppState.construct.parts.length;i++){
+if(AppState.construct.parts[i].type==='protein'&&AppState.construct.parts[i].fullSequence){selPart=AppState.construct.parts[i];break;}
+}
 if(!selPart||!selPart.fullSequence)return;
 var seq=selPart.fullSequence.slice(start-1,end);
 var popup=document.getElementById('regionPopup');
@@ -481,7 +517,7 @@ searchInput.addEventListener('input',()=>{clearTimeout(searchDebounce);const que
 document.addEventListener('click',e=>{if(!e.target.closest('.search-container'))dropdown.classList.remove('visible');});
 document.getElementById('pasteLoadBtn').addEventListener('click',()=>{const val=document.getElementById('pasteTextarea').value;if(val.trim()){loadPastedSequence(val);document.getElementById('pastePopup').style.display='none';}});
 document.getElementById('pasteClearBtn').addEventListener('click',()=>{document.getElementById('pastePopup').style.display='none';});
-document.getElementById('changeBtn').addEventListener('click',()=>{if(confirm('Clear entire construct?')){saveUndo();AppState.construct.parts=[];AppState.expandedParts.clear();AppState.uniprotCache={};AppState.rawDataCache={};renderAll();}});
+document.getElementById('changeBtn').addEventListener('click',async()=>{if(await customConfirm('Clear entire construct?','All parts and mutations will be removed.')){saveUndo();AppState.construct.parts=[];AppState.expandedParts.clear();AppState.uniprotCache={};AppState.rawDataCache={};renderAll();}});
 document.getElementById('undoBtn').addEventListener('click',()=>{performUndo();});
 document.getElementById('copyFastaBtnZ1').addEventListener('click',function(){var s=getAssembledSequence();if(!s)return;var n=AppState.construct.parts.map(function(p){return p.entryName||p.name}).join('-');var h='>'+n+' | '+s.length+' aa | SeqMind';var f=h+'\n'+s.match(/.{1,60}/g).join('\n');navigator.clipboard.writeText(f).then(function(){var b=document.getElementById('copyFastaBtnZ1');b.textContent='Copied!';setTimeout(function(){b.textContent='FASTA';},1500);});});
 document.getElementById('copyFastaBtn').addEventListener('click',()=>{const seq=getAssembledSequence();if(!seq)return;const partNames=AppState.construct.parts.map(p=>p.entryName||p.name).join('-');const header=`>${partNames} | ${seq.length} aa | SeqMind`;const fasta=header+'\n'+seq.match(/.{1,60}/g).join('\n');navigator.clipboard.writeText(fasta).then(()=>{const btn=document.getElementById('copyFastaBtn');btn.textContent='Copied!';setTimeout(()=>{btn.textContent='Copy FASTA';},1500);});});
