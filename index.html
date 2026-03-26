@@ -27,7 +27,7 @@
 }
 body{font-family:var(--font-sans);background:var(--bg);color:var(--text-primary);line-height:1.5;-webkit-font-smoothing:antialiased}
 .hero{padding:28px 40px 20px;border-bottom:1px solid var(--border-light);position:relative;overflow:visible;background:var(--bg)}.hero-inner{max-width:1400px;margin:0 auto}
-.hero-title{font-size:18px;font-weight:700;letter-spacing:-0.3px}.hero-subtitle{font-size:12px;color:var(--text-tertiary);font-weight:400;margin-left:2px}
+.hero-title{font-size:18px;font-weight:700;letter-spacing:-0.3px;color:var(--accent)}.hero-subtitle{font-size:12px;color:var(--text-tertiary);font-weight:400;margin-left:2px}
 .search-row{display:flex;align-items:center;gap:12px}.search-container{flex:1;position:relative}
 .search-input{width:100%;height:44px;padding:0 16px 0 40px;border:1.5px solid var(--border);border-radius:var(--radius);font-family:var(--font-sans);font-size:14px;color:var(--text-primary);background:var(--bg);transition:border-color .15s,box-shadow .15s;outline:none}.search-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,0.1)}.search-input::placeholder{color:var(--text-tertiary)}
 .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--text-tertiary)}
@@ -65,6 +65,7 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text-primary)
 .pub-item{padding:12px 0;border-bottom:1px solid var(--border-light)}.pub-item:last-child{border-bottom:none}.pub-title{font-size:13px;font-weight:500}.pub-authors{font-size:12px;color:var(--text-tertiary);margin-top:2px}.pub-journal{font-size:12px;color:var(--text-secondary);font-style:italic;margin-top:2px}.pub-link{font-size:12px;color:var(--accent);text-decoration:none;margin-top:4px;display:inline-block}.pub-link:hover{text-decoration:underline}
 .info-block{margin-bottom:16px;padding:12px;background:var(--bg-subtle);border-radius:var(--radius);border:1px solid var(--border-light)}.info-block-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-tertiary);margin-bottom:6px}.info-block-text{font-size:13px;color:var(--text-secondary);line-height:1.6}
 .empty-state{text-align:center;padding:32px;color:var(--text-tertiary);font-size:13px}.landing-state{text-align:center;padding:80px 40px;max-width:500px;margin:0 auto}.landing-icon{width:64px;height:64px;background:var(--accent-light);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px}.landing-icon svg{width:32px;height:32px;color:var(--accent)}.landing-title{font-size:20px;font-weight:700;margin-bottom:8px}.landing-desc{font-size:14px;color:var(--text-secondary);line-height:1.6}
+.template-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:12px 16px;border:1.5px solid var(--border);background:var(--bg);border-radius:var(--radius-lg);cursor:pointer;transition:all .15s;font-family:var(--font-sans);min-width:80px}.template-btn:hover{border-color:var(--accent);box-shadow:var(--shadow);transform:translateY(-2px);background:var(--accent-light)}
 .part-card[draggable="true"]{cursor:grab}.part-card[draggable="true"]:active{cursor:grabbing}.part-card.dragging{opacity:0.4;transform:scale(0.95)}.part-card.drag-over{border-color:var(--accent)!important;box-shadow:0 0 0 2px rgba(37,99,235,0.2)!important}
 .construct-bar-segment[draggable="true"]{cursor:grab}.construct-bar-segment[draggable="true"]:active{cursor:grabbing}.construct-bar-segment.dragging{opacity:0.4}.construct-bar-segment.drag-over{outline:2px solid var(--accent);outline-offset:-2px}
 .add-part-popup{position:fixed;z-index:200;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);padding:0;width:420px;display:none}.add-part-popup-header{display:flex;border-bottom:1px solid var(--border-light)}.add-part-popup-tab{flex:1;padding:10px 12px;border:none;background:transparent;font-family:var(--font-sans);font-size:12px;font-weight:500;color:var(--text-tertiary);cursor:pointer;text-align:center;border-bottom:2px solid transparent;transition:all .15s}.add-part-popup-tab:hover{color:var(--text-secondary)}.add-part-popup-tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}.add-part-popup-body{padding:16px}.add-part-search-input{width:100%;height:38px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-family:var(--font-sans);font-size:13px;outline:none;color:var(--text-primary)}.add-part-search-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,0.1)}.add-part-results{max-height:200px;overflow-y:auto;margin-top:8px}.add-part-result{padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--border-light);border-radius:4px;transition:background .1s;font-size:12px}.add-part-result:hover{background:var(--bg-subtle)}.add-part-result-name{font-weight:600;font-size:13px}.add-part-result-meta{color:var(--text-secondary);margin-top:1px}.add-part-paste-area{width:100%;height:80px;padding:10px;font-family:var(--font-mono);font-size:12px;border:1.5px solid var(--border);border-radius:6px;resize:vertical;outline:none;margin-bottom:8px}.add-part-paste-area:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,0.1)}.add-part-name-input{width:100%;height:34px;padding:0 10px;border:1.5px solid var(--border);border-radius:6px;font-family:var(--font-sans);font-size:12px;outline:none;margin-bottom:8px}.add-part-name-input:focus{border-color:var(--accent)}
@@ -99,7 +100,28 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text-primary)
 </div>
 </div>
 <main class="main">
-<div id="landingState" class="landing-state"><div class="landing-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/></svg></div><h2 class="landing-title">Design your construct</h2><p class="landing-desc">Search for a protein above or paste a sequence to get started.</p></div>
+<div id="landingState" class="landing-state">
+<div class="landing-icon" id="startEmptyBtn" style="cursor:pointer;transition:transform .15s,box-shadow .15s" title="Start empty construct" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 4px 16px rgba(37,99,235,0.2)'" onmouseout="this.style.transform='';this.style.boxShadow=''"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 5v14M5 12h14"/></svg></div>
+<h2 class="landing-title">Design your construct</h2>
+<p class="landing-desc">Search for a protein above, paste a sequence, or start from a template:</p>
+<div style="display:flex;gap:12px;justify-content:center;margin-top:20px;flex-wrap:wrap">
+<button class="template-btn" data-acc="P01857" title="Antibody heavy chain">
+<span style="font-size:20px">🧬</span><span style="font-size:12px;font-weight:600">IgG1</span><span style="font-size:10px;color:var(--text-tertiary)">Antibody</span>
+</button>
+<button class="template-btn" data-acc="P42212" title="Green fluorescent protein">
+<span style="font-size:20px">💚</span><span style="font-size:12px;font-weight:600">GFP</span><span style="font-size:10px;color:var(--text-tertiary)">Reporter</span>
+</button>
+<button class="template-btn" data-acc="Q03431" title="PTH1 receptor — 7-TM GPCR">
+<span style="font-size:20px">🔬</span><span style="font-size:12px;font-weight:600">PTH1R</span><span style="font-size:10px;color:var(--text-tertiary)">GPCR</span>
+</button>
+<button class="template-btn" data-acc="P01308" title="Insulin — small secreted protein">
+<span style="font-size:20px">💉</span><span style="font-size:12px;font-weight:600">Insulin</span><span style="font-size:10px;color:var(--text-tertiary)">Secreted</span>
+</button>
+<button class="template-btn" data-acc="P00533" title="EGF receptor — receptor tyrosine kinase">
+<span style="font-size:20px">🎯</span><span style="font-size:12px;font-weight:600">EGFR</span><span style="font-size:10px;color:var(--text-tertiary)">RTK</span>
+</button>
+</div>
+</div>
 <div class="zone1-card" id="zone1Card"><div class="zone1-header"><div class="protein-meta" id="proteinMeta"></div><div style="display:flex;gap:6px;flex-shrink:0;align-items:center"><button class="btn btn-secondary btn-sm" id="undoBtn" title="Undo" style="display:none">↩ Undo</button><button class="btn btn-primary btn-sm" id="addPartBtn">+ Add</button><button class="btn-change" id="changeBtn">Clear</button></div></div>
 <div class="zone1-body">
 <div class="term-labels"><span class="term-label term-label-n">N-term ←</span><span class="term-label term-label-c">→ C-term</span></div>
@@ -234,7 +256,17 @@ else{span.className='seq-residue seq-clickable';span.textContent=partSeq[i];span
 const gi=globalOffset+i;span.dataset.globalpos=gi;span.addEventListener('click',e=>{e.stopPropagation();showMutationPopup(gi,e);});seqDiv.appendChild(span);
 if((i+1)%10===0){const sp=document.createElement('span');sp.textContent=' ';seqDiv.appendChild(sp);}}
 domainsDiv.appendChild(seqDiv);}
-card.appendChild(domainsDiv);card.addEventListener('click',e=>{if(e.target.classList.contains('domain-toggle')||e.target.classList.contains('part-card-remove')||e.target.classList.contains('seq-clickable')||e.target.classList.contains('seq-mutated'))return;if(AppState.expandedParts.has(idx))AppState.expandedParts.delete(idx);else AppState.expandedParts.add(idx);renderAll();});}
+card.appendChild(domainsDiv);card.addEventListener('click',e=>{if(e.target.classList.contains('domain-toggle')||e.target.classList.contains('part-card-remove')||e.target.classList.contains('seq-clickable')||e.target.classList.contains('seq-mutated'))return;if(AppState.expandedParts.has(idx))AppState.expandedParts.delete(idx);else AppState.expandedParts.add(idx);// Template buttons
+document.querySelectorAll('.template-btn').forEach(btn=>{btn.addEventListener('click',()=>{loadProtein(btn.dataset.acc);});});
+document.getElementById('startEmptyBtn')?.addEventListener('click',()=>{
+saveUndo();AppState.construct.parts=[];AppState.expandedParts.clear();
+// Show empty workspace
+document.getElementById('landingState').style.display='none';
+document.getElementById('zone1Card').classList.add('visible');
+document.getElementById('zone2').classList.add('visible');
+document.getElementById('zone3').classList.add('visible');
+});
+renderAll();});}
 // Show inline sequence for expanded parts without domains
 if((part.type!=='protein'||part.segments.length<=1)&&AppState.expandedParts.has(idx)){
 card.classList.add('expanded');
