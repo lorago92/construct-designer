@@ -199,42 +199,7 @@ else{span.className='seq-residue seq-clickable';span.textContent=partSeq[i];span
 const gi=globalOffset+i;span.dataset.globalpos=gi;span.addEventListener('click',e=>{e.stopPropagation();showMutationPopup(gi,e);});seqDiv.appendChild(span);
 if((i+1)%10===0){const sp=document.createElement('span');sp.textContent=' ';seqDiv.appendChild(sp);}}
 domainsDiv.appendChild(seqDiv);}
-card.appendChild(domainsDiv);card.addEventListener('click',e=>{if(e.target.classList.contains('domain-toggle')||e.target.classList.contains('part-card-remove')||e.target.classList.contains('seq-clickable')||e.target.classList.contains('seq-mutated'))return;if(AppState.expandedParts.has(idx))AppState.expandedParts.delete(idx);else AppState.expandedParts.add(idx);renderAll();
-// Signal tab setup
-renderSignalsList();
-document.querySelectorAll('.sig-filter-btn').forEach(btn=>{btn.addEventListener('click',()=>{document.querySelectorAll('.sig-filter-btn').forEach(b=>{b.style.background='var(--bg)';b.style.color='var(--text-secondary)';});btn.style.background='var(--accent)';btn.style.color='white';sigFilterSystem=btn.dataset.sys;renderSignalsList();});});
-let sigSearchDebounce=null;
-const sigSearchInput=document.getElementById('sigSearchInput');
-if(sigSearchInput)sigSearchInput.addEventListener('input',function(){
-clearTimeout(sigSearchDebounce);const query=this.value.trim();const resultsEl=document.getElementById('sigSearchResults');
-if(query.length<2){resultsEl.innerHTML='';return;}
-resultsEl.innerHTML='<div style="padding:6px;color:var(--text-tertiary);font-size:11px">Searching UniProt for signal peptides\u2026</div>';
-sigSearchDebounce=setTimeout(async()=>{
-// Search UniProt for proteins with this name that have signal peptides
-const results=await searchUniProt(query+' AND ft_signal:*');
-if(results.length===0){resultsEl.innerHTML='<div style="padding:6px;color:var(--text-tertiary);font-size:11px">No results with signal peptides</div>';return;}
-resultsEl.innerHTML='';
-for(const r of results.slice(0,6)){
-const div=document.createElement('div');
-div.style.cssText='padding:6px 8px;cursor:pointer;border-bottom:1px solid var(--border-light);border-radius:4px;transition:background .1s;font-size:11px';
-div.innerHTML='<div style="font-weight:600">'+r.entryName+'</div><div style="color:var(--text-tertiary);font-size:10px">'+r.accession+' \u00B7 '+r.gene+' \u00B7 '+r.organism+'</div>';
-div.addEventListener('mouseenter',()=>{div.style.background='var(--bg-subtle)';});
-div.addEventListener('mouseleave',()=>{div.style.background='';});
-div.addEventListener('click',async()=>{
-resultsEl.innerHTML='<div style="padding:6px;color:var(--text-tertiary);font-size:11px">Fetching signal peptide\u2026</div>';
-const data=await fetchUniProtEntry(r.accession);
-if(!data){resultsEl.innerHTML='<div style="padding:6px;color:#dc2626;font-size:11px">Failed to fetch</div>';return;}
-const sigFeature=(data.features||[]).find(f=>f.type==='Signal peptide'||f.type==='Signal');
-if(!sigFeature){resultsEl.innerHTML='<div style="padding:6px;color:var(--text-tertiary);font-size:11px">No signal peptide found in this entry</div>';return;}
-const seq=data.sequence?.value?.slice(sigFeature.location.start.value-1,sigFeature.location.end.value)||'';
-if(seq)addSignalToConstruct(r.entryName+' signal',seq,r.organism);
-sigSearchInput.value='';resultsEl.innerHTML='';
-});
-resultsEl.appendChild(div);
-}
-},400);
-});
-});}
+card.appendChild(domainsDiv);card.addEventListener('click',e=>{if(e.target.classList.contains('domain-toggle')||e.target.classList.contains('part-card-remove')||e.target.classList.contains('seq-clickable')||e.target.classList.contains('seq-mutated'))return;if(AppState.expandedParts.has(idx))AppState.expandedParts.delete(idx);else AppState.expandedParts.add(idx);renderAll();});}
 // Show inline sequence for expanded parts without domains
 if((part.type!=='protein'||part.segments.length<=1)&&AppState.expandedParts.has(idx)){
 card.classList.add('expanded');
@@ -366,6 +331,39 @@ document.getElementById('addPartSearchInput').addEventListener('input',function(
 async function addProteinPart(accession){addPartPopup.style.display='none';const data=await fetchUniProtEntry(accession);if(!data){alert('Failed to fetch.');return;}const parsed=parseUniProtToProteinPart(data);saveUndo();AppState.uniprotCache[accession]=parsed;AppState.rawDataCache[accession]=data;const part=parsed.part;if(parsed.signalPeptide){part.segments.unshift({name:'Signal peptide',type:'Signal peptide',start:parsed.signalPeptide.start,end:parsed.signalPeptide.end,sequence:parsed.signalPeptide.sequence,description:parsed.signalPeptide.description,active:true,isTM:false,mutations:[],ss:new Array(parsed.signalPeptide.sequence.length).fill('loop')});}AppState.construct.parts.push(part);renderAll();}
 document.getElementById('addPartPasteBtn').addEventListener('click',()=>{let seq=document.getElementById('addPartPasteArea').value.trim();const name=document.getElementById('addPartName').value.trim()||'Custom sequence';if(seq.startsWith('>')){const lines=seq.split('\n');seq=lines.slice(1).join('').trim();}seq=seq.replace(/[\s\d]/g,'').toUpperCase();if(!/^[ACDEFGHIKLMNPQRSTVWY]+$/.test(seq)){alert('Invalid amino acid characters.');return;}if(seq.length<2){alert('Sequence too short.');return;}saveUndo();AppState.construct.parts.push({type:'protein',name:name,entryName:name,gene:'\u2014',organism:'\u2014',accession:null,source:'custom',fullSequence:seq,length:seq.length,mw:calculateMW(seq),segments:[{name:name,type:'full',start:1,end:seq.length,sequence:seq,description:'Custom sequence',active:true,isTM:false,mutations:[],ss:new Array(seq.length).fill('loop')}],expanded:false});document.getElementById('addPartPasteArea').value='';document.getElementById('addPartName').value='';addPartPopup.style.display='none';renderAll();});
 document.addEventListener('click',e=>{if(addPartPopup.style.display==='block'&&!addPartPopup.contains(e.target)&&e.target.id!=='addPartBtn')addPartPopup.style.display='none';});
+// Signal tab setup
+renderSignalsList();
+document.querySelectorAll('.sig-filter-btn').forEach(btn=>{btn.addEventListener('click',()=>{document.querySelectorAll('.sig-filter-btn').forEach(b=>{b.style.background='var(--bg)';b.style.color='var(--text-secondary)';});btn.style.background='var(--accent)';btn.style.color='white';sigFilterSystem=btn.dataset.sys;renderSignalsList();});});
+var sigSearchTimer=null;
+var sigSInput=document.getElementById('sigSearchInput');
+if(sigSInput)sigSInput.addEventListener('input',function(){
+clearTimeout(sigSearchTimer);var q=this.value.trim();var res=document.getElementById('sigSearchResults');
+if(q.length<2){res.innerHTML='';return;}
+res.innerHTML='<div style="padding:6px;color:var(--text-tertiary);font-size:11px">Searching UniProt\u2026</div>';
+sigSearchTimer=setTimeout(async()=>{
+var results=await searchUniProt(q);
+if(results.length===0){res.innerHTML='<div style="padding:6px;color:var(--text-tertiary);font-size:11px">No results</div>';return;}
+res.innerHTML='';
+results.slice(0,6).forEach(r=>{
+var d=document.createElement('div');
+d.style.cssText='padding:6px 8px;cursor:pointer;border-bottom:1px solid var(--border-light);border-radius:4px;transition:background .1s;font-size:11px';
+d.innerHTML='<div style="font-weight:600">'+r.entryName+'</div><div style="color:var(--text-tertiary);font-size:10px">'+r.accession+' \u00B7 '+r.gene+' \u00B7 '+r.organism+'</div>';
+d.addEventListener('mouseenter',function(){this.style.background='var(--bg-subtle)';});
+d.addEventListener('mouseleave',function(){this.style.background='';});
+d.addEventListener('click',(function(acc,eName,org){return async function(){
+res.innerHTML='<div style="padding:6px;color:var(--text-tertiary);font-size:11px">Fetching signal\u2026</div>';
+var data=await fetchUniProtEntry(acc);
+if(!data){res.innerHTML='<div style="padding:6px;color:#dc2626;font-size:11px">Failed</div>';return;}
+var sf=(data.features||[]).find(function(f){return f.type==='Signal peptide'||f.type==='Signal';});
+if(!sf){res.innerHTML='<div style="padding:6px;color:var(--text-tertiary);font-size:11px">No signal peptide in this entry</div>';return;}
+var seq=(data.sequence?.value||'').slice(sf.location.start.value-1,sf.location.end.value);
+if(seq)addSignalToConstruct(eName+' signal',seq,org);
+sigSInput.value='';res.innerHTML='';
+};})(r.accession,r.entryName,r.organism));
+res.appendChild(d);
+});
+},400);
+});
 renderAll();});
 </script>
 </body>
