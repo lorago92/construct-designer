@@ -241,7 +241,10 @@ fetch('https://files.rcsb.org/view/'+pdbId+'.pdb').then(function(r){if(!r.ok)thr
 el.innerHTML='';
 var viewer=$3Dmol.createViewer(el,{backgroundColor:'#1a1a2e'});
 viewer.addModel(pdbData,'pdb');
-viewer.setStyle({},{cartoon:{colorscheme:{prop:'resi',gradient:'roygb'}}});
+var atoms=viewer.getModel(0).selectedAtoms({});
+var minR=Infinity,maxR=-Infinity;
+atoms.forEach(function(a){if(a.resi<minR)minR=a.resi;if(a.resi>maxR)maxR=a.resi;});
+viewer.setStyle({},{cartoon:{colorscheme:{prop:'resi',gradient:'roygb',min:minR,max:maxR}}});
 viewer.zoomTo();
 viewer.render();
 // Add N→C legend
