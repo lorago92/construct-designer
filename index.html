@@ -58,7 +58,7 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text-primary)
 .library-content{padding:16px;overflow-y:auto;flex:1;min-height:0}.library-empty{text-align:center;padding:32px 16px;color:var(--text-tertiary);font-size:13px}.library-empty-icon{font-size:28px;margin-bottom:8px;opacity:.4}
 .variant-item{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-bottom:1px solid var(--border-light);font-size:12px;cursor:pointer;transition:background .1s;border-radius:4px}.variant-item:hover{background:var(--bg-subtle)}.variant-change{font-family:var(--font-mono);font-weight:600;font-size:13px}.variant-type-badge{font-size:9px;padding:1px 5px;border-radius:3px;font-weight:600}.variant-type-natural{background:#ede9fe;color:#7c3aed}.variant-type-mutagenesis{background:#fef3c7;color:#d97706}
 .variant-tooltip{position:fixed;z-index:300;background:var(--text-primary);color:white;padding:8px 12px;border-radius:6px;font-size:12px;max-width:300px;pointer-events:none;box-shadow:var(--shadow-lg)}
-.zone3{display:none;margin-top:20px}.zone3.visible{display:block}.zone3-tabs{display:flex;border-bottom:1px solid var(--border);overflow-x:auto;gap:0}.zone3-tab{padding:12px 16px;border:none;background:transparent;font-family:var(--font-sans);font-size:12px;font-weight:500;color:var(--text-tertiary);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap}.zone3-tab:hover{color:var(--text-secondary)}.zone3-tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}.zone3-panel{display:none;padding:20px;min-height:300px;max-height:600px;overflow-y:auto}.zone3-panel.visible{display:block}
+.zone3{display:none;margin-top:20px}.zone3.visible{display:block}.zone3-tabs{display:flex;border-bottom:1px solid var(--border);overflow-x:auto;gap:0}.zone3-tab{padding:12px 16px;border:none;background:transparent;font-family:var(--font-sans);font-size:12px;font-weight:500;color:var(--text-tertiary);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap}.zone3-tab:hover{color:var(--text-secondary)}.zone3-tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}.zone3-panel{display:none;padding:20px;height:460px;overflow-y:auto}.zone3-panel.visible{display:block}
 .zone3-part-selector{width:100%;max-width:300px;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-family:var(--font-sans);font-size:12px;font-weight:500;color:var(--text-primary);background:var(--bg);margin-bottom:12px;outline:none}
 .structure-layout{display:flex;gap:20px}.structure-table-wrap{flex:1;min-width:0;max-height:400px;overflow-y:auto}.structure-viewer-wrap{width:350px;flex-shrink:0}.structure-viewer{width:100%;height:350px;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:#1a1a2e;position:relative}.data-table tr.pdb-active td{background:var(--accent-light)}
 .data-table{width:100%;border-collapse:collapse;font-size:13px}.data-table th{text-align:left;padding:8px 12px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-tertiary);border-bottom:1px solid var(--border);background:var(--bg-subtle);position:sticky;top:0;z-index:5}.data-table td{padding:8px 12px;border-bottom:1px solid var(--border-light);color:var(--text-secondary)}.data-table tr:hover td{background:var(--bg-subtle)}.data-table .pos-badge{font-family:var(--font-mono);font-size:12px;font-weight:500;color:var(--accent)}
@@ -120,6 +120,38 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text-primary)
 </div>
 </div>
 </div>
+<div id="insertResiduePopup" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:500">
+<div style="position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.3)" id="insertResidueOverlay"></div>
+<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--bg);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);width:420px;max-width:90vw;overflow:hidden">
+<div style="padding:20px 24px;border-bottom:1px solid var(--border-light)">
+<div style="font-weight:600;font-size:15px" id="insertResidueTitle">Insert residue</div>
+<div style="font-size:13px;color:var(--text-secondary);margin-top:6px" id="insertResidueDesc"></div>
+</div>
+<div style="padding:16px 24px">
+<div style="margin-bottom:12px">
+<label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px">Position (insert after)</label>
+<input type="number" id="insertResiduePos" min="0" style="width:100%;height:38px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-family:var(--font-mono);font-size:14px;outline:none;color:var(--text-primary)" placeholder="0 = before first residue">
+</div>
+<div style="margin-bottom:4px">
+<label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px">Amino acid</label>
+<select id="insertResidueAA" style="width:100%;height:38px;padding:0 10px;border:1.5px solid var(--border);border-radius:6px;font-family:var(--font-mono);font-size:14px;font-weight:600;outline:none;color:var(--text-primary);background:var(--bg);cursor:pointer">
+<option value="">Select…</option>
+<option value="A">A — Ala</option><option value="C">C — Cys</option><option value="D">D — Asp</option>
+<option value="E">E — Glu</option><option value="F">F — Phe</option><option value="G">G — Gly</option>
+<option value="H">H — His</option><option value="I">I — Ile</option><option value="K">K — Lys</option>
+<option value="L">L — Leu</option><option value="M">M — Met</option><option value="N">N — Asn</option>
+<option value="P">P — Pro</option><option value="Q">Q — Gln</option><option value="R">R — Arg</option>
+<option value="S">S — Ser</option><option value="T">T — Thr</option><option value="V">V — Val</option>
+<option value="W">W — Trp</option><option value="Y">Y — Tyr</option>
+</select>
+</div>
+</div>
+<div style="padding:0 24px 16px;display:flex;gap:10px;justify-content:flex-end">
+<button class="btn btn-secondary" id="insertResidueCancel" style="padding:8px 20px">Cancel</button>
+<button class="btn btn-primary" id="insertResidueOk" style="padding:8px 20px">Insert</button>
+</div>
+</div>
+</div>
 <main class="main">
 <div id="landingState" class="landing-state">
 <div class="landing-icon" id="startEmptyBtn" style="cursor:pointer;transition:transform .15s,box-shadow .15s" title="Start empty construct" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 4px 16px rgba(37,99,235,0.2)'" onmouseout="this.style.transform='';this.style.boxShadow=''" onclick="openEmptyWorkspace()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 5v14M5 12h14"/></svg></div>
@@ -159,7 +191,7 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text-primary)
 </div></div>
 <div class="sequence-display-zone1" id="zone1Sequence"></div>
 </div></div>
-<div class="zone2" id="zone2"><div class="zone2-left"><div class="card"><div class="card-header"><span class="card-title">Construct Assembly</span><div style="display:flex;gap:8px"><button class="btn btn-primary btn-sm" id="addPartBtnZ2" title="Add custom sequence">+ Add sequence</button><button class="btn btn-secondary btn-sm" id="copyFastaBtn">Copy FASTA</button></div></div>
+<div class="zone2" id="zone2"><div class="zone2-left"><div class="card"><div class="card-header"><span class="card-title">Construct Assembly</span><div style="display:flex;gap:8px"><button class="btn btn-primary btn-sm" id="addPartBtnZ2" title="Add custom sequence">+ Add sequence</button><button class="btn btn-secondary btn-sm" id="copyFastaBtn">FASTA</button></div></div>
 <div class="card-body"><div class="construct-strip-wrapper"><div class="construct-strip" id="constructStrip"><span class="strip-term-label strip-term-n">N-term ←</span><div class="construct-strip-empty" id="stripEmpty">Load a protein to begin assembly</div><span class="strip-term-label strip-term-c">→ C-term</span></div>
 </div><div class="construct-stats" id="constructStats" style="display:none"><div class="stat-item">Length: <span class="stat-value" id="statLength">0</span> aa</div><div class="stat-item">MW: <span class="stat-value" id="statMW">0</span> kDa</div><div class="stat-item">Ext. coeff. (ox): <span class="stat-value" id="statExtCoeffOx">0</span> M⁻¹cm⁻¹</div><div class="stat-item">Ext. coeff. (red): <span class="stat-value" id="statExtCoeffRed">0</span> M⁻¹cm⁻¹</div></div>
 </div></div></div>
@@ -216,7 +248,7 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text-primary)
 <div class="zone3" id="zone3"><div class="card"><div class="zone3-tabs" id="zone3Tabs"><button class="zone3-tab active" data-z3tab="function">Function</button><button class="zone3-tab" data-z3tab="names">Names & Taxonomy</button><button class="zone3-tab" data-z3tab="subcellular">Subcellular Location</button><button class="zone3-tab" data-z3tab="disease">Disease & Variants</button><button class="zone3-tab" data-z3tab="ptm">PTM/Processing</button><button class="zone3-tab" data-z3tab="expression">Expression</button><button class="zone3-tab" data-z3tab="interaction">Interaction</button><button class="zone3-tab" data-z3tab="structure">Structure</button><button class="zone3-tab" data-z3tab="family">Family & Domains</button><button class="zone3-tab" data-z3tab="publications">Publications</button></div><div id="zone3Content" class="zone3-panel visible"></div></div></div>
 </main>
 <script>
-const AppState={searchMode:'search',construct:{parts:[]},uniprotCache:{},rawDataCache:{},expandedParts:new Set(),zone3Tab:'function',pubSortAsc:false,zone3SelectedPart:0,mutSelectedPart:-1};
+const AppState={searchMode:'search',construct:{parts:[]},uniprotCache:{},rawDataCache:{},alphaFoldCache:{},expandedParts:new Set(),zone3Tab:'function',pubSortAsc:false,zone3SelectedPart:0,mutSelectedPart:-1};
 const DOMAIN_COLORS=[{main:'#0891b2',bg:'#cffafe',border:'#67e8f9'},{main:'#7c3aed',bg:'#ede9fe',border:'#c4b5fd'},{main:'#0d9488',bg:'#ccfbf1',border:'#5eead4'},{main:'#4f46e5',bg:'#e0e7ff',border:'#a5b4fc'},{main:'#be185d',bg:'#fce7f3',border:'#f9a8d4'},{main:'#ea580c',bg:'#fff7ed',border:'#fdba74'}];
 const PART_COLORS={signal:{main:'#16a34a',bg:'#dcfce7',border:'#86efac'},tag:{main:'#7c3aed',bg:'#f3e8ff',border:'#c4b5fd'},conjugation:{main:'#d97706',bg:'#fef3c7',border:'#fcd34d'},linker:{main:'#6b7280',bg:'#f3f4f6',border:'#d1d5db'},protease:{main:'#dc2626',bg:'#fef2f2',border:'#fca5a5'}};
 const PROTEIN_COLORS=['#0891b2','#7c3aed','#0d9488','#4f46e5','#be185d','#ea580c'];
@@ -251,6 +283,77 @@ function removeMutation(seg,uniprotPos){if(!seg.mutations)return;seg.mutations=s
 function getAssembledParts(){const result=[];let dci=0;AppState.construct.parts.forEach((part,pi)=>{if(part.type==='protein'){part.segments.filter(s=>s.active).forEach((seg,si)=>{let color;if(seg.isTM)color={main:'#374151',bg:'#f3f4f6',border:'#9ca3af'};else if(seg.type==='unannotated')color={main:'#94a3b8',bg:'#f1f5f9',border:'#cbd5e1'};else{color=DOMAIN_COLORS[dci%DOMAIN_COLORS.length];dci++;}result.push({sequence:seg.sequence,ss:seg.ss||[],color,name:seg.name,type:seg.type,partIndex:pi,segIndex:si,isProteinSegment:true,isTM:seg.isTM||false,isUnannotated:seg.type==='unannotated',start:seg.start,end:seg.end});});}else{const color=PART_COLORS[part.type]||PART_COLORS.tag;result.push({sequence:part.sequence||'',ss:new Array((part.sequence||'').length).fill('loop'),color,name:part.name,type:part.type,partIndex:pi,segIndex:-1,isProteinSegment:false,isTM:false,isUnannotated:false});}});return result;}
 function calculateMW(seq){const t={A:71.08,R:156.19,N:114.10,D:115.09,C:103.14,E:129.12,Q:128.13,G:57.05,H:137.14,I:113.16,L:113.16,K:128.17,M:131.20,F:147.18,P:97.12,S:87.08,T:101.10,W:186.21,Y:163.18,V:99.13};let mw=18.02;for(const aa of seq.toUpperCase())mw+=t[aa]||110;return mw;}
 function calculateExtinctionCoeff(sequence){const s=sequence.toUpperCase();const nY=(s.match(/Y/g)||[]).length;const nW=(s.match(/W/g)||[]).length;const nC=(s.match(/C/g)||[]).length;return{oxidized:nY*1490+nW*5500+Math.floor(nC/2)*125,reduced:nY*1490+nW*5500};}
+// AlphaFold SS computation from PDB backbone phi/psi angles
+function vecSub(a,b){return[a[0]-b[0],a[1]-b[1],a[2]-b[2]];}
+function vecCross(a,b){return[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];}
+function vecDot(a,b){return a[0]*b[0]+a[1]*b[1]+a[2]*b[2];}
+function vecNorm(a){const l=Math.sqrt(vecDot(a,a));return l>0?[a[0]/l,a[1]/l,a[2]/l]:[0,0,0];}
+function dihedralAngle(p1,p2,p3,p4){
+const b1=vecSub(p2,p1);const b2=vecSub(p3,p2);const b3=vecSub(p4,p3);
+const n1=vecCross(b1,b2);const n2=vecCross(b2,b3);
+const m1=vecCross(n1,vecNorm(b2));
+return Math.atan2(vecDot(m1,n2),vecDot(n1,n2))*180/Math.PI;
+}
+function parsePDBBackbone(pdbText){
+const atoms={};const bfactors={};
+pdbText.split('\n').forEach(line=>{
+if(!line.startsWith('ATOM'))return;
+const atomName=line.substring(12,16).trim();
+if(!['N','CA','C'].includes(atomName))return;
+const resi=parseInt(line.substring(22,26));
+const x=parseFloat(line.substring(30,38));
+const y=parseFloat(line.substring(38,46));
+const z=parseFloat(line.substring(46,54));
+const bf=parseFloat(line.substring(60,66));
+if(!atoms[resi])atoms[resi]={};
+atoms[resi][atomName]=[x,y,z];
+if(atomName==='CA')bfactors[resi]=bf;
+});
+return{atoms,bfactors};
+}
+function computeSSFromBackbone(atoms,seqLength){
+const ss=new Array(seqLength).fill('loop');
+for(let resi=2;resi<=seqLength;resi++){
+const prev=atoms[resi-1];const curr=atoms[resi];const next=atoms[resi+1];
+if(!prev||!curr||!prev.C||!curr.N||!curr.CA||!curr.C)continue;
+const phi=dihedralAngle(prev.C,curr.N,curr.CA,curr.C);
+if(!next||!next.N){
+if(phi>-120&&phi<-30)ss[resi-1]='helix';
+else if(phi>-180&&phi<-60)ss[resi-1]='strand';
+continue;
+}
+const psi=dihedralAngle(curr.N,curr.CA,curr.C,next.N);
+if(phi>-120&&phi<-30&&psi>-80&&psi<-10)ss[resi-1]='helix';
+else if((phi>-180&&phi<-60)&&(psi>60||psi<-160))ss[resi-1]='strand';
+}
+// Smooth: remove isolated SS assignments (min 2 consecutive)
+for(let i=0;i<seqLength;i++){
+const t=ss[i];if(t==='loop')continue;
+const prev=i>0?ss[i-1]:'loop';const next=i<seqLength-1?ss[i+1]:'loop';
+if(prev!==t&&next!==t)ss[i]='loop';
+}
+return ss;
+}
+async function fetchAlphaFoldPDB(accession){
+if(AppState.alphaFoldCache[accession])return AppState.alphaFoldCache[accession];
+try{
+const url='https://alphafold.ebi.ac.uk/files/AF-'+accession+'-F1-model_v4.pdb';
+const res=await fetch(url);
+if(!res.ok)throw new Error(res.status);
+const pdbText=await res.text();
+AppState.alphaFoldCache[accession]=pdbText;
+return pdbText;
+}catch(e){console.warn('AlphaFold fetch failed for '+accession+':',e);return null;}
+}
+async function assignAlphaFoldSS(accession,part){
+const pdbText=await fetchAlphaFoldPDB(accession);
+if(!pdbText)return;
+const{atoms,bfactors}=parsePDBBackbone(pdbText);
+const fullSS=computeSSFromBackbone(atoms,part.fullSequence.length);
+part.segments.forEach(seg=>{
+seg.ss=fullSS.slice(seg.start-1,seg.end);
+});
+}
 function shortName(name){if(!name)return'';const semi=name.indexOf(';');return semi>0?name.slice(0,semi):name;}
 function renderAll(){renderZone1();renderZone2();renderZone3();}
 function renderZone1(){const card=document.getElementById('zone1Card');const landing=document.getElementById('landingState');if(AppState.construct.parts.length===0){card.classList.remove('visible');landing.style.display='';return;}landing.style.display='none';card.classList.add('visible');const proteinPart=AppState.construct.parts.find(p=>p.type==='protein');const metaEl=document.getElementById('proteinMeta');if(proteinPart){const totalSeq=getAssembledSequence();const totalMW=calculateMW(totalSeq);const extCoeff=calculateExtinctionCoeff(totalSeq);const displayName=proteinPart.entryName||shortName(proteinPart.name);metaEl.innerHTML=`<div style="width:100%"><div class="protein-meta" style="margin-bottom:8px"><div class="protein-meta-item"><span class="meta-label">Protein</span><span class="meta-value">${displayName}</span></div><div class="protein-meta-item"><span class="meta-label">UniProt</span><span class="meta-value">${proteinPart.accession||'Custom'}</span></div><div class="protein-meta-item"><span class="meta-label">Gene</span><span class="meta-value">${proteinPart.gene||'\u2014'}</span></div><div class="protein-meta-item"><span class="meta-label">Organism</span><span class="meta-value">${proteinPart.organism||'\u2014'}</span></div></div><div class="protein-meta"><div class="protein-meta-item"><span class="meta-label">Length</span><span class="meta-value">${totalSeq.length} aa</span></div><div class="protein-meta-item"><span class="meta-label">MW</span><span class="meta-value">${(totalMW/1000).toFixed(1)} kDa</span></div><div class="protein-meta-item"><span class="meta-label">Ext. coeff. (ox)</span><span class="meta-value">${extCoeff.oxidized.toLocaleString()} M⁻¹cm⁻¹</span></div><div class="protein-meta-item"><span class="meta-label">Ext. coeff. (red)</span><span class="meta-value">${extCoeff.reduced.toLocaleString()} M⁻¹cm⁻¹</span></div></div></div>`;}
@@ -303,16 +406,21 @@ strip.querySelectorAll('.action-delete').forEach(btn=>{btn.addEventListener('cli
 // Part copy handlers
 strip.querySelectorAll('.action-copy').forEach(btn=>{btn.addEventListener('click',e=>{
 e.stopPropagation();const pi=parseInt(btn.dataset.idx);const p=AppState.construct.parts[pi];if(!p)return;
-const seq=p.type==='protein'?p.segments.filter(s=>s.active).map(s=>s.sequence).join(''):(p.sequence||'');
-navigator.clipboard.writeText(seq).then(()=>{btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>';setTimeout(()=>{btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>';},1200);});
+let seq;if(p.type==='protein'){let seqArr=[];p.segments.filter(s=>s.active).forEach(s=>{let segSeq=s.sequence.split('');(s.mutations||[]).forEach(m=>{const idx2=m.position-s.start;if(idx2>=0&&idx2<segSeq.length)segSeq[idx2]=m.mutant;});seqArr.push(segSeq.join(''));});seq=seqArr.join('');}else{let partSeq=(p.sequence||'').split('');(p.mutations||[]).forEach(m=>{const idx2=m.position-1;if(idx2>=0&&idx2<partSeq.length)partSeq[idx2]=m.mutant;});seq=partSeq.join('');}
+const displayName=p.entryName||p.name;
+const constructName=AppState.construct.parts.map(cp=>cp.entryName||cp.name).join('-');
+const header='>' + displayName + ' | ' + p.type + ' | ' + seq.length + ' aa | ' + constructName + ' | SeqMind';
+const fasta=header+'\n'+seq.match(/.{1,60}/g).join('\n');
+navigator.clipboard.writeText(fasta).then(()=>{btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>';setTimeout(()=>{btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>';},1200);});
 });});
 // Part insert residue handlers
-strip.querySelectorAll('.action-insert').forEach(btn=>{btn.addEventListener('click',e=>{
+strip.querySelectorAll('.action-insert').forEach(btn=>{btn.addEventListener('click',async e=>{
 e.stopPropagation();const pi=parseInt(btn.dataset.idx);const p=AppState.construct.parts[pi];if(!p)return;
 const seq=p.type==='protein'?p.segments.filter(s=>s.active).map(s=>s.sequence).join(''):(p.sequence||'');
-const pos=prompt('Insert residue after position (1-'+seq.length+'):');if(!pos)return;
-const posN=parseInt(pos);if(isNaN(posN)||posN<0||posN>seq.length)return;
-const aa=prompt('Amino acid to insert (single letter):');if(!aa||!/^[ACDEFGHIKLMNPQRSTVWY]$/i.test(aa))return;
+const displayName=p.entryName||p.name;
+const result=await showInsertResiduePopup('Insert residue into '+displayName,'Sequence length: '+seq.length+' aa',seq.length);
+if(!result)return;
+const posN=result.position;const aa=result.aa;
 saveUndo();
 if(p.type==='protein'){
 let offset=0;for(const seg of p.segments){if(!seg.active)continue;if(posN<=offset+seg.sequence.length){const localPos=posN-offset;seg.sequence=seg.sequence.slice(0,localPos)+aa.toUpperCase()+seg.sequence.slice(localPos);seg.end++;seg.ss.splice(localPos,0,'loop');break;}offset+=seg.sequence.length;}
@@ -323,16 +431,22 @@ renderAll();
 // Domain copy handlers
 strip.querySelectorAll('.seg-copy').forEach(btn=>{btn.addEventListener('click',e=>{
 e.stopPropagation();const pi=parseInt(btn.dataset.part);const si=parseInt(btn.dataset.seg);
-const seg=AppState.construct.parts[pi]?.segments?.[si];if(!seg)return;
-navigator.clipboard.writeText(seg.sequence).then(()=>{btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" style="width:12px;height:12px"><path d="M20 6L9 17l-5-5"/></svg>';setTimeout(()=>{btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>';},1200);});
+const part=AppState.construct.parts[pi];const seg=part?.segments?.[si];if(!seg)return;
+let segSeq=seg.sequence.split('');(seg.mutations||[]).forEach(m=>{const idx2=m.position-seg.start;if(idx2>=0&&idx2<segSeq.length)segSeq[idx2]=m.mutant;});const seq=segSeq.join('');
+const partName=part.entryName||part.name;
+const constructName=AppState.construct.parts.map(cp=>cp.entryName||cp.name).join('-');
+const header='>' + partName + ' | ' + seg.name + ' | ' + seg.start + '-' + seg.end + ' | ' + seq.length + ' aa | ' + constructName + ' | SeqMind';
+const fasta=header+'\n'+seq.match(/.{1,60}/g).join('\n');
+navigator.clipboard.writeText(fasta).then(()=>{btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" style="width:12px;height:12px"><path d="M20 6L9 17l-5-5"/></svg>';setTimeout(()=>{btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>';},1200);});
 });});
 // Domain insert residue handlers
-strip.querySelectorAll('.seg-insert').forEach(btn=>{btn.addEventListener('click',e=>{
+strip.querySelectorAll('.seg-insert').forEach(btn=>{btn.addEventListener('click',async e=>{
 e.stopPropagation();const pi=parseInt(btn.dataset.part);const si=parseInt(btn.dataset.seg);
 const seg=AppState.construct.parts[pi]?.segments?.[si];if(!seg)return;
-const pos=prompt('Insert residue after position (0=start, 1-'+seg.sequence.length+'):');if(!pos&&pos!=='0')return;
-const posN=parseInt(pos);if(isNaN(posN)||posN<0||posN>seg.sequence.length)return;
-const aa=prompt('Amino acid to insert (single letter):');if(!aa||!/^[ACDEFGHIKLMNPQRSTVWY]$/i.test(aa))return;
+const partName=AppState.construct.parts[pi]?.entryName||AppState.construct.parts[pi]?.name||'';
+const result=await showInsertResiduePopup('Insert residue into '+seg.name,partName+' \u00B7 '+seg.start+'\u2013'+seg.end+' ('+seg.sequence.length+' aa)',seg.sequence.length);
+if(!result)return;
+const posN=result.position;const aa=result.aa;
 saveUndo();
 seg.sequence=seg.sequence.slice(0,posN)+aa.toUpperCase()+seg.sequence.slice(posN);
 seg.end++;seg.ss.splice(posN,0,'loop');
@@ -358,15 +472,80 @@ function renderZone3(){const zone3=document.getElementById('zone3');if(AppState.
 if(proteinParts.length>1){html+='<select class="zone3-part-selector" id="zone3PartSelector">';AppState.construct.parts.forEach((p,i)=>{if(p.type==='protein'&&p.accession)html+=`<option value="${i}" ${i===AppState.zone3SelectedPart?'selected':''}>${p.entryName||p.name}</option>`;});html+='</select>';}
 const tab=AppState.zone3Tab;if(!rawData&&tab!=='publications'){html+='<div class="empty-state">No data available for this part</div>';contentEl.innerHTML=html;return;}
 const comments=(rawData?.comments||[]);const features=(rawData?.features||[]);const xrefs=(rawData?.uniProtKBCrossReferences||[]);
-if(tab==='function'){const funcs=comments.filter(c=>c.commentType==='FUNCTION');const cats=comments.filter(c=>c.commentType==='CATALYTIC ACTIVITY');if(funcs.length>0||cats.length>0){funcs.forEach(f=>{html+=`<div class="info-block"><div class="info-block-title">Function</div><div class="info-block-text">${f.texts?.map(t=>t.value).join(' ')||'\u2014'}</div></div>`;});cats.forEach(c=>{html+=`<div class="info-block"><div class="info-block-title">Catalytic Activity</div><div class="info-block-text">${c.reaction?.name||'\u2014'}</div></div>`;});}else html+='<div class="empty-state">No function data available</div>';}
-else if(tab==='names'){html+=`<div class="info-block"><div class="info-block-title">Entry Name</div><div class="info-block-text">${selPart?.entryName||'\u2014'}</div></div>`;html+=`<div class="info-block"><div class="info-block-title">Protein Name</div><div class="info-block-text">${rawData?.proteinDescription?.recommendedName?.fullName?.value||'\u2014'}</div></div>`;const altNames=(rawData?.proteinDescription?.alternativeNames||[]).map(n=>n.fullName?.value).filter(Boolean);if(altNames.length>0)html+=`<div class="info-block"><div class="info-block-title">Alternative Names</div><div class="info-block-text">${altNames.join(', ')}</div></div>`;html+=`<div class="info-block"><div class="info-block-title">Organism</div><div class="info-block-text">${rawData?.organism?.scientificName||'\u2014'} (${rawData?.organism?.commonName||''})</div></div>`;html+=`<div class="info-block"><div class="info-block-title">Taxonomic lineage</div><div class="info-block-text">${(rawData?.organism?.lineage||[]).join(' > ')}</div></div>`;}
-else if(tab==='subcellular'){const locs=comments.filter(c=>c.commentType==='SUBCELLULAR LOCATION');if(locs.length>0){locs.forEach(l=>{const lt=(l.subcellularLocations||[]).map(sl=>sl.location?.value).filter(Boolean);html+=`<div class="info-block"><div class="info-block-title">Subcellular Location</div><div class="info-block-text">${lt.join('; ')||l.texts?.map(t=>t.value).join(' ')||'\u2014'}</div></div>`;});}else html+='<div class="empty-state">No subcellular location data</div>';}
+if(tab==='function'){const funcs=comments.filter(c=>c.commentType==='FUNCTION');const cats=comments.filter(c=>c.commentType==='CATALYTIC ACTIVITY');const cofactors=comments.filter(c=>c.commentType==='COFACTOR');const actReg=comments.filter(c=>c.commentType==='ACTIVITY REGULATION');const pathway=comments.filter(c=>c.commentType==='PATHWAY');const kinetics=comments.filter(c=>c.commentType==='KINETICS');const bioTech=comments.filter(c=>c.commentType==='BIOTECHNOLOGY');const caution=comments.filter(c=>c.commentType==='CAUTION');
+let hasContent=false;
+funcs.forEach(f=>{hasContent=true;html+=`<div class="info-block"><div class="info-block-title">Function</div><div class="info-block-text">${f.texts?.map(t=>t.value).join(' ')||'\u2014'}</div></div>`;});
+cats.forEach(c=>{hasContent=true;html+=`<div class="info-block"><div class="info-block-title">Catalytic Activity</div><div class="info-block-text">${c.reaction?.name||'\u2014'}${c.reaction?.ecNumber?' <span style="font-family:var(--font-mono);font-size:11px;color:var(--accent)">(EC '+c.reaction.ecNumber+')</span>':''}</div></div>`;});
+cofactors.forEach(c=>{hasContent=true;const names=(c.cofactors||[]).map(cf=>cf.name).filter(Boolean);html+=`<div class="info-block"><div class="info-block-title">Cofactor</div><div class="info-block-text">${names.join(', ')||c.texts?.map(t=>t.value).join(' ')||'\u2014'}</div></div>`;});
+actReg.forEach(a=>{hasContent=true;html+=`<div class="info-block"><div class="info-block-title">Activity Regulation</div><div class="info-block-text">${a.texts?.map(t=>t.value).join(' ')||'\u2014'}</div></div>`;});
+pathway.forEach(p=>{hasContent=true;html+=`<div class="info-block"><div class="info-block-title">Pathway</div><div class="info-block-text">${p.texts?.map(t=>t.value).join(' ')||'\u2014'}</div></div>`;});
+kinetics.forEach(k=>{hasContent=true;html+=`<div class="info-block"><div class="info-block-title">Kinetics</div><div class="info-block-text">${k.texts?.map(t=>t.value).join(' ')||'\u2014'}</div></div>`;});
+bioTech.forEach(b=>{hasContent=true;html+=`<div class="info-block"><div class="info-block-title">Biotechnology</div><div class="info-block-text">${b.texts?.map(t=>t.value).join(' ')||'\u2014'}</div></div>`;});
+caution.forEach(c=>{hasContent=true;html+=`<div class="info-block"><div class="info-block-title" style="color:#d97706">Caution</div><div class="info-block-text">${c.texts?.map(t=>t.value).join(' ')||'\u2014'}</div></div>`;});
+if(!hasContent)html+='<div class="empty-state">No function data available</div>';}
+else if(tab==='names'){html+=`<div class="info-block"><div class="info-block-title">Entry Name</div><div class="info-block-text">${selPart?.entryName||'\u2014'}</div></div>`;html+=`<div class="info-block"><div class="info-block-title">Protein Name</div><div class="info-block-text">${rawData?.proteinDescription?.recommendedName?.fullName?.value||'\u2014'}${(rawData?.proteinDescription?.recommendedName?.ecNumbers||[]).length>0?' <span style="font-family:var(--font-mono);font-size:11px;color:var(--accent)">(EC '+(rawData.proteinDescription.recommendedName.ecNumbers.map(e=>e.value).join(', '))+')</span>':''}</div></div>`;
+const shortNames=(rawData?.proteinDescription?.recommendedName?.shortNames||[]).map(n=>n.value).filter(Boolean);if(shortNames.length>0)html+=`<div class="info-block"><div class="info-block-title">Short Names</div><div class="info-block-text">${shortNames.join(', ')}</div></div>`;
+const altNames=(rawData?.proteinDescription?.alternativeNames||[]).map(n=>n.fullName?.value).filter(Boolean);if(altNames.length>0)html+=`<div class="info-block"><div class="info-block-title">Alternative Names</div><div class="info-block-text">${altNames.join(', ')}</div></div>`;
+const subNames=(rawData?.proteinDescription?.submissionNames||[]).map(n=>n.fullName?.value).filter(Boolean);if(subNames.length>0)html+=`<div class="info-block"><div class="info-block-title">Submitted Names</div><div class="info-block-text">${subNames.join(', ')}</div></div>`;
+const genes=rawData?.genes||[];if(genes.length>0){const geneNames=genes.map(g=>{const parts=[];if(g.geneName)parts.push(g.geneName.value);(g.synonyms||[]).forEach(s=>parts.push(s.value));return parts;}).flat();if(geneNames.length>0)html+=`<div class="info-block"><div class="info-block-title">Gene Names</div><div class="info-block-text">${geneNames.join(', ')}</div></div>`;
+const orfNames=genes.flatMap(g=>(g.orfNames||[]).map(o=>o.value)).filter(Boolean);if(orfNames.length>0)html+=`<div class="info-block"><div class="info-block-title">ORF Names</div><div class="info-block-text">${orfNames.join(', ')}</div></div>`;}
+html+=`<div class="info-block"><div class="info-block-title">Organism</div><div class="info-block-text">${rawData?.organism?.scientificName||'\u2014'}${rawData?.organism?.commonName?' ('+rawData.organism.commonName+')':''}</div></div>`;
+const taxonId=rawData?.organism?.taxonId;if(taxonId)html+=`<div class="info-block"><div class="info-block-title">Taxonomy ID</div><div class="info-block-text"><a href="https://www.uniprot.org/taxonomy/${taxonId}" target="_blank" style="color:var(--accent);text-decoration:none">${taxonId}</a></div></div>`;
+html+=`<div class="info-block"><div class="info-block-title">Taxonomic Lineage</div><div class="info-block-text">${(rawData?.organism?.lineage||[]).join(' > ')}</div></div>`;}
+else if(tab==='subcellular'){const locs=comments.filter(c=>c.commentType==='SUBCELLULAR LOCATION');if(locs.length>0){locs.forEach(l=>{(l.subcellularLocations||[]).forEach(sl=>{const loc=sl.location?.value||'';const topo=sl.topology?.value||'';const orient=sl.orientation?.value||'';let text=loc;if(topo)text+=' \u00B7 '+topo;if(orient)text+=' \u00B7 '+orient;html+=`<div class="info-block"><div class="info-block-title">Subcellular Location</div><div class="info-block-text">${text||'\u2014'}</div></div>`;});
+if(l.note?.texts?.length>0)html+=`<div class="info-block"><div class="info-block-title">Note</div><div class="info-block-text">${l.note.texts.map(t=>t.value).join(' ')}</div></div>`;
+if(!l.subcellularLocations?.length&&l.texts?.length>0)html+=`<div class="info-block"><div class="info-block-title">Subcellular Location</div><div class="info-block-text">${l.texts.map(t=>t.value).join(' ')}</div></div>`;});}
+// Topological features from features array
+const topoFeats=features.filter(f=>f.type==='Topological domain'||f.type==='Transmembrane'||f.type==='Intramembrane');
+if(topoFeats.length>0){html+='<div style="margin-top:12px"><table class="data-table"><thead><tr><th>Type</th><th>Position</th><th>Description</th></tr></thead><tbody>';topoFeats.forEach(f=>{html+=`<tr><td>${f.type}</td><td class="pos-badge">${f.location?.start?.value||'?'}\u2013${f.location?.end?.value||'?'}</td><td>${f.description||'\u2014'}</td></tr>`;});html+='</tbody></table></div>';}
+if(locs.length===0&&topoFeats.length===0)html+='<div class="empty-state">No subcellular location data</div>';}
 else if(tab==='disease'){const diseases=comments.filter(c=>c.commentType==='DISEASE');const variants=features.filter(f=>f.type==='Natural variant'||f.type==='Mutagenesis');if(diseases.length>0)diseases.forEach(d=>{html+=`<div class="info-block"><div class="info-block-title">${d.disease?.diseaseId||'Disease'}</div><div class="info-block-text">${d.disease?.description||d.texts?.map(t=>t.value).join(' ')||'\u2014'}</div></div>`;});if(variants.length>0){html+='<table class="data-table"><thead><tr><th>Type</th><th>Pos</th><th>Change</th><th>Description</th></tr></thead><tbody>';variants.forEach(v=>{const alt=v.alternativeSequence||{};const orig=alt.originalSequence||'?';const altAA=(alt.alternativeSequences||[])[0]||'?';html+=`<tr class="disease-variant-row" data-pos="${v.location?.start?.value||''}" data-orig="${orig}" data-alt="${altAA}" data-desc="${(v.description||'').replace(/"/g,'&quot;')}" style="cursor:pointer"><td>${v.type}</td><td class="pos-badge">${v.location?.start?.value||'?'}</td><td style="font-family:var(--font-mono);font-weight:600">${orig}\u2192${altAA}</td><td>${(v.description||'').slice(0,60)}${(v.description||'').length>60?'\u2026':''}</td></tr>`;});html+='</tbody></table>';}if(diseases.length===0&&variants.length===0)html+='<div class="empty-state">No disease or variant data</div>';}
-else if(tab==='ptm'){const ptmC=comments.filter(c=>c.commentType==='PTM');const ptmF=features.filter(f=>['Modified residue','Glycosylation','Disulfide bond','Cross-link','Lipidation'].includes(f.type));ptmC.forEach(p=>{html+=`<div class="info-block"><div class="info-block-title">PTM</div><div class="info-block-text">${p.texts?.map(t=>t.value).join(' ')||'\u2014'}</div></div>`;});if(ptmF.length>0){html+='<table class="data-table"><thead><tr><th>Type</th><th>Position</th><th>Description</th></tr></thead><tbody>';ptmF.forEach(f=>{html+=`<tr class="ptm-clickable-row" data-start="${f.location?.start?.value||''}" data-end="${f.location?.end?.value||''}" data-type="${f.type}" data-desc="${(f.description||'').replace(/"/g,'&quot;')}" style="cursor:pointer"><td>${f.type}</td><td class="pos-badge">${f.location?.start?.value||'?'}${f.location?.end?.value!==f.location?.start?.value?'\u2013'+f.location?.end?.value:''}</td><td>${f.description||'\u2014'}</td></tr>`;});html+='</tbody></table>';}if(ptmC.length===0&&ptmF.length===0)html+='<div class="empty-state">No PTM data available</div>';}
-else if(tab==='expression'){const expr=comments.filter(c=>c.commentType==='TISSUE SPECIFICITY');if(expr.length>0)expr.forEach(e=>{html+=`<div class="info-block"><div class="info-block-title">Tissue Specificity</div><div class="info-block-text">${e.texts?.map(t=>t.value).join(' ')||'\u2014'}</div></div>`;});else html+='<div class="empty-state">No expression data available</div>';}
-else if(tab==='interaction'){const subunit=comments.filter(c=>c.commentType==='SUBUNIT');const inter=comments.filter(c=>c.commentType==='INTERACTION');subunit.forEach(s=>{html+=`<div class="info-block"><div class="info-block-title">Subunit</div><div class="info-block-text">${s.texts?.map(t=>t.value).join(' ')||'\u2014'}</div></div>`;});if(inter.length>0){html+='<table class="data-table"><thead><tr><th>Interactant</th><th>Gene</th><th>Experiments</th></tr></thead><tbody>';inter.forEach(i=>{(i.interactions||[]).forEach(ix=>{html+=`<tr><td>${ix.interactantTwo?.uniProtkbAccession?'<a href="https://www.uniprot.org/uniprotkb/'+ix.interactantTwo.uniProtkbAccession+'" target="_blank" style="color:var(--accent)">'+ix.interactantTwo.uniProtkbAccession+'</a>':'\u2014'}</td><td>${ix.interactantTwo?.geneName||'\u2014'}</td><td>${ix.numberOfExperiments||'\u2014'}</td></tr>`;});});html+='</tbody></table>';}if(subunit.length===0&&inter.length===0)html+='<div class="empty-state">No interaction data</div>';}
-else if(tab==='structure'){const pdb=xrefs.filter(x=>x.database==='PDB');if(pdb.length>0){html+='<div class="structure-layout"><div class="structure-table-wrap"><table class="data-table"><thead><tr><th>PDB</th><th>Method</th><th>Res.</th><th>Chains</th></tr></thead><tbody>';pdb.forEach(p=>{const pr=p.properties||[];html+=`<tr class="pdb-row" data-pdb="${p.id}" style="cursor:pointer"><td class="pdb-link">${p.id} <a href="https://www.rcsb.org/structure/${p.id}" target="_blank" onclick="event.stopPropagation()" style="font-size:9px;color:var(--text-tertiary);text-decoration:none" title="Open in RCSB">\u2197</a></td><td>${pr.find(x=>x.key==='Method')?.value||'\u2014'}</td><td>${pr.find(x=>x.key==='Resolution')?.value||'\u2014'}</td><td style="font-size:11px">${pr.find(x=>x.key==='Chains')?.value||'\u2014'}</td></tr>`;});html+='</tbody></table></div><div class="structure-viewer-wrap"><div class="structure-viewer" id="pdbViewer"><div style="display:flex;align-items:center;justify-content:center;height:100%;color:#666;font-size:13px">Click a PDB to view</div></div></div></div>';}else html+='<div class="empty-state">No structure data</div>';}
-else if(tab==='family'){const domC=comments.filter(c=>c.commentType==='DOMAIN');const simC=comments.filter(c=>c.commentType==='SIMILARITY');const famF=features.filter(f=>['Domain','Repeat','Zinc finger','Coiled coil','Compositional bias','Motif'].includes(f.type));domC.forEach(d=>{html+=`<div class="info-block"><div class="info-block-title">Domain</div><div class="info-block-text">${d.texts?.map(t=>t.value).join(' ')||'\u2014'}</div></div>`;});simC.forEach(s=>{html+=`<div class="info-block"><div class="info-block-title">Similarity</div><div class="info-block-text">${s.texts?.map(t=>t.value).join(' ')||'\u2014'}</div></div>`;});if(famF.length>0){html+='<table class="data-table"><thead><tr><th>Type</th><th>Position</th><th>Description</th></tr></thead><tbody>';famF.forEach(f=>{html+=`<tr class="domain-clickable-row" data-start="${f.location?.start?.value||''}" data-end="${f.location?.end?.value||''}" data-desc="${(f.description||'').replace(/"/g,'&quot;')}" style="cursor:pointer"><td>${f.type}</td><td class="pos-badge">${f.location?.start?.value||'?'}\u2013${f.location?.end?.value||'?'}</td><td>${f.description||'\u2014'}</td></tr>`;});html+='</tbody></table>';}if(domC.length===0&&simC.length===0&&famF.length===0)html+='<div class="empty-state">No family/domain data</div>';}
+else if(tab==='ptm'){const ptmC=comments.filter(c=>c.commentType==='PTM');const ptmF=features.filter(f=>['Modified residue','Glycosylation','Disulfide bond','Cross-link','Lipidation','Signal peptide','Signal','Transit peptide','Propeptide','Mature protein','Chain','Peptide','Initiator methionine'].includes(f.type));ptmC.forEach(p=>{html+=`<div class="info-block"><div class="info-block-title">PTM</div><div class="info-block-text">${p.texts?.map(t=>t.value).join(' ')||'\u2014'}</div></div>`;});if(ptmF.length>0){html+='<table class="data-table"><thead><tr><th>Type</th><th>Position</th><th>Description</th></tr></thead><tbody>';ptmF.forEach(f=>{html+=`<tr class="ptm-clickable-row" data-start="${f.location?.start?.value||''}" data-end="${f.location?.end?.value||''}" data-type="${f.type}" data-desc="${(f.description||'').replace(/"/g,'&quot;')}" style="cursor:pointer"><td>${f.type}</td><td class="pos-badge">${f.location?.start?.value||'?'}${f.location?.end?.value!==f.location?.start?.value?'\u2013'+f.location?.end?.value:''}</td><td>${f.description||'\u2014'}</td></tr>`;});html+='</tbody></table>';}if(ptmC.length===0&&ptmF.length===0)html+='<div class="empty-state">No PTM data available</div>';}
+else if(tab==='expression'){const expr=comments.filter(c=>c.commentType==='TISSUE SPECIFICITY');const induction=comments.filter(c=>c.commentType==='INDUCTION');const devStage=comments.filter(c=>c.commentType==='DEVELOPMENTAL STAGE');let hasContent=false;
+expr.forEach(e=>{hasContent=true;html+=`<div class="info-block"><div class="info-block-title">Tissue Specificity</div><div class="info-block-text">${e.texts?.map(t=>t.value).join(' ')||'\u2014'}</div></div>`;});
+induction.forEach(i=>{hasContent=true;html+=`<div class="info-block"><div class="info-block-title">Induction</div><div class="info-block-text">${i.texts?.map(t=>t.value).join(' ')||'\u2014'}</div></div>`;});
+devStage.forEach(d=>{hasContent=true;html+=`<div class="info-block"><div class="info-block-title">Developmental Stage</div><div class="info-block-text">${d.texts?.map(t=>t.value).join(' ')||'\u2014'}</div></div>`;});
+if(!hasContent)html+='<div class="empty-state">No expression data available</div>';}
+else if(tab==='interaction'){const subunit=comments.filter(c=>c.commentType==='SUBUNIT');const inter=comments.filter(c=>c.commentType==='INTERACTION');let hasContent=false;
+subunit.forEach(s=>{hasContent=true;html+=`<div class="info-block"><div class="info-block-title">Subunit</div><div class="info-block-text">${s.texts?.map(t=>t.value).join(' ')||'\u2014'}</div></div>`;});
+if(inter.length>0){hasContent=true;html+='<table class="data-table"><thead><tr><th>Interactant</th><th>Gene</th><th>Experiments</th></tr></thead><tbody>';inter.forEach(i=>{(i.interactions||[]).forEach(ix=>{html+=`<tr><td>${ix.interactantTwo?.uniProtkbAccession?'<a href="https://www.uniprot.org/uniprotkb/'+ix.interactantTwo.uniProtkbAccession+'" target="_blank" style="color:var(--accent)">'+ix.interactantTwo.uniProtkbAccession+'</a>':'\u2014'}</td><td>${ix.interactantTwo?.geneName||'\u2014'}</td><td>${ix.numberOfExperiments||'\u2014'}</td></tr>`;});});html+='</tbody></table>';}
+// Interaction databases from cross-references
+const interDbs=xrefs.filter(x=>['BioGRID','CORUM','ComplexPortal','IntAct','MINT','STRING','FunCoup'].includes(x.database));
+if(interDbs.length>0){hasContent=true;html+='<div style="margin-top:16px"><div style="font-weight:600;font-size:13px;margin-bottom:8px">Interaction Databases</div><table class="data-table"><thead><tr><th>Database</th><th>ID</th><th>Details</th></tr></thead><tbody>';
+interDbs.forEach(db=>{const props=(db.properties||[]).map(p=>p.value).filter(Boolean).join(', ');let link='';
+if(db.database==='BioGRID')link='https://thebiogrid.org/'+db.id;
+else if(db.database==='STRING')link='https://string-db.org/network/'+db.id;
+else if(db.database==='IntAct')link='https://www.ebi.ac.uk/intact/search?query='+db.id;
+else if(db.database==='ComplexPortal')link='https://www.ebi.ac.uk/complexportal/complex/'+db.id;
+else if(db.database==='CORUM')link='https://mips.helmholtz-muenchen.de/corum/#entry/'+db.id;
+html+=`<tr><td style="font-weight:500">${db.database}</td><td>${link?'<a href="'+link+'" target="_blank" style="color:var(--accent);text-decoration:none">'+db.id+' \u2197</a>':db.id}</td><td style="font-size:11px;color:var(--text-tertiary)">${props}</td></tr>`;});
+html+='</tbody></table></div>';}
+if(!hasContent)html+='<div class="empty-state">No interaction data</div>';}
+else if(tab==='structure'){const pdb=xrefs.filter(x=>x.database==='PDB');const acc=selPart?.accession||'';
+html+='<div class="structure-layout"><div class="structure-table-wrap">';
+html+='<div style="margin-bottom:12px"><div style="font-weight:600;font-size:13px;margin-bottom:6px">AlphaFold Predicted Structure</div><button class="btn btn-primary btn-sm" id="loadAlphaFoldBtn" data-acc="'+acc+'" style="margin-bottom:8px">Load AlphaFold model</button></div>';
+html+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;font-size:10px" id="afLegend" style="display:none"><span style="font-weight:600;color:var(--text-tertiary)">Model Confidence:</span><span style="display:inline-flex;align-items:center;gap:3px"><span style="width:12px;height:12px;border-radius:2px;background:#0053d6;display:inline-block"></span>Very high (pLDDT > 90)</span><span style="display:inline-flex;align-items:center;gap:3px"><span style="width:12px;height:12px;border-radius:2px;background:#65cbf3;display:inline-block"></span>Confident (70–90)</span><span style="display:inline-flex;align-items:center;gap:3px"><span style="width:12px;height:12px;border-radius:2px;background:#ffdb13;display:inline-block"></span>Low (50–70)</span><span style="display:inline-flex;align-items:center;gap:3px"><span style="width:12px;height:12px;border-radius:2px;background:#ff7d45;display:inline-block"></span>Very low (< 50)</span></div>';
+if(pdb.length>0){html+='<div style="font-weight:600;font-size:13px;margin-bottom:6px;margin-top:16px">Experimental Structures ('+pdb.length+')</div>';
+html+='<table class="data-table"><thead><tr><th>PDB</th><th>Method</th><th>Res.</th><th>Chains</th></tr></thead><tbody>';pdb.forEach(p=>{const pr=p.properties||[];html+=`<tr class="pdb-row" data-pdb="${p.id}" style="cursor:pointer"><td class="pdb-link">${p.id} <a href="https://www.rcsb.org/structure/${p.id}" target="_blank" onclick="event.stopPropagation()" style="font-size:9px;color:var(--text-tertiary);text-decoration:none" title="Open in RCSB">\u2197</a></td><td>${pr.find(x=>x.key==='Method')?.value||'\u2014'}</td><td>${pr.find(x=>x.key==='Resolution')?.value||'\u2014'}</td><td style="font-size:11px">${pr.find(x=>x.key==='Chains')?.value||'\u2014'}</td></tr>`;});html+='</tbody></table>';}
+else{html+='<div style="color:var(--text-tertiary);font-size:12px;margin-top:12px">No experimental structures available</div>';}
+// Cross-reference databases
+const structXrefs=xrefs.filter(x=>['SMR','AlphaFoldDB','EMBL','PDBe-KB'].includes(x.database));
+if(structXrefs.length>0){html+='<div style="margin-top:16px"><div style="font-weight:600;font-size:13px;margin-bottom:6px">Structure Databases</div>';structXrefs.forEach(x=>{html+='<div style="padding:4px 0;font-size:12px"><a href="https://www.uniprot.org/uniprotkb/'+acc+'" target="_blank" style="color:var(--accent);text-decoration:none">'+x.database+'</a> <span style="color:var(--text-tertiary)">'+x.id+'</span></div>';});html+='</div>';}
+html+='</div><div class="structure-viewer-wrap"><div class="structure-viewer" id="pdbViewer"><div style="display:flex;align-items:center;justify-content:center;height:100%;color:#666;font-size:13px">Loading AlphaFold\u2026</div></div></div></div>';}
+else if(tab==='family'){const domC=comments.filter(c=>c.commentType==='DOMAIN');const simC=comments.filter(c=>c.commentType==='SIMILARITY');const famF=features.filter(f=>['Domain','Repeat','Zinc finger','Coiled coil','Compositional bias','Motif','Region','Topological domain','Transmembrane','Intramembrane'].includes(f.type));let hasContent=false;
+domC.forEach(d=>{hasContent=true;html+=`<div class="info-block"><div class="info-block-title">Domain</div><div class="info-block-text">${d.texts?.map(t=>t.value).join(' ')||'\u2014'}</div></div>`;});simC.forEach(s=>{hasContent=true;html+=`<div class="info-block"><div class="info-block-title">Similarity</div><div class="info-block-text">${s.texts?.map(t=>t.value).join(' ')||'\u2014'}</div></div>`;});
+if(famF.length>0){hasContent=true;html+='<table class="data-table"><thead><tr><th>Type</th><th>Position</th><th>Description</th></tr></thead><tbody>';famF.forEach(f=>{html+=`<tr class="domain-clickable-row" data-start="${f.location?.start?.value||''}" data-end="${f.location?.end?.value||''}" data-desc="${(f.description||'').replace(/"/g,'&quot;')}" style="cursor:pointer"><td>${f.type}</td><td class="pos-badge">${f.location?.start?.value||'?'}\u2013${f.location?.end?.value||'?'}</td><td>${f.description||'\u2014'}</td></tr>`;});html+='</tbody></table>';}
+// Domain databases from cross-references
+const domDbs=xrefs.filter(x=>['Pfam','InterPro','SMART','PROSITE','CDD','SUPFAM','Gene3D'].includes(x.database));
+if(domDbs.length>0){hasContent=true;html+='<div style="margin-top:16px"><div style="font-weight:600;font-size:13px;margin-bottom:8px">Domain Databases</div><table class="data-table"><thead><tr><th>Database</th><th>ID</th><th>Name</th></tr></thead><tbody>';
+domDbs.forEach(db=>{const entryName=(db.properties||[]).find(p=>p.key==='EntryName')?.value||'';let link='';
+if(db.database==='Pfam')link='https://www.ebi.ac.uk/interpro/entry/pfam/'+db.id;
+else if(db.database==='InterPro')link='https://www.ebi.ac.uk/interpro/entry/InterPro/'+db.id;
+else if(db.database==='SMART')link='http://smart.embl-heidelberg.de/smart/do_annotation.pl?ACC='+db.id;
+else if(db.database==='PROSITE')link='https://prosite.expasy.org/'+db.id;
+html+=`<tr><td style="font-weight:500">${db.database}</td><td>${link?'<a href="'+link+'" target="_blank" style="color:var(--accent);text-decoration:none">'+db.id+' \u2197</a>':db.id}</td><td style="font-size:11px;color:var(--text-tertiary)">${entryName}</td></tr>`;});
+html+='</tbody></table></div>';}
+if(!hasContent)html+='<div class="empty-state">No family/domain data</div>';}
 else if(tab==='publications'){if(cached&&cached.publications.length>0){const pubs=[...cached.publications];const sortAsc=AppState.pubSortAsc||false;pubs.sort((a,b)=>{const ya=parseInt(a.year)||0;const yb=parseInt(b.year)||0;return sortAsc?(ya-yb):(yb-ya);});html+=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><span style="font-size:12px;color:var(--text-tertiary)">${pubs.length} publications</span><button class="sort-toggle" id="pubSortBtn">${sortAsc?'\u2191 Oldest first':'\u2193 Newest first'}</button></div>`;pubs.slice(0,30).forEach(p=>{html+=`<div class="pub-item"><div class="pub-title">${p.title}</div><div class="pub-authors">${p.authors}</div><div class="pub-journal">${p.journal} ${p.year}</div>${p.pubmedId?`<a class="pub-link" href="https://pubmed.ncbi.nlm.nih.gov/${p.pubmedId}" target="_blank">PubMed \u2197</a>`:''}</div>`;});}else html+='<div class="empty-state">No publications found</div>';}
 contentEl.innerHTML=html;contentEl.querySelectorAll('.disease-variant-row').forEach(row=>{row.addEventListener('click',async()=>{const pos=parseInt(row.dataset.pos);const orig=row.dataset.orig;const altAA=row.dataset.alt;const desc=row.dataset.desc;if(!pos||orig==='?'||altAA==='?')return;if(!selPart)return;var ok=await customConfirm('Apply mutation '+orig+pos+altAA+' to '+(selPart.entryName||selPart.name)+'?',desc||'');if(ok){saveUndo();for(const seg of selPart.segments){if(pos>=seg.start&&pos<=seg.end){applyMutation(seg,pos,orig,altAA,'uniprot',desc);return;}}}});});
 // PTM row click - show region popup with interactive sequence
@@ -384,6 +563,10 @@ showRegionPopup(desc||'Region',start,end,e);
 });});
 const z3sel=document.getElementById('zone3PartSelector');if(z3sel)z3sel.addEventListener('change',()=>{AppState.zone3SelectedPart=parseInt(z3sel.value);renderZone3();});
 contentEl.querySelectorAll('.pdb-row').forEach(row=>{row.addEventListener('click',()=>{const pdbId=row.dataset.pdb;contentEl.querySelectorAll('.pdb-row').forEach(r=>r.classList.remove('pdb-active'));row.classList.add('pdb-active');loadPdbStructure(pdbId);});});
+// AlphaFold auto-load on Structure tab
+const afBtn=document.getElementById('loadAlphaFoldBtn');
+if(afBtn){const afAcc=afBtn.dataset.acc;if(afAcc){loadAlphaFoldStructure(afAcc);}
+afBtn.addEventListener('click',()=>{contentEl.querySelectorAll('.pdb-row').forEach(r=>r.classList.remove('pdb-active'));loadAlphaFoldStructure(afBtn.dataset.acc);});}
 const pubSortBtn=document.getElementById('pubSortBtn');if(pubSortBtn)pubSortBtn.addEventListener('click',()=>{AppState.pubSortAsc=!AppState.pubSortAsc;renderZone3();});}
 function loadPdbStructure(pdbId){const el=document.getElementById('pdbViewer');if(!el)return;
 el.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#aaa;font-size:13px">Loading '+pdbId+'...</div>';
@@ -401,7 +584,35 @@ viewer.render();
 // Add N→C legend
 var legend=document.createElement('div');legend.style.cssText='position:absolute;bottom:8px;left:8px;right:8px;display:flex;align-items:center;gap:6px;font-size:10px;color:white;z-index:10;font-family:var(--font-sans)';legend.innerHTML='<span style="font-weight:600">N</span><div style="flex:1;height:6px;border-radius:3px;background:linear-gradient(to right,#0000ff,#00ffff,#00ff00,#ffff00,#ff8800,#ff0000)"></div><span style="font-weight:600">C</span>';el.appendChild(legend);
 }).catch(function(err){el.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#f87171;font-size:12px">Could not load '+pdbId+'</div>';});}
-async function loadProtein(accession){const data=await fetchUniProtEntry(accession);if(!data){alert('Failed to fetch protein data.');return;}const parsed=parseUniProtToProteinPart(data);saveUndo();AppState.construct.parts=[];AppState.expandedParts.clear();AppState.uniprotCache={};AppState.rawDataCache={};AppState.uniprotCache[accession]=parsed;AppState.rawDataCache[accession]=data;const sigLen=parsed.signalPeptide?parsed.signalPeptide.sequence.length:0;const segLen=parsed.part.segments.reduce((a,s)=>a+s.sequence.length,0);if(sigLen+segLen!==parsed.part.fullSequence.length)console.warn('Sequence integrity mismatch');if(parsed.signalPeptide){AppState.construct.parts.push({type:'signal',name:`${parsed.part.gene||parsed.part.name} signal`,entryName:`${parsed.part.gene||parsed.part.entryName} signal`,source:'uniprot',sequence:parsed.signalPeptide.sequence,description:parsed.signalPeptide.description,originalRange:`${parsed.signalPeptide.start}\u2013${parsed.signalPeptide.end}`,ss:new Array(parsed.signalPeptide.sequence.length).fill('loop'),mutations:[]});}AppState.construct.parts.push(parsed.part);AppState.mutSelectedPart=AppState.construct.parts.length-1;AppState.zone3SelectedPart=AppState.construct.parts.length-1;document.getElementById('searchDropdown').classList.remove('visible');document.getElementById('searchInput').value='';renderAll();}
+function loadAlphaFoldStructure(accession){
+const el=document.getElementById('pdbViewer');if(!el)return;
+el.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#aaa;font-size:13px">Loading AlphaFold\u2026</div>';
+if(typeof $3Dmol==='undefined'){el.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#f87171;font-size:12px">3D viewer unavailable (loading\u2026)</div>';
+// Retry after 3Dmol loads
+setTimeout(function(){if(typeof $3Dmol!=='undefined')loadAlphaFoldStructure(accession);},2000);return;}
+fetchAlphaFoldPDB(accession).then(function(pdbData){
+if(!pdbData){el.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#f87171;font-size:12px">AlphaFold model not available</div>';return;}
+el.innerHTML='';
+var viewer=$3Dmol.createViewer(el,{backgroundColor:'#1a1a2e'});
+viewer.addModel(pdbData,'pdb');
+// Confidence coloring using pLDDT from B-factor
+viewer.setStyle({},{cartoon:{colorfunc:function(atom){
+var b=atom.b;
+if(b>90)return '#0053d6';
+if(b>70)return '#65cbf3';
+if(b>50)return '#ffdb13';
+return '#ff7d45';
+}}});
+viewer.zoomTo();
+viewer.render();
+// AlphaFold label
+var label=document.createElement('div');label.style.cssText='position:absolute;bottom:8px;left:8px;font-size:10px;color:rgba(255,255,255,0.7);z-index:10;font-family:var(--font-sans)';label.textContent='AlphaFold \u00B7 '+accession;el.appendChild(label);
+}).catch(function(err){el.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#f87171;font-size:12px">Could not load AlphaFold model</div>';});
+}
+async function loadProtein(accession){const data=await fetchUniProtEntry(accession);if(!data){alert('Failed to fetch protein data.');return;}const parsed=parseUniProtToProteinPart(data);saveUndo();AppState.construct.parts=[];AppState.expandedParts.clear();AppState.uniprotCache={};AppState.rawDataCache={};AppState.uniprotCache[accession]=parsed;AppState.rawDataCache[accession]=data;const sigLen=parsed.signalPeptide?parsed.signalPeptide.sequence.length:0;const segLen=parsed.part.segments.reduce((a,s)=>a+s.sequence.length,0);if(sigLen+segLen!==parsed.part.fullSequence.length)console.warn('Sequence integrity mismatch');if(parsed.signalPeptide){AppState.construct.parts.push({type:'signal',name:`${parsed.part.gene||parsed.part.name} signal`,entryName:`${parsed.part.gene||parsed.part.entryName} signal`,source:'uniprot',sequence:parsed.signalPeptide.sequence,description:parsed.signalPeptide.description,originalRange:`${parsed.signalPeptide.start}\u2013${parsed.signalPeptide.end}`,ss:new Array(parsed.signalPeptide.sequence.length).fill('loop'),mutations:[]});}AppState.construct.parts.push(parsed.part);AppState.mutSelectedPart=AppState.construct.parts.length-1;AppState.zone3SelectedPart=AppState.construct.parts.length-1;document.getElementById('searchDropdown').classList.remove('visible');document.getElementById('searchInput').value='';renderAll();
+// Fetch AlphaFold SS asynchronously and update
+assignAlphaFoldSS(accession,parsed.part).then(()=>{renderAll();}).catch(()=>{});
+}
 function loadPastedSequence(raw){let seq=raw.trim();if(seq.startsWith('>')){const lines=seq.split('\n');seq=lines.slice(1).join('').trim();}seq=seq.replace(/[\s\d]/g,'').toUpperCase();if(!/^[ACDEFGHIKLMNPQRSTVWY]+$/.test(seq)){alert('Invalid amino acid characters.');return;}if(seq.length<5){alert('Sequence too short.');return;}saveUndo();AppState.construct.parts=[];AppState.expandedParts.clear();AppState.uniprotCache={};AppState.rawDataCache={};var pastedName=document.getElementById('pasteNameInput').value.trim()||'Custom protein';AppState.construct.parts.push({type:'protein',name:pastedName,entryName:pastedName,gene:'\u2014',organism:'\u2014',accession:null,source:'custom',fullSequence:seq,length:seq.length,mw:calculateMW(seq),segments:[{name:pastedName,type:'full',start:1,end:seq.length,sequence:seq,description:'Pasted sequence',active:true,isTM:false,mutations:[],ss:new Array(seq.length).fill('loop')}],expanded:false});AppState.uniprotCache['custom']={mutations:[],features:[],publications:[]};document.getElementById('pasteTextarea').value='';document.getElementById('pasteNameInput').value='';document.getElementById('pastePopup').style.display='none';renderAll();}
 
 let COMMON_SIGNALS=[];
@@ -459,6 +670,29 @@ function onOk(){cleanup();resolve(true);}
 function onCancel(){cleanup();resolve(false);}
 okBtn.addEventListener('click',onOk);
 cancelBtn.addEventListener('click',onCancel);
+});
+}
+function showInsertResiduePopup(title,desc,maxPos){
+return new Promise(function(resolve){
+document.getElementById('insertResidueTitle').textContent=title||'Insert residue';
+document.getElementById('insertResidueDesc').textContent=desc||'';
+var posInput=document.getElementById('insertResiduePos');
+var aaSelect=document.getElementById('insertResidueAA');
+posInput.value='';posInput.max=maxPos||999;posInput.placeholder='0 = before first, 1\u2013'+(maxPos||'N');
+aaSelect.value='';
+document.getElementById('insertResiduePopup').style.display='block';
+posInput.focus();
+var okBtn=document.getElementById('insertResidueOk');
+var cancelBtn=document.getElementById('insertResidueCancel');
+var overlay=document.getElementById('insertResidueOverlay');
+function cleanup(){document.getElementById('insertResiduePopup').style.display='none';okBtn.removeEventListener('click',onOk);cancelBtn.removeEventListener('click',onCancel);overlay.removeEventListener('click',onCancel);posInput.removeEventListener('keydown',onKey);}
+function onOk(){var p=parseInt(posInput.value);var aa=aaSelect.value;if(isNaN(p)||p<0||p>maxPos){posInput.style.borderColor='#dc2626';setTimeout(function(){posInput.style.borderColor='';},1500);return;}if(!aa){aaSelect.style.borderColor='#dc2626';setTimeout(function(){aaSelect.style.borderColor='';},1500);return;}cleanup();resolve({position:p,aa:aa});}
+function onCancel(){cleanup();resolve(null);}
+function onKey(e){if(e.key==='Enter')onOk();if(e.key==='Escape')onCancel();}
+okBtn.addEventListener('click',onOk);
+cancelBtn.addEventListener('click',onCancel);
+overlay.addEventListener('click',onCancel);
+posInput.addEventListener('keydown',onKey);
 });
 }
 function showRegionPopup(title,start,end,event){
@@ -557,10 +791,10 @@ searchInput.addEventListener('input',()=>{clearTimeout(searchDebounce);const que
 document.addEventListener('click',e=>{if(!e.target.closest('.search-container'))dropdown.classList.remove('visible');});
 document.getElementById('pasteLoadBtn').addEventListener('click',()=>{const val=document.getElementById('pasteTextarea').value;if(val.trim()){loadPastedSequence(val);document.getElementById('pastePopup').style.display='none';}});
 document.getElementById('pasteClearBtn').addEventListener('click',()=>{document.getElementById('pastePopup').style.display='none';});
-document.getElementById('changeBtn').addEventListener('click',async()=>{if(await customConfirm('Clear entire construct?','All parts and mutations will be removed.')){saveUndo();AppState.construct.parts=[];AppState.expandedParts.clear();AppState.uniprotCache={};AppState.rawDataCache={};renderAll();}});
+document.getElementById('changeBtn').addEventListener('click',async()=>{if(await customConfirm('Clear entire construct?','All parts and mutations will be removed.')){saveUndo();AppState.construct.parts=[];AppState.expandedParts.clear();AppState.uniprotCache={};AppState.rawDataCache={};AppState.alphaFoldCache={};renderAll();}});
 document.getElementById('undoBtn').addEventListener('click',()=>{performUndo();});
 document.getElementById('copyFastaBtnZ1').addEventListener('click',function(){var s=getAssembledSequence();if(!s)return;var n=AppState.construct.parts.map(function(p){return p.entryName||p.name}).join('-');var h='>'+n+' | '+s.length+' aa | SeqMind';var f=h+'\n'+s.match(/.{1,60}/g).join('\n');navigator.clipboard.writeText(f).then(function(){var b=document.getElementById('copyFastaBtnZ1');b.textContent='Copied!';setTimeout(function(){b.textContent='FASTA';},1500);});});
-document.getElementById('copyFastaBtn').addEventListener('click',()=>{const seq=getAssembledSequence();if(!seq)return;const partNames=AppState.construct.parts.map(p=>p.entryName||p.name).join('-');const header=`>${partNames} | ${seq.length} aa | SeqMind`;const fasta=header+'\n'+seq.match(/.{1,60}/g).join('\n');navigator.clipboard.writeText(fasta).then(()=>{const btn=document.getElementById('copyFastaBtn');btn.textContent='Copied!';setTimeout(()=>{btn.textContent='Copy FASTA';},1500);});});
+document.getElementById('copyFastaBtn').addEventListener('click',()=>{const seq=getAssembledSequence();if(!seq)return;const partNames=AppState.construct.parts.map(p=>p.entryName||p.name).join('-');const header=`>${partNames} | ${seq.length} aa | SeqMind`;const fasta=header+'\n'+seq.match(/.{1,60}/g).join('\n');navigator.clipboard.writeText(fasta).then(()=>{const btn=document.getElementById('copyFastaBtn');btn.textContent='Copied!';setTimeout(()=>{btn.textContent='FASTA';},1500);});});
 document.querySelectorAll('.zone3-tab').forEach(tab=>{tab.addEventListener('click',()=>{document.querySelectorAll('.zone3-tab').forEach(t=>t.classList.remove('active'));tab.classList.add('active');AppState.zone3Tab=tab.dataset.z3tab;document.getElementById('zone3Content').classList.add('visible');renderZone3();});});
 document.querySelectorAll('.library-tab').forEach(tab=>{tab.addEventListener('click',()=>{document.querySelectorAll('.library-tab').forEach(t=>t.classList.remove('active'));tab.classList.add('active');const target=tab.dataset.libtab;['libMutations','libSignals','libLinkers','libConjugation','libTags'].forEach(id=>{document.getElementById(id).style.display='none';});document.getElementById({mutations:'libMutations',signals:'libSignals',linkers:'libLinkers',conjugation:'libConjugation',tags:'libTags'}[target]).style.display='';});});
 document.getElementById('mutPopApply').addEventListener('click',()=>{const popup=document.getElementById('mutationPopup');const globalPos=parseInt(popup.dataset.globalPos);const uniprotPos=parseInt(popup.dataset.uniprotPos);const original=popup.dataset.original;const mutant=document.getElementById('mutPopSelect').value;saveUndo();const info=findSegmentAtGlobalPos(globalPos);if(info)applyMutation(info.seg,uniprotPos,original,mutant,'manual','');popup.style.display='none';});
@@ -580,7 +814,7 @@ document.getElementById('addPartBtnZ2').addEventListener('click',e=>{showAddPart
 document.querySelectorAll('.add-part-popup-tab').forEach(tab=>{tab.addEventListener('click',()=>{document.querySelectorAll('.add-part-popup-tab').forEach(t=>t.classList.remove('active'));tab.classList.add('active');document.getElementById('addPartSearch').style.display=tab.dataset.addtab==='search'?'':'none';document.getElementById('addPartPaste').style.display=tab.dataset.addtab==='paste'?'':'none';});});
 let addSearchDebounce=null;
 document.getElementById('addPartSearchInput').addEventListener('input',function(){clearTimeout(addSearchDebounce);const query=this.value.trim();const resultsEl=document.getElementById('addPartResults');if(query.length<2){resultsEl.innerHTML='';return;}resultsEl.innerHTML='<div style="padding:8px;color:var(--text-tertiary);font-size:12px">Searching\u2026</div>';addSearchDebounce=setTimeout(async()=>{const results=await searchUniProt(query);if(results.length===0){resultsEl.innerHTML='<div style="padding:8px;color:var(--text-tertiary);font-size:12px">No results</div>';return;}resultsEl.innerHTML='';results.forEach(r=>{const div=document.createElement('div');div.className='add-part-result';div.innerHTML=`<div class="add-part-result-name">${r.entryName} <span class="search-result-badge ${r.reviewed?'badge-reviewed':'badge-unreviewed'}" style="font-size:9px">${r.reviewed?'\u2605':'\u25CB'}</span></div><div class="add-part-result-meta">${r.accession} \u00B7 ${r.gene} \u00B7 ${r.organism} \u00B7 ${r.length} aa</div>`;div.addEventListener('click',()=>addProteinPart(r.accession));resultsEl.appendChild(div);});},350);});
-async function addProteinPart(accession){addPartPopup.style.display='none';const data=await fetchUniProtEntry(accession);if(!data){alert('Failed to fetch.');return;}const parsed=parseUniProtToProteinPart(data);saveUndo();AppState.uniprotCache[accession]=parsed;AppState.rawDataCache[accession]=data;const part=parsed.part;if(parsed.signalPeptide){part.segments.unshift({name:'Signal peptide',type:'Signal peptide',start:parsed.signalPeptide.start,end:parsed.signalPeptide.end,sequence:parsed.signalPeptide.sequence,description:parsed.signalPeptide.description,active:true,isTM:false,mutations:[],ss:new Array(parsed.signalPeptide.sequence.length).fill('loop')});}AppState.construct.parts.push(part);renderAll();}
+async function addProteinPart(accession){addPartPopup.style.display='none';const data=await fetchUniProtEntry(accession);if(!data){alert('Failed to fetch.');return;}const parsed=parseUniProtToProteinPart(data);saveUndo();AppState.uniprotCache[accession]=parsed;AppState.rawDataCache[accession]=data;const part=parsed.part;if(parsed.signalPeptide){part.segments.unshift({name:'Signal peptide',type:'Signal peptide',start:parsed.signalPeptide.start,end:parsed.signalPeptide.end,sequence:parsed.signalPeptide.sequence,description:parsed.signalPeptide.description,active:true,isTM:false,mutations:[],ss:new Array(parsed.signalPeptide.sequence.length).fill('loop')});}AppState.construct.parts.push(part);renderAll();assignAlphaFoldSS(accession,part).then(()=>{renderAll();}).catch(()=>{});}
 document.getElementById('addPartPasteBtn').addEventListener('click',()=>{let seq=document.getElementById('addPartPasteArea').value.trim();const name=document.getElementById('addPartName').value.trim()||'Custom sequence';if(seq.startsWith('>')){const lines=seq.split('\n');seq=lines.slice(1).join('').trim();}seq=seq.replace(/[\s\d]/g,'').toUpperCase();if(!/^[ACDEFGHIKLMNPQRSTVWY]+$/.test(seq)){alert('Invalid amino acid characters.');return;}if(seq.length<2){alert('Sequence too short.');return;}saveUndo();AppState.construct.parts.push({type:'protein',name:name,entryName:name,gene:'\u2014',organism:'\u2014',accession:null,source:'custom',fullSequence:seq,length:seq.length,mw:calculateMW(seq),segments:[{name:name,type:'full',start:1,end:seq.length,sequence:seq,description:'Custom sequence',active:true,isTM:false,mutations:[],ss:new Array(seq.length).fill('loop')}],expanded:false});document.getElementById('addPartPasteArea').value='';document.getElementById('addPartName').value='';addPartPopup.style.display='none';renderAll();});
 document.addEventListener('click',e=>{if(addPartPopup.style.display==='block'&&!addPartPopup.contains(e.target)&&e.target.id!=='addPartBtn'&&e.target.id!=='addPartBtnZ2')addPartPopup.style.display='none';});
 // Parts library tab setup
