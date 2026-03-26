@@ -122,11 +122,12 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text-primary)
 </div>
 <div id="insertResiduePopup" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:500">
 <div style="position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.3)" id="insertResidueOverlay"></div>
-<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--bg);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);width:420px;max-width:90vw;overflow:hidden">
+<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--bg);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);width:520px;max-width:90vw;overflow:hidden">
 <div style="padding:20px 24px;border-bottom:1px solid var(--border-light)">
 <div style="font-weight:600;font-size:15px" id="insertResidueTitle">Insert residue</div>
 <div style="font-size:13px;color:var(--text-secondary);margin-top:6px" id="insertResidueDesc"></div>
 </div>
+<div id="insertResidueSeqWrap" style="display:none;max-height:120px;overflow-y:auto;padding:10px 24px;border-bottom:1px solid var(--border-light);background:var(--bg-subtle);font-family:var(--font-mono);font-size:11px;line-height:1.9;word-break:break-all"></div>
 <div style="padding:16px 24px">
 <div style="margin-bottom:12px">
 <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px">Position (insert after)</label>
@@ -355,7 +356,19 @@ seg.ss=fullSS.slice(seg.start-1,seg.end);
 });
 }
 function shortName(name){if(!name)return'';const semi=name.indexOf(';');return semi>0?name.slice(0,semi):name;}
-function renderAll(){renderZone1();renderZone2();renderZone3();}
+function renderAll(){
+const pageScroll=window.scrollY;
+const stripWrap=document.querySelector('.construct-strip-wrapper');
+const stripScroll=stripWrap?stripWrap.scrollTop:0;
+const z3Panel=document.getElementById('zone3Content');
+const z3Scroll=z3Panel?z3Panel.scrollTop:0;
+renderZone1();renderZone2();renderZone3();
+window.scrollTo(0,pageScroll);
+const stripWrap2=document.querySelector('.construct-strip-wrapper');
+if(stripWrap2)stripWrap2.scrollTop=stripScroll;
+const z3Panel2=document.getElementById('zone3Content');
+if(z3Panel2)z3Panel2.scrollTop=z3Scroll;
+}
 function renderZone1(){const card=document.getElementById('zone1Card');const landing=document.getElementById('landingState');if(AppState.construct.parts.length===0){card.classList.remove('visible');landing.style.display='';return;}landing.style.display='none';card.classList.add('visible');const proteinPart=AppState.construct.parts.find(p=>p.type==='protein');const metaEl=document.getElementById('proteinMeta');if(proteinPart){const totalSeq=getAssembledSequence();const totalMW=calculateMW(totalSeq);const extCoeff=calculateExtinctionCoeff(totalSeq);const displayName=proteinPart.entryName||shortName(proteinPart.name);metaEl.innerHTML=`<div style="width:100%"><div class="protein-meta" style="margin-bottom:8px"><div class="protein-meta-item"><span class="meta-label">Protein</span><span class="meta-value">${displayName}</span></div><div class="protein-meta-item"><span class="meta-label">UniProt</span><span class="meta-value">${proteinPart.accession||'Custom'}</span></div><div class="protein-meta-item"><span class="meta-label">Gene</span><span class="meta-value">${proteinPart.gene||'\u2014'}</span></div><div class="protein-meta-item"><span class="meta-label">Organism</span><span class="meta-value">${proteinPart.organism||'\u2014'}</span></div></div><div class="protein-meta"><div class="protein-meta-item"><span class="meta-label">Length</span><span class="meta-value">${totalSeq.length} aa</span></div><div class="protein-meta-item"><span class="meta-label">MW</span><span class="meta-value">${(totalMW/1000).toFixed(1)} kDa</span></div><div class="protein-meta-item"><span class="meta-label">Ext. coeff. (ox)</span><span class="meta-value">${extCoeff.oxidized.toLocaleString()} M⁻¹cm⁻¹</span></div><div class="protein-meta-item"><span class="meta-label">Ext. coeff. (red)</span><span class="meta-value">${extCoeff.reduced.toLocaleString()} M⁻¹cm⁻¹</span></div></div></div>`;}
 const partLevelView=[];AppState.construct.parts.forEach((part,pi)=>{let seq='',ss=[];if(part.type==='protein'){part.segments.filter(s=>s.active).forEach(s=>{seq+=s.sequence;ss=ss.concat(s.ss||[]);});}else{seq=part.sequence||'';ss=new Array(seq.length).fill('loop');}const color=getPartColor(part,pi);partLevelView.push({sequence:seq,ss,color,name:part.entryName||part.name,type:part.type,partIndex:pi});});
 const totalLen=partLevelView.reduce((a,p)=>a+p.sequence.length,0);
@@ -418,7 +431,7 @@ strip.querySelectorAll('.action-insert').forEach(btn=>{btn.addEventListener('cli
 e.stopPropagation();const pi=parseInt(btn.dataset.idx);const p=AppState.construct.parts[pi];if(!p)return;
 const seq=p.type==='protein'?p.segments.filter(s=>s.active).map(s=>s.sequence).join(''):(p.sequence||'');
 const displayName=p.entryName||p.name;
-const result=await showInsertResiduePopup('Insert residue into '+displayName,'Sequence length: '+seq.length+' aa',seq.length);
+const result=await showInsertResiduePopup('Insert residue into '+displayName,'Sequence length: '+seq.length+' aa',seq.length,seq);
 if(!result)return;
 const posN=result.position;const aa=result.aa;
 saveUndo();
@@ -444,7 +457,7 @@ strip.querySelectorAll('.seg-insert').forEach(btn=>{btn.addEventListener('click'
 e.stopPropagation();const pi=parseInt(btn.dataset.part);const si=parseInt(btn.dataset.seg);
 const seg=AppState.construct.parts[pi]?.segments?.[si];if(!seg)return;
 const partName=AppState.construct.parts[pi]?.entryName||AppState.construct.parts[pi]?.name||'';
-const result=await showInsertResiduePopup('Insert residue into '+seg.name,partName+' \u00B7 '+seg.start+'\u2013'+seg.end+' ('+seg.sequence.length+' aa)',seg.sequence.length);
+const result=await showInsertResiduePopup('Insert residue into '+seg.name,partName+' \u00B7 '+seg.start+'\u2013'+seg.end+' ('+seg.sequence.length+' aa)',seg.sequence.length,seg.sequence,seg.start);
 if(!result)return;
 const posN=result.position;const aa=result.aa;
 saveUndo();
@@ -522,16 +535,10 @@ html+=`<tr><td style="font-weight:500">${db.database}</td><td>${link?'<a href="'
 html+='</tbody></table></div>';}
 if(!hasContent)html+='<div class="empty-state">No interaction data</div>';}
 else if(tab==='structure'){const pdb=xrefs.filter(x=>x.database==='PDB');const acc=selPart?.accession||'';
-html+='<div class="structure-layout"><div class="structure-table-wrap">';
-html+='<div style="margin-bottom:12px"><div style="font-weight:600;font-size:13px;margin-bottom:6px">AlphaFold Predicted Structure</div><button class="btn btn-primary btn-sm" id="loadAlphaFoldBtn" data-acc="'+acc+'" style="margin-bottom:8px">Load AlphaFold model</button></div>';
-html+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;font-size:10px" id="afLegend" style="display:none"><span style="font-weight:600;color:var(--text-tertiary)">Model Confidence:</span><span style="display:inline-flex;align-items:center;gap:3px"><span style="width:12px;height:12px;border-radius:2px;background:#0053d6;display:inline-block"></span>Very high (pLDDT > 90)</span><span style="display:inline-flex;align-items:center;gap:3px"><span style="width:12px;height:12px;border-radius:2px;background:#65cbf3;display:inline-block"></span>Confident (70–90)</span><span style="display:inline-flex;align-items:center;gap:3px"><span style="width:12px;height:12px;border-radius:2px;background:#ffdb13;display:inline-block"></span>Low (50–70)</span><span style="display:inline-flex;align-items:center;gap:3px"><span style="width:12px;height:12px;border-radius:2px;background:#ff7d45;display:inline-block"></span>Very low (< 50)</span></div>';
-if(pdb.length>0){html+='<div style="font-weight:600;font-size:13px;margin-bottom:6px;margin-top:16px">Experimental Structures ('+pdb.length+')</div>';
-html+='<table class="data-table"><thead><tr><th>PDB</th><th>Method</th><th>Res.</th><th>Chains</th></tr></thead><tbody>';pdb.forEach(p=>{const pr=p.properties||[];html+=`<tr class="pdb-row" data-pdb="${p.id}" style="cursor:pointer"><td class="pdb-link">${p.id} <a href="https://www.rcsb.org/structure/${p.id}" target="_blank" onclick="event.stopPropagation()" style="font-size:9px;color:var(--text-tertiary);text-decoration:none" title="Open in RCSB">\u2197</a></td><td>${pr.find(x=>x.key==='Method')?.value||'\u2014'}</td><td>${pr.find(x=>x.key==='Resolution')?.value||'\u2014'}</td><td style="font-size:11px">${pr.find(x=>x.key==='Chains')?.value||'\u2014'}</td></tr>`;});html+='</tbody></table>';}
-else{html+='<div style="color:var(--text-tertiary);font-size:12px;margin-top:12px">No experimental structures available</div>';}
-// Cross-reference databases
-const structXrefs=xrefs.filter(x=>['SMR','AlphaFoldDB','EMBL','PDBe-KB'].includes(x.database));
-if(structXrefs.length>0){html+='<div style="margin-top:16px"><div style="font-weight:600;font-size:13px;margin-bottom:6px">Structure Databases</div>';structXrefs.forEach(x=>{html+='<div style="padding:4px 0;font-size:12px"><a href="https://www.uniprot.org/uniprotkb/'+acc+'" target="_blank" style="color:var(--accent);text-decoration:none">'+x.database+'</a> <span style="color:var(--text-tertiary)">'+x.id+'</span></div>';});html+='</div>';}
-html+='</div><div class="structure-viewer-wrap"><div class="structure-viewer" id="pdbViewer"><div style="display:flex;align-items:center;justify-content:center;height:100%;color:#666;font-size:13px">Loading AlphaFold\u2026</div></div></div></div>';}
+html+='<div class="structure-layout"><div class="structure-table-wrap"><table class="data-table"><thead><tr><th>Structure</th><th>Method</th><th>Res.</th><th>Chains</th></tr></thead><tbody>';
+if(acc)html+='<tr class="pdb-row pdb-active" data-pdb="alphafold" data-acc="'+acc+'" style="cursor:pointer"><td class="pdb-link" style="font-weight:600;color:var(--accent)">AlphaFold <a href="https://alphafold.ebi.ac.uk/entry/'+acc+'" target="_blank" onclick="event.stopPropagation()" style="font-size:9px;color:var(--text-tertiary);text-decoration:none" title="Open in AlphaFold">\u2197</a></td><td>Predicted</td><td>\u2014</td><td>Full</td></tr>';
+pdb.forEach(p=>{const pr=p.properties||[];html+=`<tr class="pdb-row" data-pdb="${p.id}" style="cursor:pointer"><td class="pdb-link">${p.id} <a href="https://www.rcsb.org/structure/${p.id}" target="_blank" onclick="event.stopPropagation()" style="font-size:9px;color:var(--text-tertiary);text-decoration:none" title="Open in RCSB">\u2197</a></td><td>${pr.find(x=>x.key==='Method')?.value||'\u2014'}</td><td>${pr.find(x=>x.key==='Resolution')?.value||'\u2014'}</td><td style="font-size:11px">${pr.find(x=>x.key==='Chains')?.value||'\u2014'}</td></tr>`;});
+html+='</tbody></table></div><div class="structure-viewer-wrap"><div class="structure-viewer" id="pdbViewer"><div style="display:flex;align-items:center;justify-content:center;height:100%;color:#666;font-size:13px">Loading AlphaFold\u2026</div></div></div></div>';}
 else if(tab==='family'){const domC=comments.filter(c=>c.commentType==='DOMAIN');const simC=comments.filter(c=>c.commentType==='SIMILARITY');const famF=features.filter(f=>['Domain','Repeat','Zinc finger','Coiled coil','Compositional bias','Motif','Region','Topological domain','Transmembrane','Intramembrane'].includes(f.type));let hasContent=false;
 domC.forEach(d=>{hasContent=true;html+=`<div class="info-block"><div class="info-block-title">Domain</div><div class="info-block-text">${d.texts?.map(t=>t.value).join(' ')||'\u2014'}</div></div>`;});simC.forEach(s=>{hasContent=true;html+=`<div class="info-block"><div class="info-block-title">Similarity</div><div class="info-block-text">${s.texts?.map(t=>t.value).join(' ')||'\u2014'}</div></div>`;});
 if(famF.length>0){hasContent=true;html+='<table class="data-table"><thead><tr><th>Type</th><th>Position</th><th>Description</th></tr></thead><tbody>';famF.forEach(f=>{html+=`<tr class="domain-clickable-row" data-start="${f.location?.start?.value||''}" data-end="${f.location?.end?.value||''}" data-desc="${(f.description||'').replace(/"/g,'&quot;')}" style="cursor:pointer"><td>${f.type}</td><td class="pos-badge">${f.location?.start?.value||'?'}\u2013${f.location?.end?.value||'?'}</td><td>${f.description||'\u2014'}</td></tr>`;});html+='</tbody></table>';}
@@ -562,11 +569,10 @@ if(!start||!end)return;
 showRegionPopup(desc||'Region',start,end,e);
 });});
 const z3sel=document.getElementById('zone3PartSelector');if(z3sel)z3sel.addEventListener('change',()=>{AppState.zone3SelectedPart=parseInt(z3sel.value);renderZone3();});
-contentEl.querySelectorAll('.pdb-row').forEach(row=>{row.addEventListener('click',()=>{const pdbId=row.dataset.pdb;contentEl.querySelectorAll('.pdb-row').forEach(r=>r.classList.remove('pdb-active'));row.classList.add('pdb-active');loadPdbStructure(pdbId);});});
-// AlphaFold auto-load on Structure tab
-const afBtn=document.getElementById('loadAlphaFoldBtn');
-if(afBtn){const afAcc=afBtn.dataset.acc;if(afAcc){loadAlphaFoldStructure(afAcc);}
-afBtn.addEventListener('click',()=>{contentEl.querySelectorAll('.pdb-row').forEach(r=>r.classList.remove('pdb-active'));loadAlphaFoldStructure(afBtn.dataset.acc);});}
+contentEl.querySelectorAll('.pdb-row').forEach(row=>{row.addEventListener('click',()=>{contentEl.querySelectorAll('.pdb-row').forEach(r=>r.classList.remove('pdb-active'));row.classList.add('pdb-active');const pdbId=row.dataset.pdb;if(pdbId==='alphafold'){loadAlphaFoldStructure(row.dataset.acc);}else{loadPdbStructure(pdbId);}});});
+// Auto-load AlphaFold on Structure tab open
+const afRow=contentEl.querySelector('.pdb-row[data-pdb="alphafold"]');
+if(afRow&&afRow.dataset.acc){loadAlphaFoldStructure(afRow.dataset.acc);}
 const pubSortBtn=document.getElementById('pubSortBtn');if(pubSortBtn)pubSortBtn.addEventListener('click',()=>{AppState.pubSortAsc=!AppState.pubSortAsc;renderZone3();});}
 function loadPdbStructure(pdbId){const el=document.getElementById('pdbViewer');if(!el)return;
 el.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#aaa;font-size:13px">Loading '+pdbId+'...</div>';
@@ -606,7 +612,7 @@ return '#ff7d45';
 viewer.zoomTo();
 viewer.render();
 // AlphaFold label
-var label=document.createElement('div');label.style.cssText='position:absolute;bottom:8px;left:8px;font-size:10px;color:rgba(255,255,255,0.7);z-index:10;font-family:var(--font-sans)';label.textContent='AlphaFold \u00B7 '+accession;el.appendChild(label);
+var legend=document.createElement('div');legend.style.cssText='position:absolute;bottom:8px;left:8px;right:8px;display:flex;align-items:center;gap:6px;font-size:9px;color:white;z-index:10;font-family:var(--font-sans);flex-wrap:wrap';legend.innerHTML='<span style="font-weight:600;opacity:0.7">pLDDT:</span><span style="display:inline-flex;align-items:center;gap:2px"><span style="width:8px;height:8px;border-radius:2px;background:#0053d6;display:inline-block"></span>&gt;90</span><span style="display:inline-flex;align-items:center;gap:2px"><span style="width:8px;height:8px;border-radius:2px;background:#65cbf3;display:inline-block"></span>70\u201390</span><span style="display:inline-flex;align-items:center;gap:2px"><span style="width:8px;height:8px;border-radius:2px;background:#ffdb13;display:inline-block"></span>50\u201370</span><span style="display:inline-flex;align-items:center;gap:2px"><span style="width:8px;height:8px;border-radius:2px;background:#ff7d45;display:inline-block"></span>&lt;50</span><span style="margin-left:auto;opacity:0.6">AlphaFold \u00B7 '+accession+'</span>';el.appendChild(legend);
 }).catch(function(err){el.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#f87171;font-size:12px">Could not load AlphaFold model</div>';});
 }
 async function loadProtein(accession){const data=await fetchUniProtEntry(accession);if(!data){alert('Failed to fetch protein data.');return;}const parsed=parseUniProtToProteinPart(data);saveUndo();AppState.construct.parts=[];AppState.expandedParts.clear();AppState.uniprotCache={};AppState.rawDataCache={};AppState.uniprotCache[accession]=parsed;AppState.rawDataCache[accession]=data;const sigLen=parsed.signalPeptide?parsed.signalPeptide.sequence.length:0;const segLen=parsed.part.segments.reduce((a,s)=>a+s.sequence.length,0);if(sigLen+segLen!==parsed.part.fullSequence.length)console.warn('Sequence integrity mismatch');if(parsed.signalPeptide){AppState.construct.parts.push({type:'signal',name:`${parsed.part.gene||parsed.part.name} signal`,entryName:`${parsed.part.gene||parsed.part.entryName} signal`,source:'uniprot',sequence:parsed.signalPeptide.sequence,description:parsed.signalPeptide.description,originalRange:`${parsed.signalPeptide.start}\u2013${parsed.signalPeptide.end}`,ss:new Array(parsed.signalPeptide.sequence.length).fill('loop'),mutations:[]});}AppState.construct.parts.push(parsed.part);AppState.mutSelectedPart=AppState.construct.parts.length-1;AppState.zone3SelectedPart=AppState.construct.parts.length-1;document.getElementById('searchDropdown').classList.remove('visible');document.getElementById('searchInput').value='';renderAll();
@@ -672,7 +678,7 @@ okBtn.addEventListener('click',onOk);
 cancelBtn.addEventListener('click',onCancel);
 });
 }
-function showInsertResiduePopup(title,desc,maxPos){
+function showInsertResiduePopup(title,desc,maxPos,sequence,startPos){
 return new Promise(function(resolve){
 document.getElementById('insertResidueTitle').textContent=title||'Insert residue';
 document.getElementById('insertResidueDesc').textContent=desc||'';
@@ -680,6 +686,21 @@ var posInput=document.getElementById('insertResiduePos');
 var aaSelect=document.getElementById('insertResidueAA');
 posInput.value='';posInput.max=maxPos||999;posInput.placeholder='0 = before first, 1\u2013'+(maxPos||'N');
 aaSelect.value='';
+// Render sequence with numbering
+var seqWrap=document.getElementById('insertResidueSeqWrap');
+if(sequence&&sequence.length>0){
+seqWrap.style.display='';seqWrap.innerHTML='';
+var basePos=startPos||1;
+for(var i=0;i<sequence.length;i++){
+if(i>0&&i%10===0){var sp=document.createElement('span');sp.textContent=' ';seqWrap.appendChild(sp);}
+var span=document.createElement('span');span.textContent=sequence[i];span.style.color='var(--accent)';span.style.cursor='pointer';span.dataset.pos=i;
+span.title=(basePos+i)+'';
+span.addEventListener('click',(function(pos){return function(){posInput.value=pos;posInput.focus();};})(i));
+seqWrap.appendChild(span);
+if((i+1)%50===0){var numSpan=document.createElement('span');numSpan.textContent=' '+(basePos+i);numSpan.style.cssText='font-size:9px;color:var(--text-tertiary);font-weight:500';seqWrap.appendChild(numSpan);seqWrap.appendChild(document.createElement('br'));}}
+// Final number
+if(sequence.length%50!==0){var endNum=document.createElement('span');endNum.textContent=' '+(basePos+sequence.length-1);endNum.style.cssText='font-size:9px;color:var(--text-tertiary);font-weight:500';seqWrap.appendChild(endNum);}
+}else{seqWrap.style.display='none';}
 document.getElementById('insertResiduePopup').style.display='block';
 posInput.focus();
 var okBtn=document.getElementById('insertResidueOk');
