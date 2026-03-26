@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ConstructAI — Protein Construct Designer</title>
+<title>SeqMind — Protein Intelligence Platform</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -26,7 +26,7 @@
 --shadow-lg:0 4px 12px rgba(0,0,0,0.08);
 }
 body{font-family:var(--font-sans);background:var(--bg);color:var(--text-primary);line-height:1.5;-webkit-font-smoothing:antialiased}
-.hero{padding:28px 40px 20px;border-bottom:1px solid var(--border-light);position:relative;overflow:hidden;background:var(--bg)}.hero-inner{max-width:1400px;margin:0 auto}
+.hero{padding:28px 40px 20px;border-bottom:1px solid var(--border-light);position:relative;overflow:visible;background:var(--bg)}.hero-inner{max-width:1400px;margin:0 auto}
 .hero-title{font-size:18px;font-weight:700;letter-spacing:-0.3px}.hero-subtitle{font-size:12px;color:var(--text-tertiary);font-weight:400;margin-left:2px}
 .search-row{display:flex;align-items:center;gap:12px}.search-container{flex:1;position:relative}
 .search-input{width:100%;height:44px;padding:0 16px 0 40px;border:1.5px solid var(--border);border-radius:var(--radius);font-family:var(--font-sans);font-size:14px;color:var(--text-primary);background:var(--bg);transition:border-color .15s,box-shadow .15s;outline:none}.search-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,0.1)}.search-input::placeholder{color:var(--text-tertiary)}
@@ -82,9 +82,9 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text-primary)
 </head>
 <body>
 <header class="hero">
-<canvas id="aaRainCanvas" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0"></canvas>
+<canvas id="aaRainCanvas" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;clip:rect(0,100vw,100%,0)"></canvas>
 <div class="hero-inner" style="position:relative;z-index:1">
-<div style="text-align:center;margin-bottom:16px"><span class="hero-title">ConstructAI</span><span class="hero-subtitle"> — Protein Construct Designer</span></div>
+<div style="text-align:center;margin-bottom:16px"><span class="hero-title">SeqMind</span><span class="hero-subtitle"> — Protein Intelligence Platform</span></div>
 <div style="display:flex;justify-content:center"><div style="width:100%;max-width:520px">
 <div class="search-container"><svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input type="text" class="search-input" id="searchInput" placeholder="Search protein name, gene, or UniProt ID…"><div class="search-dropdown" id="searchDropdown"></div></div>
 <div style="display:flex;justify-content:center;margin-top:10px"><button class="mode-btn" id="pasteSeqBtn" style="font-size:12px">or paste a sequence</button></div>
@@ -373,7 +373,7 @@ document.getElementById('pasteLoadBtn').addEventListener('click',()=>{const val=
 document.getElementById('pasteClearBtn').addEventListener('click',()=>{document.getElementById('pastePopup').style.display='none';});
 document.getElementById('changeBtn').addEventListener('click',()=>{if(confirm('Clear entire construct?')){saveUndo();AppState.construct.parts=[];AppState.expandedParts.clear();AppState.uniprotCache={};AppState.rawDataCache={};renderAll();}});
 document.getElementById('undoBtn').addEventListener('click',()=>{performUndo();});
-document.getElementById('copyFastaBtn').addEventListener('click',()=>{const seq=getAssembledSequence();if(!seq)return;const partNames=AppState.construct.parts.map(p=>p.entryName||p.name).join('-');const header=`>${partNames} | ${seq.length} aa | ConstructAI`;const fasta=header+'\n'+seq.match(/.{1,60}/g).join('\n');navigator.clipboard.writeText(fasta).then(()=>{const btn=document.getElementById('copyFastaBtn');btn.textContent='Copied!';setTimeout(()=>{btn.textContent='Copy FASTA';},1500);});});
+document.getElementById('copyFastaBtn').addEventListener('click',()=>{const seq=getAssembledSequence();if(!seq)return;const partNames=AppState.construct.parts.map(p=>p.entryName||p.name).join('-');const header=`>${partNames} | ${seq.length} aa | SeqMind`;const fasta=header+'\n'+seq.match(/.{1,60}/g).join('\n');navigator.clipboard.writeText(fasta).then(()=>{const btn=document.getElementById('copyFastaBtn');btn.textContent='Copied!';setTimeout(()=>{btn.textContent='Copy FASTA';},1500);});});
 document.querySelectorAll('.zone3-tab').forEach(tab=>{tab.addEventListener('click',()=>{document.querySelectorAll('.zone3-tab').forEach(t=>t.classList.remove('active'));tab.classList.add('active');AppState.zone3Tab=tab.dataset.z3tab;document.getElementById('zone3Content').classList.add('visible');renderZone3();});});
 document.querySelectorAll('.library-tab').forEach(tab=>{tab.addEventListener('click',()=>{document.querySelectorAll('.library-tab').forEach(t=>t.classList.remove('active'));tab.classList.add('active');const target=tab.dataset.libtab;['libMutations','libSignals','libLinkers','libConjugation','libTags'].forEach(id=>{document.getElementById(id).style.display='none';});document.getElementById({mutations:'libMutations',signals:'libSignals',linkers:'libLinkers',conjugation:'libConjugation',tags:'libTags'}[target]).style.display='';});});
 document.getElementById('mutPopApply').addEventListener('click',()=>{const popup=document.getElementById('mutationPopup');const globalPos=parseInt(popup.dataset.globalPos);const uniprotPos=parseInt(popup.dataset.uniprotPos);const original=popup.dataset.original;const mutant=document.getElementById('mutPopSelect').value;saveUndo();const info=findSegmentAtGlobalPos(globalPos);if(info)applyMutation(info.seg,uniprotPos,original,mutant,'manual','');popup.style.display='none';});
@@ -444,7 +444,7 @@ resize();window.addEventListener('resize',resize);
 for(let i=0;i<NUM;i++){drops.push({x:Math.random()*1600,y:Math.random()*200-200,speed:0.5+Math.random()*1.2,size:12+Math.random()*8,opacity:0.15+Math.random()*0.15,char:AAs[Math.floor(Math.random()*20)]});}
 function draw(){const w=canvas.offsetWidth,h=canvas.offsetHeight;ctx.clearRect(0,0,w,h);
 drops.forEach(d=>{d.y+=d.speed;if(d.y>h+20){d.y=-20;d.x=Math.random()*w;d.char=AAs[Math.floor(Math.random()*20)];d.opacity=0.04+Math.random()*0.06;}
-ctx.fillStyle='rgba(37,99,235,0.18)';ctx.font='500 '+d.size+'px IBM Plex Mono,monospace';ctx.fillText(d.char,d.x,d.y);});
+ctx.fillStyle='rgba(147,171,220,0.45)';ctx.font='500 '+d.size+'px IBM Plex Mono,monospace';ctx.fillText(d.char,d.x,d.y);});
 requestAnimationFrame(draw);}
 draw();
 })();
