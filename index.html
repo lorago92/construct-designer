@@ -139,12 +139,6 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text-primary)
 .construct-stats{display:flex;gap:20px;margin-top:16px;padding:10px 0;border-top:1px solid var(--border-light)}
 .stat-item{font-size:13px;color:var(--text-secondary)}
 .stat-value{font-weight:600;color:var(--text-primary)}
-.sequence-viewer-header{display:flex;gap:12px;flex-wrap:wrap;margin-top:16px;margin-bottom:8px;padding:8px 12px;background:var(--bg-subtle);border-radius:6px;border:1px solid var(--border-light)}
-.seq-legend-item{display:flex;align-items:center;gap:5px;font-size:11px}
-.seq-legend-swatch{width:8px;height:8px;border-radius:2px}
-.seq-legend-name{color:var(--text-secondary);font-weight:500}
-.sequence-viewer{padding:16px;background:var(--bg-subtle);border-radius:var(--radius);border:1px solid var(--border-light);font-family:var(--font-mono);font-size:11px;line-height:2;overflow-y:auto;overflow-x:hidden;white-space:pre}
-.seq-line-number{display:inline-block;width:50px;text-align:right;padding-right:12px;color:var(--text-tertiary);user-select:none;font-size:11px}
 .library-tabs{display:flex;border-bottom:1px solid var(--border-light)}
 .library-tab{flex:1;padding:10px 8px;border:none;background:transparent;font-family:var(--font-sans);font-size:12px;font-weight:500;color:var(--text-tertiary);cursor:pointer;text-align:center;transition:all .15s;border-bottom:2px solid transparent}
 .library-tab:hover{color:var(--text-secondary)}
@@ -261,8 +255,7 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text-primary)
 <div class="zone2" id="zone2"><div class="zone2-left"><div class="card"><div class="card-header"><span class="card-title">Construct Assembly</span><div style="display:flex;gap:8px"><button class="btn btn-secondary" id="copyFastaBtn" style="font-size:12px;padding:5px 10px">Copy FASTA</button></div></div>
 <div class="card-body"><div class="construct-strip" id="constructStrip"><span class="strip-term-label strip-term-n">N-term ←</span><div class="construct-strip-empty" id="stripEmpty">Load a protein to begin assembly</div><span class="strip-term-label strip-term-c">→ C-term</span></div>
 <div class="construct-stats" id="constructStats" style="display:none"><div class="stat-item">Length: <span class="stat-value" id="statLength">0</span> aa</div><div class="stat-item">MW: <span class="stat-value" id="statMW">0</span> kDa</div><div class="stat-item">Ext. coeff. (ox): <span class="stat-value" id="statExtCoeffOx">0</span></div><div class="stat-item">Ext. coeff. (red): <span class="stat-value" id="statExtCoeffRed">0</span></div></div>
-<div class="sequence-viewer-header" id="seqViewerHeader" style="display:none"></div>
-<div class="sequence-viewer" id="sequenceViewer" style="display:none"></div>
+
 </div></div></div>
 <div class="zone2-right"><div class="card"><div class="library-tabs"><button class="library-tab active" data-libtab="mutations">Mutations</button><button class="library-tab" data-libtab="signals">Signals</button><button class="library-tab" data-libtab="linkers">Linkers</button><button class="library-tab" data-libtab="tags">Tags</button></div>
 <div class="library-content" id="libraryContent">
@@ -501,8 +494,10 @@ const seqEl=document.getElementById('zone1Sequence');seqEl.innerHTML='';let gpos
 const mutMap=getMutationMap();
 partLevelView.forEach(part=>{for(let i=0;i<part.sequence.length;i++){const span=document.createElement('span');const globalIdx=gpos;
 const isMutated=mutMap[globalIdx];
-if(isMutated){span.className='seq-residue seq-mutated';span.textContent=isMutated.mutant;span.title=`${isMutated.original}${isMutated.position}${isMutated.mutant} (${isMutated.source})`;}
-else{span.className='seq-residue';span.textContent=part.sequence[i];span.style.color=part.color.main;}
+if(isMutated){span.className='seq-residue seq-mutated seq-clickable';span.textContent=isMutated.mutant;span.title=`${isMutated.original}${isMutated.position}${isMutated.mutant} (${isMutated.source})`;}
+else{span.className='seq-residue seq-clickable';span.textContent=part.sequence[i];span.style.color=part.color.main;}
+span.dataset.globalpos=globalIdx;
+span.addEventListener('click',e=>{showMutationPopup(globalIdx,e);});
 seqEl.appendChild(span);gpos++;if(gpos%10===0){const sp=document.createElement('span');sp.textContent=' ';seqEl.appendChild(sp);}}});
 }
 
@@ -546,22 +541,6 @@ strip.querySelectorAll('.domain-toggle').forEach(cb=>{cb.addEventListener('click
 // Stats
 const totalSeq=getAssembledSequence();const statsEl=document.getElementById('constructStats');
 if(totalSeq.length>0){statsEl.style.display='';document.getElementById('statLength').textContent=totalSeq.length;document.getElementById('statMW').textContent=(calculateMW(totalSeq)/1000).toFixed(1);const ec=calculateExtinctionCoeff(totalSeq);document.getElementById('statExtCoeffOx').textContent=ec.oxidized.toLocaleString();document.getElementById('statExtCoeffRed').textContent=ec.reduced.toLocaleString();}else{statsEl.style.display='none';}
-// Sequence color legend
-const assembled=getAssembledParts();const headerEl=document.getElementById('seqViewerHeader');
-if(totalSeq.length>0){headerEl.style.display='';headerEl.innerHTML='';assembled.forEach(part=>{const item=document.createElement('div');item.className='seq-legend-item';item.innerHTML=`<div class="seq-legend-swatch" style="background:${part.color.main}"></div><span class="seq-legend-name">${shortName(part.name)}</span>`;headerEl.appendChild(item);});}else{headerEl.style.display='none';}
-// Sequence viewer — clickable for mutations
-const viewer=document.getElementById('sequenceViewer');
-const mutMap2=getMutationMap();
-if(totalSeq.length>0){viewer.style.display='';viewer.innerHTML='';const colorMap=[];assembled.forEach(p=>{for(let i=0;i<p.sequence.length;i++)colorMap.push(p.color.main);});
-for(let start=0;start<totalSeq.length;start+=80){const numSpan=document.createElement('span');numSpan.className='seq-line-number';numSpan.textContent=String(start+1).padStart(5);viewer.appendChild(numSpan);
-const chunk=totalSeq.slice(start,start+80);for(let j=0;j<chunk.length;j++){const globalIdx=start+j;const span=document.createElement('span');
-const mut=mutMap2[globalIdx];
-if(mut){span.textContent=mut.mutant;span.className='seq-mutated seq-clickable';span.title=`${mut.original}${mut.position}${mut.mutant}`;}
-else{span.textContent=chunk[j];span.style.color=colorMap[globalIdx]||'var(--text-primary)';span.style.fontWeight='500';span.className='seq-clickable';}
-span.dataset.globalpos=globalIdx;
-span.addEventListener('click',e=>{showMutationPopup(globalIdx,e);});
-viewer.appendChild(span);if((j+1)%10===0&&j<chunk.length-1){const sp=document.createElement('span');sp.textContent=' ';viewer.appendChild(sp);}}
-const endSpan=document.createElement('span');endSpan.style.color='var(--text-tertiary)';endSpan.style.fontSize='10px';endSpan.textContent=` ${Math.min(start+80,totalSeq.length)}`;viewer.appendChild(endSpan);viewer.appendChild(document.createTextNode('\n'));}}else{viewer.style.display='none';}
 // Render right panel mutations
 renderRightPanel();
 }
