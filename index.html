@@ -27,7 +27,7 @@
 }
 body{font-family:var(--font-sans);background:var(--bg);color:var(--text-primary);line-height:1.5;-webkit-font-smoothing:antialiased}
 .hero{padding:28px 40px 20px;border-bottom:1px solid var(--border-light);position:relative;overflow:visible;background:var(--bg)}.hero-inner{max-width:1400px;margin:0 auto}
-.hero-title{font-size:18px;font-weight:700;letter-spacing:-0.3px;color:var(--accent)}.hero-subtitle{font-size:12px;color:var(--accent);font-weight:400;margin-left:2px;opacity:0.7}
+.hero-title{font-size:18px;font-weight:700;letter-spacing:-0.3px;color:var(--accent)}.hero-subtitle{font-size:12px;color:var(--accent);font-weight:700;margin-left:2px;opacity:0.7}
 .search-row{display:flex;align-items:center;gap:12px}.search-container{flex:1;position:relative}
 .search-input{width:100%;height:44px;padding:0 16px 0 40px;border:1.5px solid var(--border);border-radius:var(--radius);font-family:var(--font-sans);font-size:14px;color:var(--text-primary);background:var(--bg);transition:border-color .15s,box-shadow .15s;outline:none}.search-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,0.1)}.search-input::placeholder{color:var(--text-tertiary)}
 .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--text-tertiary)}
@@ -101,7 +101,7 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text-primary)
 </div>
 <main class="main">
 <div id="landingState" class="landing-state">
-<div class="landing-icon" id="startEmptyBtn" style="cursor:pointer;transition:transform .15s,box-shadow .15s" title="Start empty construct" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 4px 16px rgba(37,99,235,0.2)'" onmouseout="this.style.transform='';this.style.boxShadow=''"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 5v14M5 12h14"/></svg></div>
+<div class="landing-icon" id="startEmptyBtn" style="cursor:pointer;transition:transform .15s,box-shadow .15s" title="Start empty construct" onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 4px 16px rgba(37,99,235,0.2)'" onmouseout="this.style.transform='';this.style.boxShadow=''" onclick="openEmptyWorkspace()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 5v14M5 12h14"/></svg></div>
 <h2 class="landing-title">Design your construct</h2>
 <p class="landing-desc">Search for a protein above, paste a sequence, or start from a template:</p>
 <div style="display:flex;gap:12px;justify-content:center;margin-top:20px;flex-wrap:wrap">
@@ -373,6 +373,20 @@ saveUndo();
 AppState.construct.parts.push({type:type,name:name,entryName:name,source:'library',sequence:sequence,description:name,originalRange:'1\u2013'+sequence.length,ss:new Array(sequence.length).fill('loop'),mutations:[]});
 renderAll();
 }
+function openEmptyWorkspace(){
+AppState.construct.parts=[];AppState.expandedParts.clear();AppState.uniprotCache={};AppState.rawDataCache={};
+AppState.mutSelectedPart=-1;AppState.zone3SelectedPart=0;
+document.getElementById('landingState').style.display='none';
+document.getElementById('zone1Card').classList.add('visible');
+document.getElementById('proteinMeta').innerHTML='<div style="color:var(--text-tertiary);font-size:13px">Add a protein or paste a sequence to begin</div>';
+document.getElementById('constructBar').innerHTML='';
+document.getElementById('ssTrack').innerHTML='';
+document.getElementById('ruler').innerHTML='';
+document.getElementById('zone1Sequence').innerHTML='';
+document.getElementById('zone2').classList.add('visible');
+document.getElementById('zone3').classList.add('visible');
+renderAll();
+}
 document.addEventListener('DOMContentLoaded',()=>{
 // Load parts library from JSON
 fetch('./data/parts_library.json').then(r=>r.json()).then(lib=>{
@@ -459,21 +473,7 @@ res.appendChild(d);
 });
 // Template buttons
 document.querySelectorAll('.template-btn').forEach(function(btn){btn.addEventListener('click',function(){loadProtein(this.dataset.acc);});});
-var emptyBtn=document.getElementById('startEmptyBtn');
-if(emptyBtn)emptyBtn.addEventListener('click',function(){
-AppState.construct.parts=[];AppState.expandedParts.clear();AppState.uniprotCache={};AppState.rawDataCache={};
-AppState.mutSelectedPart=-1;AppState.zone3SelectedPart=0;
-document.getElementById('landingState').style.display='none';
-document.getElementById('zone1Card').classList.add('visible');
-document.getElementById('proteinMeta').innerHTML='<div style="color:var(--text-tertiary);font-size:13px">Add a protein or paste a sequence to begin</div>';
-document.getElementById('constructBar').innerHTML='';
-document.getElementById('ssTrack').innerHTML='';
-document.getElementById('ruler').innerHTML='';
-document.getElementById('zone1Sequence').innerHTML='';
-document.getElementById('zone2').classList.add('visible');
-document.getElementById('zone3').classList.add('visible');
-renderAll();
-});
+
 renderAll();});
 // Amino acid rain animation
 (function(){
