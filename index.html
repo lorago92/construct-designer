@@ -111,11 +111,14 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text-primary)
 <button class="template-btn" data-acc="P42212" title="Green fluorescent protein">
 <span style="font-size:20px">💚</span><span style="font-size:12px;font-weight:600">GFP</span><span style="font-size:10px;color:var(--text-tertiary)">Reporter</span>
 </button>
-<button class="template-btn" data-acc="Q03431" title="PTH1 receptor — 7-TM GPCR">
-<span style="font-size:20px">🔬</span><span style="font-size:12px;font-weight:600">PTH1R</span><span style="font-size:10px;color:var(--text-tertiary)">GPCR</span>
+<button class="template-btn" data-acc="P43220" title="GLP-1 receptor — GPCR drug target">
+<span style="font-size:20px">🔬</span><span style="font-size:12px;font-weight:600">GLP1R</span><span style="font-size:10px;color:var(--text-tertiary)">GPCR</span>
 </button>
 <button class="template-btn" data-acc="P01308" title="Insulin — small secreted protein">
 <span style="font-size:20px">💉</span><span style="font-size:12px;font-weight:600">Insulin</span><span style="font-size:10px;color:var(--text-tertiary)">Secreted</span>
+</button>
+<button class="template-btn" data-acc="P00720" title="T4 Lysozyme — model enzyme">
+<span style="font-size:20px">⚗️</span><span style="font-size:12px;font-weight:600">T4 Lysozyme</span><span style="font-size:10px;color:var(--text-tertiary)">Enzyme</span>
 </button>
 <button class="template-btn" data-acc="P00533" title="EGF receptor — receptor tyrosine kinase">
 <span style="font-size:20px">🎯</span><span style="font-size:12px;font-weight:600">EGFR</span><span style="font-size:10px;color:var(--text-tertiary)">RTK</span>
@@ -256,16 +259,7 @@ else{span.className='seq-residue seq-clickable';span.textContent=partSeq[i];span
 const gi=globalOffset+i;span.dataset.globalpos=gi;span.addEventListener('click',e=>{e.stopPropagation();showMutationPopup(gi,e);});seqDiv.appendChild(span);
 if((i+1)%10===0){const sp=document.createElement('span');sp.textContent=' ';seqDiv.appendChild(sp);}}
 domainsDiv.appendChild(seqDiv);}
-card.appendChild(domainsDiv);card.addEventListener('click',e=>{if(e.target.classList.contains('domain-toggle')||e.target.classList.contains('part-card-remove')||e.target.classList.contains('seq-clickable')||e.target.classList.contains('seq-mutated'))return;if(AppState.expandedParts.has(idx))AppState.expandedParts.delete(idx);else AppState.expandedParts.add(idx);// Template buttons
-document.querySelectorAll('.template-btn').forEach(btn=>{btn.addEventListener('click',()=>{loadProtein(btn.dataset.acc);});});
-document.getElementById('startEmptyBtn')?.addEventListener('click',()=>{
-saveUndo();AppState.construct.parts=[];AppState.expandedParts.clear();
-// Show empty workspace
-document.getElementById('landingState').style.display='none';
-document.getElementById('zone1Card').classList.add('visible');
-document.getElementById('zone2').classList.add('visible');
-document.getElementById('zone3').classList.add('visible');
-});
+card.appendChild(domainsDiv);card.addEventListener('click',e=>{if(e.target.classList.contains('domain-toggle')||e.target.classList.contains('part-card-remove')||e.target.classList.contains('seq-clickable')||e.target.classList.contains('seq-mutated'))return;if(AppState.expandedParts.has(idx))AppState.expandedParts.delete(idx);else AppState.expandedParts.add(idx);
 renderAll();});}
 // Show inline sequence for expanded parts without domains
 if((part.type!=='protein'||part.segments.length<=1)&&AppState.expandedParts.has(idx)){
@@ -462,6 +456,16 @@ sigSInput.value='';res.innerHTML='';
 res.appendChild(d);
 });
 },400);
+});
+// Template buttons
+document.querySelectorAll('.template-btn').forEach(function(btn){btn.addEventListener('click',function(){loadProtein(this.dataset.acc);});});
+var emptyBtn=document.getElementById('startEmptyBtn');
+if(emptyBtn)emptyBtn.addEventListener('click',function(){
+saveUndo();AppState.construct.parts=[];AppState.expandedParts.clear();
+document.getElementById('landingState').style.display='none';
+document.getElementById('zone1Card').classList.add('visible');
+document.getElementById('zone2').classList.add('visible');
+document.getElementById('zone3').classList.add('visible');
 });
 renderAll();});
 // Amino acid rain animation
