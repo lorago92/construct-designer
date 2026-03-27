@@ -504,7 +504,9 @@ strip.querySelectorAll('.action-insert').forEach(btn=>{btn.addEventListener('cli
 e.stopPropagation();const pi=parseInt(btn.dataset.idx);const p=AppState.construct.parts[pi];if(!p)return;
 const seq=p.type==='protein'?p.segments.filter(s=>s.active).map(s=>s.sequence).join(''):(p.sequence||'');
 const displayName=p.entryName||p.name;
-const edits=await showSeqEditor('Edit '+displayName,seq.length+' aa',seq,1);
+const edits=await showSeqEditor('Edit '+displayName,seq.length+' aa',seq,1,
+p.type==='protein'?p.segments.filter(s=>s.active).flatMap(s=>(s.mutations||[])):(p.mutations||[]),
+p.type==='protein'?(function(){var ins=[];var off=0;p.segments.filter(s=>s.active).forEach(s=>{(s._inserted||[]).forEach(li=>{ins.push(off+li);});off+=s.sequence.length;});return ins;})():(p._inserted||[]));
 if(!edits)return;
 saveUndo();
 // Apply replacements (single AA swaps on original positions)
@@ -548,7 +550,7 @@ strip.querySelectorAll('.seg-insert').forEach(btn=>{btn.addEventListener('click'
 e.stopPropagation();const pi=parseInt(btn.dataset.part);const si=parseInt(btn.dataset.seg);
 const seg=AppState.construct.parts[pi]?.segments?.[si];if(!seg)return;
 const partName=AppState.construct.parts[pi]?.entryName||AppState.construct.parts[pi]?.name||'';
-const edits=await showSeqEditor('Edit '+seg.name,partName+' \u00B7 '+seg.start+'\u2013'+seg.end+' ('+seg.sequence.length+' aa)',seg.sequence,seg.start);
+const edits=await showSeqEditor('Edit '+seg.name,partName+' \u00B7 '+seg.start+'\u2013'+seg.end+' ('+seg.sequence.length+' aa)',seg.sequence,seg.start,seg.mutations||[],seg._inserted||[]);
 if(!edits)return;
 saveUndo();
 const part=AppState.construct.parts[pi];
@@ -570,7 +572,7 @@ strip.querySelectorAll('.domain-toggle').forEach(cb=>{cb.addEventListener('click
 const totalSeq=getAssembledSequence();const statsEl=document.getElementById('constructStats');if(totalSeq.length>0){statsEl.style.display='';document.getElementById('statLength').textContent=totalSeq.length;document.getElementById('statMW').textContent=(calculateMW(totalSeq)/1000).toFixed(1);const ec=calculateExtinctionCoeff(totalSeq);document.getElementById('statExtCoeffOx').textContent=ec.oxidized.toLocaleString();document.getElementById('statExtCoeffRed').textContent=ec.reduced.toLocaleString();}else statsEl.style.display='none';
 renderRightPanel();}
 const AA_LIST=['A','C','D','E','F','G','H','I','K','L','M','N','P','Q','R','S','T','V','W','Y'];
-function showMutationPopup(globalPos,event){const info=findSegmentAtGlobalPos(globalPos);if(!info)return;const popup=document.getElementById('mutationPopup');const origAA=info.seg.sequence[info.localIdx];const existingMut=(info.seg.mutations||[]).find(m=>m.position===info.uniprotPos);const displayAA=existingMut?existingMut.mutant:origAA;const realOriginal=existingMut?existingMut.original:origAA;document.getElementById('mutPopTitle').textContent=existingMut?'Edit mutation':'Mutate residue';const partName=info.part.entryName||info.part.name||'';const constructPos=globalPos+1;document.getElementById('mutPopPos').innerHTML=`<div style="font-weight:600;color:var(--text-primary);font-size:12px">${partName}</div><div>Position ${info.uniprotPos} in ${shortName(info.seg.name)} (${info.seg.start}\u2013${info.seg.end})</div><div style="color:var(--text-tertiary)">Construct position ${constructPos}</div>`;document.getElementById('mutPopOriginal').textContent=realOriginal;const select=document.getElementById('mutPopSelect');select.innerHTML='';AA_LIST.forEach(aa=>{const opt=document.createElement('option');opt.value=aa;opt.textContent=aa;if(aa===displayAA)opt.selected=true;select.appendChild(opt);});const rect=event.target.getBoundingClientRect();popup.style.left=Math.min(rect.left,window.innerWidth-240)+'px';popup.style.top=(rect.bottom+6)+'px';popup.style.display='block';popup.dataset.globalPos=globalPos;popup.dataset.segStart=info.seg.start;popup.dataset.uniprotPos=info.uniprotPos;popup.dataset.original=realOriginal;}
+function showMutationPopup(globalPos,event){const info=findSegmentAtGlobalPos(globalPos);if(!info)return;const popup=document.getElementById('mutationPopup');const origAA=info.seg.sequence[info.localIdx];const existingMut=(info.seg.mutations||[]).find(m=>m.position===info.uniprotPos);const isInserted=(info.seg._inserted||[]).includes(info.localIdx);const displayAA=existingMut?existingMut.mutant:origAA;const realOriginal=existingMut?existingMut.original:origAA;document.getElementById('mutPopTitle').textContent=isInserted?'Edit inserted residue':existingMut?'Edit mutation':'Mutate residue';const partName=info.part.entryName||info.part.name||'';const constructPos=globalPos+1;let posHtml=`<div style="font-weight:600;color:var(--text-primary);font-size:12px">${partName}</div>`;if(isInserted)posHtml+=`<div style="color:#16a34a;font-weight:500">Inserted residue at position ${info.uniprotPos}</div>`;else posHtml+=`<div>Position ${info.uniprotPos} in ${shortName(info.seg.name)} (${info.seg.start}\u2013${info.seg.end})</div>`;posHtml+=`<div style="color:var(--text-tertiary)">Construct position ${constructPos}</div>`;document.getElementById('mutPopPos').innerHTML=posHtml;document.getElementById('mutPopOriginal').textContent=realOriginal;const select=document.getElementById('mutPopSelect');select.innerHTML='';AA_LIST.forEach(aa=>{const opt=document.createElement('option');opt.value=aa;opt.textContent=aa;if(aa===displayAA)opt.selected=true;select.appendChild(opt);});const rect=event.target.getBoundingClientRect();popup.style.left=Math.min(rect.left,window.innerWidth-240)+'px';popup.style.top=(rect.bottom+6)+'px';popup.style.display='block';popup.dataset.globalPos=globalPos;popup.dataset.segStart=info.seg.start;popup.dataset.uniprotPos=info.uniprotPos;popup.dataset.original=realOriginal;}
 function renderRightPanel(){const mutPanel=document.getElementById('libMutations');const proteinParts=AppState.construct.parts.filter(p=>p.type==='protein'&&p.accession);let html='';if(proteinParts.length>0){html+='<select class="part-selector" id="mutPartSelector">';AppState.construct.parts.forEach((p,i)=>{if(p.type==='protein'&&p.accession)html+=`<option value="${i}" ${AppState.mutSelectedPart===i?'selected':''}>${p.entryName||p.name}</option>`;});html+='</select>';}
 const appliedMuts=[];AppState.construct.parts.forEach(part=>{if(part.type==='protein'){part.segments.forEach(seg=>{(seg.mutations||[]).forEach(m=>{appliedMuts.push({...m,segName:seg.name,seg});});});}else{(part.mutations||[]).forEach(m=>{appliedMuts.push({...m,segName:part.name,seg:{start:1,_isVirtualSeg:true,_partRef:part,mutations:part.mutations}});});}});
 if(appliedMuts.length>0){html+='<div class="right-panel-section"><div class="right-panel-section-title">Applied mutations ('+appliedMuts.length+')</div>';appliedMuts.forEach(m=>{html+=`<div class="mutation-list-item"><div class="mutation-list-info"><div class="mutation-list-change">${m.original}${m.position}${m.mutant}</div><div class="mutation-list-desc">${shortName(m.segName)}</div></div><div class="mutation-list-actions"><span class="mutation-list-source ${m.source==='uniprot'?'mutation-src-uniprot':'mutation-src-manual'}">${m.source==='uniprot'?'UniProt':'Manual'}</span><button class="mutation-remove-btn" data-seg-start="${m.seg.start}" data-pos="${m.position}" data-is-virtual="${m.seg._isVirtualSeg?'1':'0'}" title="Remove">\u00D7</button></div></div>`;});html+='</div>';}
@@ -781,12 +783,14 @@ okBtn.addEventListener('click',onOk);
 cancelBtn.addEventListener('click',onCancel);
 });
 }
-function showSeqEditor(title,desc,sequence,startPos){
+function showSeqEditor(title,desc,sequence,startPos,existingMuts,existingInserted){
 return new Promise(function(resolve){
 document.getElementById('seqEdTitle').textContent=title||'Edit sequence';
 document.getElementById('seqEdDesc').textContent=desc||'';
 var basePos=startPos||1;
 var origSeq=sequence||'';
+var mutations=existingMuts||[];// [{position,original,mutant}]
+var insertedSet=new Set(existingInserted||[]);// local indices that were previously inserted
 var edits={insertions:[],deletions:new Set(),replacements:{}};// deletions: Set of local indices; replacements: {localIdx: newAA(s)}; insertions: [{localPos,aa}]
 var activeTab='insert';
 
@@ -847,8 +851,13 @@ span.textContent=repStr;span.style.cssText='color:#d97706;font-weight:700;backgr
 span.title='Replaced \u2014 click to undo';
 span.addEventListener('click',(function(idx){return function(){delete edits.replacements[idx];updateStatus();renderSeq();};})(i));
 }else{
-span.textContent=origSeq[i];span.style.color='var(--accent)';span.style.cursor='pointer';
-span.title='Pos '+(basePos+i);
+// Check for existing mutation on this position
+var existMut=null;for(var mi=0;mi<mutations.length;mi++){if(mutations[mi].position===basePos+i){existMut=mutations[mi];break;}}
+var isExistIns=insertedSet.has(i);
+span.textContent=origSeq[i];span.style.cursor='pointer';
+if(existMut){span.style.cssText='color:#dc2626;font-weight:700;text-decoration:underline;cursor:pointer';span.title=existMut.original+existMut.position+existMut.mutant+' (mutated)';}
+else if(isExistIns){span.style.cssText='color:#16a34a;font-weight:600;background:#dcfce7;border-radius:2px;padding:0 1px;cursor:pointer';span.title='Previously inserted';}
+else{span.style.color='var(--accent)';span.title='Pos '+(basePos+i);}
 span.addEventListener('click',(function(idx,rp){return function(){
 if(activeTab==='delete'){edits.deletions.add(idx);updateStatus();renderSeq();}
 else if(activeTab==='replace'){document.getElementById('seqEdRepFrom').value=rp;document.getElementById('seqEdRepTo').value=rp;}
