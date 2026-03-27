@@ -106,10 +106,9 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text-primary)
 <div class="popup-header-bar" data-drag-target="regionPopup"><span class="popup-drag-icon">⠿</span><span class="popup-title-text"><span id="regionPopupTitle"></span><span style="font-size:11px;color:var(--text-tertiary);margin-left:8px" id="regionPopupRange"></span></span><button class="popup-close-btn" onclick="document.getElementById('regionPopup').style.display='none'">&times;</button></div>
 <div style="padding:16px;font-family:var(--font-mono);font-size:12px;line-height:2;word-break:break-all;max-height:320px;overflow-y:auto" id="regionPopupSeq"></div>
 </div>
-<div id="confirmPopup" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:500">
-<div style="position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.3)" onclick="document.getElementById('confirmPopup').style.display='none';"></div>
-<div id="confirmCard" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--bg);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);width:420px;max-width:90vw;overflow:hidden">
-<div class="popup-header-bar" data-drag-target="confirmCard"><span class="popup-drag-icon">⠿</span><span class="popup-title-text" id="confirmTitle"></span><button class="popup-close-btn" onclick="document.getElementById('confirmPopup').style.display='none'">&times;</button></div>
+<div id="confirmPopup" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:500;pointer-events:none">
+<div id="confirmCard" style="pointer-events:auto;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--bg);border-radius:var(--radius-lg);box-shadow:0 25px 50px -12px rgba(0,0,0,0.25),0 0 0 1px rgba(0,0,0,0.05);width:420px;max-width:90vw;overflow:hidden">
+<div class="popup-header-bar" data-drag-target="confirmCard"><span class="popup-drag-icon">⠿</span><span class="popup-title-text" id="confirmTitle"></span><button class="popup-close-btn" onclick="document.getElementById('confirmCancel').click()">&times;</button></div>
 <div style="padding:12px 24px">
 <div style="font-size:13px;color:var(--text-secondary)" id="confirmDesc"></div>
 </div>
@@ -119,10 +118,9 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text-primary)
 </div>
 </div>
 </div>
-<div id="seqEditorPopup" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:500">
-<div style="position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.3)" id="seqEditorOverlay"></div>
-<div id="seqEditorCard" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--bg);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);width:620px;max-width:92vw;overflow:hidden;max-height:90vh;display:flex;flex-direction:column">
-<div class="popup-header-bar" data-drag-target="seqEditorCard"><span class="popup-drag-icon">⠿</span><span class="popup-title-text" id="seqEdTitle">Edit sequence</span><button class="popup-close-btn" onclick="document.getElementById('seqEditorPopup').style.display='none'">&times;</button></div>
+<div id="seqEditorPopup" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:500;pointer-events:none">
+<div id="seqEditorCard" style="pointer-events:auto;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--bg);border-radius:var(--radius-lg);box-shadow:0 25px 50px -12px rgba(0,0,0,0.25),0 0 0 1px rgba(0,0,0,0.05);width:620px;max-width:92vw;overflow:hidden;max-height:90vh;display:flex;flex-direction:column">
+<div class="popup-header-bar" data-drag-target="seqEditorCard"><span class="popup-drag-icon">⠿</span><span class="popup-title-text" id="seqEdTitle">Edit sequence</span><button class="popup-close-btn" onclick="document.getElementById('seqEdCancel').click()">&times;</button></div>
 <div style="padding:6px 24px 10px;flex-shrink:0">
 <div style="font-size:12px;color:var(--text-secondary)" id="seqEdDesc"></div>
 </div>
@@ -1095,7 +1093,7 @@ if(!hasEdits){cleanup();resolve(null);return;}
 cleanup();resolve(edits);
 };
 document.getElementById('seqEdCancel').onclick=function(){cleanup();resolve(null);};
-document.getElementById('seqEditorOverlay').onclick=function(){cleanup();resolve(null);};
+// Seq editor close handled by X button and Cancel
 });
 }
 async function showRegionPopup(title,start,end,event){
