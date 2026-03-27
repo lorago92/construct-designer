@@ -864,7 +864,7 @@ var isRep=edits.replacements[i]!==undefined;
 var span=document.createElement('span');
 if(isDel){
 span.textContent=origSeq[i];span.style.cssText='color:#dc2626;text-decoration:line-through;opacity:0.6;cursor:pointer';
-span.title='Deleted \u2014 click to restore';
+span.title=origSeq[i]+(basePos+i)+' \u2014 click to restore';
 span.addEventListener('click',(function(idx){return function(){edits.deletions.delete(idx);updateStatus();renderSeq();};})(i));
 }else if(isRep){
 // Show original struck through + replacement in green
@@ -872,7 +872,7 @@ var oldSpan=document.createElement('span');oldSpan.textContent=origSeq[i];oldSpa
 wrap.appendChild(oldSpan);
 var repStr=edits.replacements[i];
 span.textContent=repStr;span.style.cssText='color:#d97706;font-weight:700;background:#fef3c7;border-radius:2px;padding:0 1px;cursor:pointer';
-span.title='Replaced \u2014 click to undo';
+span.title=origSeq[i]+(basePos+i)+'\u2192'+repStr+' \u2014 click to undo';
 span.addEventListener('click',(function(idx){return function(){delete edits.replacements[idx];updateStatus();renderSeq();};})(i));
 }else{
 // Check for existing mutation on this position
