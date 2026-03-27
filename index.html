@@ -548,6 +548,39 @@ renderAll();});}
 // Show inline sequence for expanded parts without domains
 if((part.type!=='protein'||part.segments.length<=1)&&AppState.expandedParts.has(idx)){
 card.classList.add('expanded');
+// Edit log for non-domain parts
+const editLog2=[];
+if(part.type==='protein'&&part.segments.length===1){
+const seg=part.segments[0];
+(seg.mutations||[]).filter(m=>!(seg._replaced||[]).some(r=>r.position===m.position)).forEach((m,mi)=>{editLog2.push({type:'mutation',label:m.original+m.position+m.mutant,source:m.source||'manual',revert:function(){saveUndo();seg.mutations.splice(seg.mutations.indexOf(m),1);renderAll();}});});
+(seg._replaced||[]).forEach((r,ri)=>{editLog2.push({type:'replacement',label:r.original+r.position+'\u2192'+r.mutant,revert:function(){saveUndo();const pos=r.position;seg.mutations=(seg.mutations||[]).filter(m2=>m2.position!==pos);seg._replaced.splice(seg._replaced.indexOf(r),1);renderAll();}});});
+(seg._inserted||[]).forEach((li)=>{editLog2.push({type:'insertion',label:'+'+seg.sequence[li]+' at pos '+(seg.start+li),revert:function(){saveUndo();if(li>=0&&li<seg.sequence.length){seg.sequence=seg.sequence.slice(0,li)+seg.sequence.slice(li+1);seg.end--;if(seg.ss)seg.ss.splice(li,1);seg._inserted=seg._inserted.filter(x=>x!==li).map(x=>x>li?x-1:x);if(part.fullSequence){const gp=seg.start-1+li;part.fullSequence=part.fullSequence.slice(0,gp)+part.fullSequence.slice(gp+1);}}renderAll();}});});
+(seg._deleted||[]).forEach((d,di)=>{editLog2.push({type:'deletion',label:'\u2212'+d.aa+d.origPos,revert:function(){saveUndo();const restorePos=d.origPos-seg.start;const clampPos=Math.min(restorePos,seg.sequence.length);seg.sequence=seg.sequence.slice(0,clampPos)+d.aa+seg.sequence.slice(clampPos);seg.end++;if(seg.ss)seg.ss.splice(clampPos,0,'loop');if(part.fullSequence){const gp=seg.start-1+clampPos;part.fullSequence=part.fullSequence.slice(0,gp)+d.aa+part.fullSequence.slice(gp);}seg._deleted.splice(di,1);renderAll();}});});
+}else if(part.type!=='protein'){
+(part.mutations||[]).filter(m=>!(part._replaced||[]).some(r=>r.position===m.position)).forEach((m,mi)=>{editLog2.push({type:'mutation',label:m.original+m.position+m.mutant,source:m.source||'manual',revert:function(){saveUndo();part.mutations.splice(part.mutations.indexOf(m),1);renderAll();}});});
+(part._replaced||[]).forEach((r,ri)=>{editLog2.push({type:'replacement',label:r.original+r.position+'\u2192'+r.mutant,revert:function(){saveUndo();const pos=r.position;part.mutations=(part.mutations||[]).filter(m2=>m2.position!==pos);part._replaced.splice(part._replaced.indexOf(r),1);renderAll();}});});
+(part._inserted||[]).forEach((li)=>{editLog2.push({type:'insertion',label:'+'+(part.sequence||'')[li]+' at pos '+(1+li),revert:function(){saveUndo();if(li>=0&&li<part.sequence.length){part.sequence=part.sequence.slice(0,li)+part.sequence.slice(li+1);part._inserted=part._inserted.filter(x=>x!==li).map(x=>x>li?x-1:x);}renderAll();}});});
+(part._deleted||[]).forEach((d,di)=>{editLog2.push({type:'deletion',label:'\u2212'+d.aa+d.origPos,revert:function(){saveUndo();const restorePos=d.origPos-1;const clampPos=Math.min(restorePos,part.sequence.length);part.sequence=part.sequence.slice(0,clampPos)+d.aa+part.sequence.slice(clampPos);part._deleted.splice(di,1);renderAll();}});});
+}
+if(editLog2.length>0){
+const logDiv2=document.createElement('div');logDiv2.style.cssText='margin-top:8px;padding:8px 10px;background:var(--bg-subtle);border-radius:6px;border:1px solid var(--border-light);max-height:100px;overflow-y:auto';
+const logTitle2=document.createElement('div');logTitle2.style.cssText='font-size:10px;font-weight:600;color:var(--text-tertiary);margin-bottom:6px;font-family:var(--font-sans);text-transform:uppercase;letter-spacing:0.5px';logTitle2.textContent='Edit log ('+editLog2.length+')';logDiv2.appendChild(logTitle2);
+editLog2.forEach(function(entry){
+const row=document.createElement('div');row.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:2px 0;font-size:11px;font-family:var(--font-mono)';
+const left=document.createElement('span');const partLabel=part.entryName||part.name||'';
+if(entry.type==='mutation'){left.innerHTML='<span style="color:#dc2626;font-weight:600">'+entry.label+'</span><span style="color:var(--text-tertiary);font-family:var(--font-sans);font-size:10px;margin-left:6px">'+partLabel+'</span>';}
+else if(entry.type==='replacement'){left.innerHTML='<span style="color:#d97706;font-weight:600">'+entry.label+'</span><span style="color:var(--text-tertiary);font-family:var(--font-sans);font-size:10px;margin-left:6px">'+partLabel+'</span>';}
+else if(entry.type==='insertion'){left.innerHTML='<span style="color:#16a34a;font-weight:600">'+entry.label+'</span><span style="color:var(--text-tertiary);font-family:var(--font-sans);font-size:10px;margin-left:6px">'+partLabel+'</span>';}
+else if(entry.type==='deletion'){left.innerHTML='<span style="color:#dc2626;text-decoration:line-through;font-weight:500">'+entry.label+'</span><span style="color:var(--text-tertiary);font-family:var(--font-sans);font-size:10px;margin-left:6px">'+partLabel+'</span>';}
+row.appendChild(left);
+const revertBtn=document.createElement('button');revertBtn.textContent='\u2715';revertBtn.style.cssText='border:none;background:none;color:var(--text-tertiary);cursor:pointer;font-size:12px;padding:0 4px;line-height:1;border-radius:3px';revertBtn.title='Revert this change';
+revertBtn.addEventListener('mouseenter',function(){this.style.color='#dc2626';this.style.background='#fef2f2';});
+revertBtn.addEventListener('mouseleave',function(){this.style.color='var(--text-tertiary)';this.style.background='none';});
+revertBtn.addEventListener('click',function(ev){ev.stopPropagation();entry.revert();});
+row.appendChild(revertBtn);logDiv2.appendChild(row);
+});
+card.appendChild(logDiv2);
+}
 const seqDiv2=document.createElement('div');seqDiv2.className='part-card-inline-seq';
 const pSeq=part.type==='protein'?part.segments.filter(s=>s.active).map(s=>s.sequence).join(''):(part.sequence||'');
 let gOff2=0;for(let pi3=0;pi3<idx;pi3++){const pp=AppState.construct.parts[pi3];if(pp.type==='protein')pp.segments.filter(s=>s.active).forEach(s=>{gOff2+=s.sequence.length;});else gOff2+=(pp.sequence||'').length;}
@@ -964,7 +997,7 @@ if(existMut){span.style.cssText='color:#dc2626;font-weight:700;text-decoration:u
 else if(isExistIns){span.style.cssText='color:#16a34a;font-weight:600;background:#dcfce7;border-radius:2px;padding:0 1px;cursor:pointer';span.title='Previously inserted';}
 else{span.style.color='var(--accent)';span.title='Pos '+(basePos+i);}
 span.addEventListener('click',(function(idx,rp){return function(){
-if(activeTab==='delete'){edits.deletions.add(idx);updateStatus();renderSeq();}
+if(activeTab==='delete'){edits.deletions.add(idx);document.getElementById('seqEdDelFrom').value=rp;document.getElementById('seqEdDelTo').value=rp;updateStatus();renderSeq();}
 else if(activeTab==='replace'){document.getElementById('seqEdRepFrom').value=rp;document.getElementById('seqEdRepTo').value=rp;}
 else{document.getElementById('seqEdInsPos').value=rp;}
 };})(i,basePos+i));
