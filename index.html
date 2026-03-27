@@ -284,54 +284,24 @@ function removeMutation(seg,uniprotPos){if(!seg.mutations)return;seg.mutations=s
 function getAssembledParts(){const result=[];let dci=0;AppState.construct.parts.forEach((part,pi)=>{if(part.type==='protein'){part.segments.filter(s=>s.active).forEach((seg,si)=>{let color;if(seg.isTM)color={main:'#374151',bg:'#f3f4f6',border:'#9ca3af'};else if(seg.type==='unannotated')color={main:'#94a3b8',bg:'#f1f5f9',border:'#cbd5e1'};else{color=DOMAIN_COLORS[dci%DOMAIN_COLORS.length];dci++;}result.push({sequence:seg.sequence,ss:seg.ss||[],color,name:seg.name,type:seg.type,partIndex:pi,segIndex:si,isProteinSegment:true,isTM:seg.isTM||false,isUnannotated:seg.type==='unannotated',start:seg.start,end:seg.end});});}else{const color=PART_COLORS[part.type]||PART_COLORS.tag;result.push({sequence:part.sequence||'',ss:new Array((part.sequence||'').length).fill('loop'),color,name:part.name,type:part.type,partIndex:pi,segIndex:-1,isProteinSegment:false,isTM:false,isUnannotated:false});}});return result;}
 function calculateMW(seq){const t={A:71.08,R:156.19,N:114.10,D:115.09,C:103.14,E:129.12,Q:128.13,G:57.05,H:137.14,I:113.16,L:113.16,K:128.17,M:131.20,F:147.18,P:97.12,S:87.08,T:101.10,W:186.21,Y:163.18,V:99.13};let mw=18.02;for(const aa of seq.toUpperCase())mw+=t[aa]||110;return mw;}
 function calculateExtinctionCoeff(sequence){const s=sequence.toUpperCase();const nY=(s.match(/Y/g)||[]).length;const nW=(s.match(/W/g)||[]).length;const nC=(s.match(/C/g)||[]).length;return{oxidized:nY*1490+nW*5500+Math.floor(nC/2)*125,reduced:nY*1490+nW*5500};}
-// AlphaFold SS computation from PDB backbone phi/psi angles
-function vecSub(a,b){return[a[0]-b[0],a[1]-b[1],a[2]-b[2]];}
-function vecCross(a,b){return[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];}
-function vecDot(a,b){return a[0]*b[0]+a[1]*b[1]+a[2]*b[2];}
-function vecNorm(a){const l=Math.sqrt(vecDot(a,a));return l>0?[a[0]/l,a[1]/l,a[2]/l]:[0,0,0];}
-function dihedralAngle(p1,p2,p3,p4){
-const b1=vecSub(p2,p1);const b2=vecSub(p3,p2);const b3=vecSub(p4,p3);
-const n1=vecCross(b1,b2);const n2=vecCross(b2,b3);
-const m1=vecCross(n1,vecNorm(b2));
-return Math.atan2(vecDot(m1,n2),vecDot(n1,n2))*180/Math.PI;
-}
-function parsePDBBackbone(pdbText){
-const atoms={};const bfactors={};
-pdbText.split('\n').forEach(line=>{
-if(!line.startsWith('ATOM'))return;
-const atomName=line.substring(12,16).trim();
-if(!['N','CA','C'].includes(atomName))return;
-const resi=parseInt(line.substring(22,26));
-const x=parseFloat(line.substring(30,38));
-const y=parseFloat(line.substring(38,46));
-const z=parseFloat(line.substring(46,54));
-const bf=parseFloat(line.substring(60,66));
-if(!atoms[resi])atoms[resi]={};
-atoms[resi][atomName]=[x,y,z];
-if(atomName==='CA')bfactors[resi]=bf;
-});
-return{atoms,bfactors};
-}
-function computeSSFromBackbone(atoms,seqLength){
+// AlphaFold SS parsing from PDB HELIX/SHEET records (DSSP-derived)
+function parseSSFromPDB(pdbText,seqLength){
 const ss=new Array(seqLength).fill('loop');
-for(let resi=2;resi<=seqLength;resi++){
-const prev=atoms[resi-1];const curr=atoms[resi];const next=atoms[resi+1];
-if(!prev||!curr||!prev.C||!curr.N||!curr.CA||!curr.C)continue;
-const phi=dihedralAngle(prev.C,curr.N,curr.CA,curr.C);
-if(!next||!next.N)continue;
-const psi=dihedralAngle(curr.N,curr.CA,curr.C,next.N);
-// Alpha-helix: phi ~-57, psi ~-47
-if(phi>-100&&phi<-30&&psi>-80&&psi<-5)ss[resi-1]='helix';
-// Beta-strand: phi ~-120, psi ~+130
-else if(phi>-170&&phi<-60&&(psi>90||psi<-150))ss[resi-1]='strand';
+pdbText.split('\n').forEach(line=>{
+if(line.startsWith('HELIX ')){
+const startResi=parseInt(line.substring(21,25));
+const endResi=parseInt(line.substring(33,37));
+if(!isNaN(startResi)&&!isNaN(endResi)){
+for(let i=startResi-1;i<endResi&&i<seqLength;i++)if(i>=0)ss[i]='helix';
 }
-// Smooth: remove isolated SS assignments (min 3 consecutive)
-for(let pass=0;pass<2;pass++){
-for(let i=0;i<seqLength;i++){
-const t=ss[i];if(t==='loop')continue;
-const prev=i>0?ss[i-1]:'loop';const next=i<seqLength-1?ss[i+1]:'loop';
-if(prev!==t&&next!==t)ss[i]='loop';
-}}
+}else if(line.startsWith('SHEET ')){
+const startResi=parseInt(line.substring(22,26));
+const endResi=parseInt(line.substring(33,37));
+if(!isNaN(startResi)&&!isNaN(endResi)){
+for(let i=startResi-1;i<endResi&&i<seqLength;i++)if(i>=0)ss[i]='strand';
+}
+}
+});
 return ss;
 }
 async function fetchAlphaFoldPDB(accession){
@@ -353,8 +323,7 @@ return pdbText;
 async function assignAlphaFoldSS(accession,part){
 const pdbText=await fetchAlphaFoldPDB(accession);
 if(!pdbText)return;
-const{atoms,bfactors}=parsePDBBackbone(pdbText);
-const fullSS=computeSSFromBackbone(atoms,part.fullSequence.length);
+const fullSS=parseSSFromPDB(pdbText,part.fullSequence.length);
 part.segments.forEach(seg=>{
 seg.ss=fullSS.slice(seg.start-1,seg.end);
 });
