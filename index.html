@@ -327,57 +327,54 @@ seg.ss=fullSS.slice(seg.start-1,seg.end);
 function parseSSFromCIF(cifText,seqLength){
 const ss=new Array(seqLength).fill('loop');
 const lines=cifText.split('\n');
-// Parse _struct_conf (helices)
-let inStructConf=false;let confCols={};let colIdx=0;
+// Generic mmCIF loop table parser
+function parseLoopTable(prefix){
+const rows=[];let cols=[];let inLoop=false;let inData=false;
 for(let i=0;i<lines.length;i++){
 const line=lines[i].trim();
-if(line==='_struct_conf.id'||line.startsWith('_struct_conf.')){
-inStructConf=true;
-if(line.startsWith('_struct_conf.')){
-confCols[line]=colIdx++;
+if(line==='loop_'){
+if(inData){inLoop=false;inData=false;cols=[];}
+// Check if next lines are our prefix
+const nextLine=(lines[i+1]||'').trim();
+if(nextLine.startsWith(prefix)){inLoop=true;cols=[];continue;}
 }
-continue;
+if(inLoop&&line.startsWith(prefix)){
+cols.push(line);continue;
 }
-if(inStructConf&&!line.startsWith('_')&&!line.startsWith('#')&&!line.startsWith('loop_')&&line.length>0){
-const parts=line.match(/\S+/g);
-if(!parts)continue;
-const begCol=confCols['_struct_conf.beg_auth_seq_id'];
-const endCol=confCols['_struct_conf.end_auth_seq_id'];
-const typeCol=confCols['_struct_conf.conf_type_id'];
-if(begCol!==undefined&&endCol!==undefined&&parts[begCol]&&parts[endCol]){
-const beg=parseInt(parts[begCol]);const end=parseInt(parts[endCol]);
+if(inLoop&&cols.length>0&&!line.startsWith('_')&&!line.startsWith('#')&&!line.startsWith('loop_')&&line.length>0){
+inData=true;
+const vals=line.match(/\S+/g);
+if(vals&&vals.length>=cols.length){
+const row={};cols.forEach((c,ci)=>{row[c]=vals[ci];});
+rows.push(row);
+}
+}
+if(inData&&(line.startsWith('#')||line.startsWith('loop_')||line.startsWith('_'))){
+break;
+}
+}
+return rows;
+}
+// Parse helices from _struct_conf (only HELX types)
+const confRows=parseLoopTable('_struct_conf.');
+confRows.forEach(row=>{
+const type=row['_struct_conf.conf_type_id']||'';
+if(!type.startsWith('HELX'))return; // Only count helices, not TURN/BEND
+const beg=parseInt(row['_struct_conf.beg_auth_seq_id']);
+const end=parseInt(row['_struct_conf.end_auth_seq_id']);
 if(!isNaN(beg)&&!isNaN(end)){
 for(let r=beg-1;r<end&&r<seqLength;r++)if(r>=0)ss[r]='helix';
 }
-}
-}else if(inStructConf&&(line.startsWith('#')||line.startsWith('_')||line.startsWith('loop_'))){
-inStructConf=false;colIdx=0;confCols={};
-}
-}
-// Parse _struct_sheet_range (strands)
-let inSheet=false;let sheetCols={};colIdx=0;
-for(let i=0;i<lines.length;i++){
-const line=lines[i].trim();
-if(line.startsWith('_struct_sheet_range.')){
-inSheet=true;
-sheetCols[line]=colIdx++;
-continue;
-}
-if(inSheet&&!line.startsWith('_')&&!line.startsWith('#')&&!line.startsWith('loop_')&&line.length>0){
-const parts=line.match(/\S+/g);
-if(!parts)continue;
-const begCol=sheetCols['_struct_sheet_range.beg_auth_seq_id'];
-const endCol=sheetCols['_struct_sheet_range.end_auth_seq_id'];
-if(begCol!==undefined&&endCol!==undefined&&parts[begCol]&&parts[endCol]){
-const beg=parseInt(parts[begCol]);const end=parseInt(parts[endCol]);
+});
+// Parse strands from _struct_sheet_range
+const sheetRows=parseLoopTable('_struct_sheet_range.');
+sheetRows.forEach(row=>{
+const beg=parseInt(row['_struct_sheet_range.beg_auth_seq_id']);
+const end=parseInt(row['_struct_sheet_range.end_auth_seq_id']);
 if(!isNaN(beg)&&!isNaN(end)){
 for(let r=beg-1;r<end&&r<seqLength;r++)if(r>=0)ss[r]='strand';
 }
-}
-}else if(inSheet&&(line.startsWith('#')||line.startsWith('_')||line.startsWith('loop_'))){
-inSheet=false;colIdx=0;sheetCols={};
-}
-}
+});
 return ss;
 }
 function shortName(name){if(!name)return'';const semi=name.indexOf(';');return semi>0?name.slice(0,semi):name;}
