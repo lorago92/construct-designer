@@ -355,18 +355,20 @@ break;
 }
 return rows;
 }
-// Parse helices from _struct_conf (only HELX types)
+// Parse helices and strands from _struct_conf (HELX=helix, STRN=strand, skip TURN/BEND)
 const confRows=parseLoopTable('_struct_conf.');
 confRows.forEach(row=>{
 const type=row['_struct_conf.conf_type_id']||'';
-if(!type.startsWith('HELX'))return; // Only count helices, not TURN/BEND
 const beg=parseInt(row['_struct_conf.beg_auth_seq_id']);
 const end=parseInt(row['_struct_conf.end_auth_seq_id']);
-if(!isNaN(beg)&&!isNaN(end)){
+if(isNaN(beg)||isNaN(end))return;
+if(type.startsWith('HELX')){
 for(let r=beg-1;r<end&&r<seqLength;r++)if(r>=0)ss[r]='helix';
+}else if(type==='STRN'){
+for(let r=beg-1;r<end&&r<seqLength;r++)if(r>=0)ss[r]='strand';
 }
 });
-// Parse strands from _struct_sheet_range
+// Also parse _struct_sheet_range as fallback for strands
 const sheetRows=parseLoopTable('_struct_sheet_range.');
 sheetRows.forEach(row=>{
 const beg=parseInt(row['_struct_sheet_range.beg_auth_seq_id']);
