@@ -524,6 +524,8 @@ let globalOffset=0;for(let pi2=0;pi2<idx;pi2++){const pp=AppState.construct.part
 // Build segment range map for highlighting
 const segRanges=[];let sOff2=0;part.segments.filter(s=>s.active).forEach((s,asi)=>{const origSi=part.segments.indexOf(s);segRanges.push({start:sOff2,end:sOff2+s.sequence.length,segIdx:origSi});sOff2+=s.sequence.length;});
 const partInsMap={};lpos=0;part.segments.filter(s=>s.active).forEach(s=>{(s._inserted||[]).forEach(li=>{if(li>=0&&li<s.sequence.length)partInsMap[lpos+li]=true;});lpos+=s.sequence.length;});
+// Build segment boundary markers: local position → UniProt position label
+const segBoundaryMarkers={};segRanges.forEach(sr=>{const seg=part.segments[sr.segIdx];if(sr.end-sr.start>=1){segBoundaryMarkers[sr.start]=(segBoundaryMarkers[sr.start]?segBoundaryMarkers[sr.start]+' ':'')+''+seg.start;if(sr.end-sr.start>1){segBoundaryMarkers[sr.end-1]=(segBoundaryMarkers[sr.end-1]?segBoundaryMarkers[sr.end-1]+' ':'')+''+seg.end;}}});
 for(let i=0;i<partSeq.length;i++){const span=document.createElement('span');const mut=partMutMap[i];const isIns=partInsMap[i];
 // Find which segment this residue belongs to
 let segIdx=-1;for(let sr=0;sr<segRanges.length;sr++){if(i>=segRanges[sr].start&&i<segRanges[sr].end){segIdx=segRanges[sr].segIdx;break;}}
@@ -537,7 +539,8 @@ span.addEventListener('mouseenter',function(){const si2=parseInt(this.dataset.se
 span.addEventListener('mouseleave',function(){domainsDiv.querySelectorAll('.domain-subcard').forEach(sc2=>{sc2.style.boxShadow='';});});
 seqDiv.appendChild(span);
 if((i+1)%10===0){const sp=document.createElement('span');sp.textContent=' ';seqDiv.appendChild(sp);}
-if((i+1)%100===0){const tag=document.createElement('span');tag.style.cssText='font-size:8px;color:var(--text-tertiary);vertical-align:super;margin:0 1px;user-select:none';tag.textContent=i+1;seqDiv.appendChild(tag);}
+// Show segment boundary markers (UniProt positions at start/end of each domain)
+if(segBoundaryMarkers[i]!==undefined){const tag=document.createElement('span');tag.style.cssText='font-size:8px;color:var(--text-tertiary);vertical-align:super;margin:0 1px;user-select:none';tag.textContent=segBoundaryMarkers[i];seqDiv.appendChild(tag);}
 }
 domainsDiv.appendChild(seqDiv);}
 card.appendChild(domainsDiv);card.addEventListener('click',e=>{if(e.target.classList.contains('domain-toggle')||e.target.closest('.part-card-actions')||e.target.closest('.domain-subcard-actions')||e.target.classList.contains('seq-clickable')||e.target.classList.contains('seq-mutated'))return;if(AppState.expandedParts.has(idx))AppState.expandedParts.delete(idx);else AppState.expandedParts.add(idx);
@@ -555,7 +558,7 @@ else if(isIns){span.className='seq-residue seq-inserted seq-clickable';span.text
 else{span.className='seq-residue seq-clickable';span.textContent=pSeq[i];span.style.color='var(--text-secondary)';}
 span.dataset.globalpos=gi2;span.addEventListener('click',e=>{e.stopPropagation();showMutationPopup(gi2,e);});seqDiv2.appendChild(span);
 if((i+1)%10===0){const sp=document.createElement('span');sp.textContent=' ';seqDiv2.appendChild(sp);}
-if((i+1)%100===0){const tag=document.createElement('span');tag.style.cssText='font-size:8px;color:var(--text-tertiary);vertical-align:super;margin:0 1px;user-select:none';tag.textContent=i+1;seqDiv2.appendChild(tag);}}
+if((i+1)%20===0){const tag=document.createElement('span');tag.style.cssText='font-size:8px;color:var(--text-tertiary);vertical-align:super;margin:0 1px;user-select:none';tag.textContent=i+1;seqDiv2.appendChild(tag);}}
 card.appendChild(seqDiv2);
 if(!card.dataset.clickBound){card.dataset.clickBound='1';card.addEventListener('click',e=>{if(e.target.classList.contains('seq-clickable')||e.target.classList.contains('seq-mutated')||e.target.closest('.part-card-actions')||e.target.closest('.domain-subcard-actions'))return;if(AppState.expandedParts.has(idx))AppState.expandedParts.delete(idx);else AppState.expandedParts.add(idx);renderAll();});}}
 else if(part.type!=='protein'||part.segments.length<=1){card.addEventListener('click',e=>{if(e.target.closest('.part-card-actions')||e.target.closest('.domain-subcard-actions'))return;if(AppState.expandedParts.has(idx))AppState.expandedParts.delete(idx);else AppState.expandedParts.add(idx);renderAll();});}
