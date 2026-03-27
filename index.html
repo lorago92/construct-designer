@@ -610,8 +610,7 @@ strip.querySelectorAll('.action-copy').forEach(btn=>{btn.addEventListener('click
 e.stopPropagation();const pi=parseInt(btn.dataset.idx);const p=AppState.construct.parts[pi];if(!p)return;
 let seq;if(p.type==='protein'){let seqArr=[];p.segments.filter(s=>s.active).forEach(s=>{let segSeq=s.sequence.split('');(s.mutations||[]).forEach(m=>{const idx2=m.position-s.start;if(idx2>=0&&idx2<segSeq.length)segSeq[idx2]=m.mutant;});seqArr.push(segSeq.join(''));});seq=seqArr.join('');}else{let partSeq=(p.sequence||'').split('');(p.mutations||[]).forEach(m=>{const idx2=m.position-1;if(idx2>=0&&idx2<partSeq.length)partSeq[idx2]=m.mutant;});seq=partSeq.join('');}
 const displayName=p.entryName||p.name;
-const constructName=AppState.construct.parts.map(cp=>cp.entryName||cp.name).join('-');
-const header='>' + displayName + ' | ' + p.type + ' | ' + seq.length + ' aa | ' + constructName + ' | SeqMind';
+const header='>' + displayName + ' | ' + p.type + ' | ' + seq.length + ' aa | SeqMind';
 const fasta=header+'\n'+seq.match(/.{1,60}/g).join('\n');
 navigator.clipboard.writeText(fasta).then(()=>{btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>';setTimeout(()=>{btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>';},1200);});
 });});
@@ -665,8 +664,7 @@ e.stopPropagation();const pi=parseInt(btn.dataset.part);const si=parseInt(btn.da
 const part=AppState.construct.parts[pi];const seg=part?.segments?.[si];if(!seg)return;
 let segSeq=seg.sequence.split('');(seg.mutations||[]).forEach(m=>{const idx2=m.position-seg.start;if(idx2>=0&&idx2<segSeq.length)segSeq[idx2]=m.mutant;});const seq=segSeq.join('');
 const partName=part.entryName||part.name;
-const constructName=AppState.construct.parts.map(cp=>cp.entryName||cp.name).join('-');
-const header='>' + partName + ' | ' + seg.name + ' | ' + seg.start + '-' + seg.end + ' | ' + seq.length + ' aa | ' + constructName + ' | SeqMind';
+const header='>' + partName + ' | ' + seg.name + ' | ' + seg.start + '-' + seg.end + ' | ' + seq.length + ' aa | SeqMind';
 const fasta=header+'\n'+seq.match(/.{1,60}/g).join('\n');
 navigator.clipboard.writeText(fasta).then(()=>{btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" style="width:12px;height:12px"><path d="M20 6L9 17l-5-5"/></svg>';setTimeout(()=>{btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>';},1200);});
 });});
