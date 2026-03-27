@@ -318,21 +318,20 @@ for(let resi=2;resi<=seqLength;resi++){
 const prev=atoms[resi-1];const curr=atoms[resi];const next=atoms[resi+1];
 if(!prev||!curr||!prev.C||!curr.N||!curr.CA||!curr.C)continue;
 const phi=dihedralAngle(prev.C,curr.N,curr.CA,curr.C);
-if(!next||!next.N){
-if(phi>-120&&phi<-30)ss[resi-1]='helix';
-else if(phi>-180&&phi<-60)ss[resi-1]='strand';
-continue;
-}
+if(!next||!next.N)continue;
 const psi=dihedralAngle(curr.N,curr.CA,curr.C,next.N);
-if(phi>-120&&phi<-30&&psi>-80&&psi<-10)ss[resi-1]='helix';
-else if((phi>-180&&phi<-60)&&(psi>60||psi<-160))ss[resi-1]='strand';
+// Alpha-helix: phi ~-57, psi ~-47
+if(phi>-100&&phi<-30&&psi>-80&&psi<-5)ss[resi-1]='helix';
+// Beta-strand: phi ~-120, psi ~+130
+else if(phi>-170&&phi<-60&&(psi>90||psi<-150))ss[resi-1]='strand';
 }
-// Smooth: remove isolated SS assignments (min 2 consecutive)
+// Smooth: remove isolated SS assignments (min 3 consecutive)
+for(let pass=0;pass<2;pass++){
 for(let i=0;i<seqLength;i++){
 const t=ss[i];if(t==='loop')continue;
 const prev=i>0?ss[i-1]:'loop';const next=i<seqLength-1?ss[i+1]:'loop';
 if(prev!==t&&next!==t)ss[i]='loop';
-}
+}}
 return ss;
 }
 async function fetchAlphaFoldPDB(accession){
