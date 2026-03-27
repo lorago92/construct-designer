@@ -365,6 +365,9 @@ return pdbText;
 }catch(e){console.warn('AlphaFold fetch failed for '+accession+':',e);return null;}
 }
 async function assignAlphaFoldSS(accession,part){
+// Check if UniProt already provided SS data — if so, keep it
+const existingSS=[];part.segments.forEach(seg=>{existingSS.push(...(seg.ss||[]));});
+if(existingSS.some(s=>s!=='loop'))return; // UniProt SS is good, don't overwrite
 const pdbText=await fetchAlphaFoldPDB(accession);
 if(!pdbText)return;
 // Try 1: HELIX/SHEET records (DSSP-derived, most reliable)
