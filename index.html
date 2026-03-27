@@ -460,7 +460,8 @@ substrip.appendChild(subcard);});domainsDiv.appendChild(substrip);
 if(AppState.expandedParts.has(idx)){
 const editLog=[];
 part.segments.forEach((seg,si)=>{
-(seg.mutations||[]).forEach((m,mi)=>{editLog.push({type:'mutation',label:m.original+m.position+m.mutant,segName:seg.name,segIdx:si,mutIdx:mi,source:m.source||'manual'});});
+(seg.mutations||[]).filter(m=>!(seg._replaced||[]).some(r=>r.position===m.position)).forEach((m,mi)=>{editLog.push({type:'mutation',label:m.original+m.position+m.mutant,segName:seg.name,segIdx:si,mutIdx:mi,source:m.source||'manual'});});
+(seg._replaced||[]).forEach((r,ri)=>{editLog.push({type:'replacement',label:r.original+r.position+'\u2192'+r.mutant,segName:seg.name,segIdx:si,repIdx:ri,repPos:r.position});});
 (seg._inserted||[]).forEach((li,ii)=>{editLog.push({type:'insertion',label:'+'+seg.sequence[li]+' at pos '+(seg.start+li),segName:seg.name,segIdx:si,insLocalIdx:li});});
 (seg._deleted||[]).forEach((d,di)=>{editLog.push({type:'deletion',label:'\u2212'+d.aa+d.origPos,segName:seg.name,segIdx:si,delIdx:di});});
 });
@@ -471,6 +472,7 @@ editLog.forEach(function(entry){
 const row=document.createElement('div');row.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:2px 0;font-size:11px;font-family:var(--font-mono)';
 const left=document.createElement('span');
 if(entry.type==='mutation'){left.innerHTML='<span style="color:#dc2626;font-weight:600">'+entry.label+'</span><span style="color:var(--text-tertiary);font-family:var(--font-sans);font-size:10px;margin-left:6px">'+entry.segName+'</span>';}
+else if(entry.type==='replacement'){left.innerHTML='<span style="color:#d97706;font-weight:600">'+entry.label+'</span><span style="color:var(--text-tertiary);font-family:var(--font-sans);font-size:10px;margin-left:6px">'+entry.segName+'</span>';}
 else if(entry.type==='insertion'){left.innerHTML='<span style="color:#16a34a;font-weight:600">'+entry.label+'</span><span style="color:var(--text-tertiary);font-family:var(--font-sans);font-size:10px;margin-left:6px">'+entry.segName+'</span>';}
 else if(entry.type==='deletion'){left.innerHTML='<span style="color:#dc2626;text-decoration:line-through;font-weight:500">'+entry.label+'</span><span style="color:var(--text-tertiary);font-family:var(--font-sans);font-size:10px;margin-left:6px">'+entry.segName+'</span>';}
 row.appendChild(left);
@@ -481,6 +483,13 @@ revertBtn.addEventListener('click',function(ev){ev.stopPropagation();saveUndo();
 const seg2=part.segments[entry.segIdx];
 if(entry.type==='mutation'){
 if(seg2.mutations&&seg2.mutations[entry.mutIdx]){seg2.mutations.splice(entry.mutIdx,1);}
+}else if(entry.type==='replacement'){
+// Remove both the mutation and the _replaced entry
+if(seg2._replaced&&seg2._replaced[entry.repIdx]){
+const pos=seg2._replaced[entry.repIdx].position;
+seg2.mutations=(seg2.mutations||[]).filter(m=>m.position!==pos);
+seg2._replaced.splice(entry.repIdx,1);
+}
 }else if(entry.type==='insertion'){
 const li=entry.insLocalIdx;
 if(li>=0&&li<seg2.sequence.length){
@@ -576,10 +585,10 @@ p.type==='protein'?(function(){var ins=[];var off=0;p.segments.filter(s=>s.activ
 p.type==='protein'?p.segments.filter(s=>s.active).flatMap(s=>(s._deleted||[])):(p._deleted||[]));
 if(!edits)return;
 saveUndo();
-// Apply replacements as mutations (so they show red everywhere)
+// Apply replacements as mutations (so they show red everywhere) and track
 Object.keys(edits.replacements).forEach(function(k){var localIdx=parseInt(k);var newAA=edits.replacements[k];
-if(p.type==='protein'){let offset=0;for(const seg of p.segments){if(!seg.active)continue;if(localIdx<offset+seg.sequence.length){const li=localIdx-offset;const uniPos=seg.start+li;const origAA=seg.sequence[li];if(!seg.mutations)seg.mutations=[];seg.mutations=seg.mutations.filter(m=>m.position!==uniPos);if(origAA!==newAA)seg.mutations.push({position:uniPos,original:origAA,mutant:newAA,source:'manual',description:'Sequence editor replacement'});break;}offset+=seg.sequence.length;}}
-else{const origAA=(p.sequence||'')[localIdx];if(!p.mutations)p.mutations=[];p.mutations=p.mutations.filter(m=>m.position!==(localIdx+1));if(origAA!==newAA)p.mutations.push({position:localIdx+1,original:origAA,mutant:newAA,source:'manual',description:'Sequence editor replacement'});}
+if(p.type==='protein'){let offset=0;for(const seg of p.segments){if(!seg.active)continue;if(localIdx<offset+seg.sequence.length){const li=localIdx-offset;const uniPos=seg.start+li;const origAA=seg.sequence[li];if(!seg.mutations)seg.mutations=[];seg.mutations=seg.mutations.filter(m=>m.position!==uniPos);if(origAA!==newAA){seg.mutations.push({position:uniPos,original:origAA,mutant:newAA,source:'manual',description:'Sequence editor replacement'});if(!seg._replaced)seg._replaced=[];seg._replaced.push({position:uniPos,original:origAA,mutant:newAA});}break;}offset+=seg.sequence.length;}}
+else{const origAA=(p.sequence||'')[localIdx];if(!p.mutations)p.mutations=[];p.mutations=p.mutations.filter(m=>m.position!==(localIdx+1));if(origAA!==newAA){p.mutations.push({position:localIdx+1,original:origAA,mutant:newAA,source:'manual',description:'Sequence editor replacement'});if(!p._replaced)p._replaced=[];p._replaced.push({position:localIdx+1,original:origAA,mutant:newAA});}}
 });
 // Apply deletions (from end to start) and track
 var delArr=[...edits.deletions].sort(function(a,b){return b-a;});
@@ -629,11 +638,12 @@ const edits=await showSeqEditor('Edit '+seg.name,partName+' \u00B7 '+seg.start+'
 if(!edits)return;
 saveUndo();
 const part=AppState.construct.parts[pi];
-// Replacements as mutations
+// Replacements as mutations and track
 Object.keys(edits.replacements).forEach(function(k){var li=parseInt(k);var newAA=edits.replacements[k];
 const uniPos=seg.start+li;const origAA=seg.sequence[li];
 if(!seg.mutations)seg.mutations=[];seg.mutations=seg.mutations.filter(m=>m.position!==uniPos);
-if(origAA!==newAA)seg.mutations.push({position:uniPos,original:origAA,mutant:newAA,source:'manual',description:'Sequence editor replacement'});
+if(origAA!==newAA){seg.mutations.push({position:uniPos,original:origAA,mutant:newAA,source:'manual',description:'Sequence editor replacement'});
+if(!seg._replaced)seg._replaced=[];seg._replaced.push({position:uniPos,original:origAA,mutant:newAA});}
 });
 // Deletions (end to start) and track
 var delArr=[...edits.deletions].sort(function(a,b){return b-a;});
