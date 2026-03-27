@@ -506,7 +506,8 @@ const seq=p.type==='protein'?p.segments.filter(s=>s.active).map(s=>s.sequence).j
 const displayName=p.entryName||p.name;
 const edits=await showSeqEditor('Edit '+displayName,seq.length+' aa',seq,1,
 p.type==='protein'?p.segments.filter(s=>s.active).flatMap(s=>(s.mutations||[])):(p.mutations||[]),
-p.type==='protein'?(function(){var ins=[];var off=0;p.segments.filter(s=>s.active).forEach(s=>{(s._inserted||[]).forEach(li=>{ins.push(off+li);});off+=s.sequence.length;});return ins;})():(p._inserted||[]));
+p.type==='protein'?(function(){var ins=[];var off=0;p.segments.filter(s=>s.active).forEach(s=>{(s._inserted||[]).forEach(li=>{ins.push(off+li);});off+=s.sequence.length;});return ins;})():(p._inserted||[]),
+p.type==='protein'?p.segments.filter(s=>s.active).flatMap(s=>(s._deleted||[])):(p._deleted||[]));
 if(!edits)return;
 saveUndo();
 // Apply replacements as mutations (so they show red everywhere)
@@ -514,12 +515,20 @@ Object.keys(edits.replacements).forEach(function(k){var localIdx=parseInt(k);var
 if(p.type==='protein'){let offset=0;for(const seg of p.segments){if(!seg.active)continue;if(localIdx<offset+seg.sequence.length){const li=localIdx-offset;const uniPos=seg.start+li;const origAA=seg.sequence[li];if(!seg.mutations)seg.mutations=[];seg.mutations=seg.mutations.filter(m=>m.position!==uniPos);if(origAA!==newAA)seg.mutations.push({position:uniPos,original:origAA,mutant:newAA,source:'manual',description:'Sequence editor replacement'});break;}offset+=seg.sequence.length;}}
 else{const origAA=(p.sequence||'')[localIdx];if(!p.mutations)p.mutations=[];p.mutations=p.mutations.filter(m=>m.position!==(localIdx+1));if(origAA!==newAA)p.mutations.push({position:localIdx+1,original:origAA,mutant:newAA,source:'manual',description:'Sequence editor replacement'});}
 });
-// Apply deletions (from end to start)
+// Apply deletions (from end to start) and track
 var delArr=[...edits.deletions].sort(function(a,b){return b-a;});
 delArr.forEach(function(localIdx){
-if(p.type==='protein'){let offset=0;for(const seg of p.segments){if(!seg.active)continue;if(localIdx<offset+seg.sequence.length){const li=localIdx-offset;seg.sequence=seg.sequence.slice(0,li)+seg.sequence.slice(li+1);seg.end--;if(seg.ss)seg.ss.splice(li,1);break;}offset+=seg.sequence.length;}
+if(p.type==='protein'){let offset=0;for(const seg of p.segments){if(!seg.active)continue;if(localIdx<offset+seg.sequence.length){const li=localIdx-offset;const delAA=seg.sequence[li];const origPos=seg.start+li;
+if(!seg._deleted)seg._deleted=[];seg._deleted.push({origPos:origPos,aa:delAA});
+seg.sequence=seg.sequence.slice(0,li)+seg.sequence.slice(li+1);seg.end--;if(seg.ss)seg.ss.splice(li,1);
+// Adjust _inserted indices
+if(seg._inserted)seg._inserted=seg._inserted.filter(x=>x!==li).map(x=>x>li?x-1:x);
+break;}offset+=seg.sequence.length;}
 if(p.fullSequence)p.fullSequence=p.fullSequence.slice(0,localIdx)+p.fullSequence.slice(localIdx+1);}
-else{p.sequence=p.sequence.slice(0,localIdx)+p.sequence.slice(localIdx+1);}
+else{const delAA=(p.sequence||'')[localIdx];
+if(!p._deleted)p._deleted=[];p._deleted.push({origPos:localIdx+1,aa:delAA});
+p.sequence=p.sequence.slice(0,localIdx)+p.sequence.slice(localIdx+1);
+if(p._inserted)p._inserted=p._inserted.filter(x=>x!==localIdx).map(x=>x>localIdx?x-1:x);}
 });
 // Apply insertions (from end to start) and track positions
 var insArr=edits.insertions.slice().sort(function(a,b){return b.localPos-a.localPos;});
@@ -550,7 +559,7 @@ strip.querySelectorAll('.seg-insert').forEach(btn=>{btn.addEventListener('click'
 e.stopPropagation();const pi=parseInt(btn.dataset.part);const si=parseInt(btn.dataset.seg);
 const seg=AppState.construct.parts[pi]?.segments?.[si];if(!seg)return;
 const partName=AppState.construct.parts[pi]?.entryName||AppState.construct.parts[pi]?.name||'';
-const edits=await showSeqEditor('Edit '+seg.name,partName+' \u00B7 '+seg.start+'\u2013'+seg.end+' ('+seg.sequence.length+' aa)',seg.sequence,seg.start,seg.mutations||[],seg._inserted||[]);
+const edits=await showSeqEditor('Edit '+seg.name,partName+' \u00B7 '+seg.start+'\u2013'+seg.end+' ('+seg.sequence.length+' aa)',seg.sequence,seg.start,seg.mutations||[],seg._inserted||[],seg._deleted||[]);
 if(!edits)return;
 saveUndo();
 const part=AppState.construct.parts[pi];
@@ -560,9 +569,12 @@ const uniPos=seg.start+li;const origAA=seg.sequence[li];
 if(!seg.mutations)seg.mutations=[];seg.mutations=seg.mutations.filter(m=>m.position!==uniPos);
 if(origAA!==newAA)seg.mutations.push({position:uniPos,original:origAA,mutant:newAA,source:'manual',description:'Sequence editor replacement'});
 });
-// Deletions (end to start)
+// Deletions (end to start) and track
 var delArr=[...edits.deletions].sort(function(a,b){return b-a;});
-delArr.forEach(function(li){seg.sequence=seg.sequence.slice(0,li)+seg.sequence.slice(li+1);seg.end--;if(seg.ss)seg.ss.splice(li,1);
+delArr.forEach(function(li){const delAA=seg.sequence[li];const origPos=seg.start+li;
+if(!seg._deleted)seg._deleted=[];seg._deleted.push({origPos:origPos,aa:delAA});
+seg.sequence=seg.sequence.slice(0,li)+seg.sequence.slice(li+1);seg.end--;if(seg.ss)seg.ss.splice(li,1);
+if(seg._inserted)seg._inserted=seg._inserted.filter(x=>x!==li).map(x=>x>li?x-1:x);
 if(part.fullSequence){const gp=seg.start-1+li;part.fullSequence=part.fullSequence.slice(0,gp)+part.fullSequence.slice(gp+1);}});
 // Insertions (end to start)
 var insArr=edits.insertions.slice().sort(function(a,b){return b.localPos-a.localPos;});
@@ -787,14 +799,15 @@ okBtn.addEventListener('click',onOk);
 cancelBtn.addEventListener('click',onCancel);
 });
 }
-function showSeqEditor(title,desc,sequence,startPos,existingMuts,existingInserted){
+function showSeqEditor(title,desc,sequence,startPos,existingMuts,existingInserted,existingDeleted){
 return new Promise(function(resolve){
 document.getElementById('seqEdTitle').textContent=title||'Edit sequence';
 document.getElementById('seqEdDesc').textContent=desc||'';
 var basePos=startPos||1;
 var origSeq=sequence||'';
-var mutations=existingMuts||[];// [{position,original,mutant}]
-var insertedSet=new Set(existingInserted||[]);// local indices that were previously inserted
+var mutations=existingMuts||[];
+var insertedSet=new Set(existingInserted||[]);
+var deletedHistory=existingDeleted||[];// [{origPos, aa}]
 var edits={insertions:[],deletions:new Set(),replacements:{}};// deletions: Set of local indices; replacements: {localIdx: newAA(s)}; insertions: [{localPos,aa}]
 var activeTab='insert';
 
@@ -822,6 +835,13 @@ document.getElementById('seqEdStatus').textContent=n>0?n+' pending edit'+(n>1?'s
 
 function renderSeq(){
 var wrap=document.getElementById('seqEdSeqWrap');wrap.innerHTML='';
+// Show previously deleted residues
+if(deletedHistory.length>0){
+var delDiv=document.createElement('div');delDiv.style.cssText='margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid var(--border-light);font-size:10px';
+var delLabel=document.createElement('span');delLabel.textContent='Previously deleted: ';delLabel.style.cssText='color:var(--text-tertiary);font-size:9px;font-family:var(--font-sans)';delDiv.appendChild(delLabel);
+deletedHistory.forEach(function(d){var sp=document.createElement('span');sp.textContent=d.aa+d.origPos;sp.style.cssText='color:#dc2626;text-decoration:line-through;margin-right:6px;font-weight:500';delDiv.appendChild(sp);});
+wrap.appendChild(delDiv);
+}
 var origCount=0;
 // Build items: original residues + insertions interleaved
 for(var i=0;i<origSeq.length;i++){
