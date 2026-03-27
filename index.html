@@ -129,15 +129,18 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text-primary)
 </div>
 <div id="insertResidueSeqWrap" style="display:none;max-height:140px;overflow-y:auto;padding:10px 24px;border-bottom:1px solid var(--border-light);background:var(--bg-subtle);font-family:var(--font-mono);font-size:11px;line-height:1.9;word-break:break-all"></div>
 <div style="padding:16px 24px">
-<div style="display:flex;gap:10px;align-items:flex-end">
-<div style="flex:1">
+<div style="margin-bottom:10px">
 <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px">Insert after position</label>
 <input type="number" id="insertResiduePos" min="0" style="width:100%;height:38px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-family:var(--font-mono);font-size:14px;outline:none;color:var(--text-primary)" placeholder="Position">
 </div>
+<div style="display:flex;gap:6px;margin-bottom:10px">
+<button class="btn btn-sm" id="insertModeSingle" style="padding:4px 12px;font-size:11px;border:1.5px solid var(--accent);background:var(--accent-light);color:var(--accent);font-weight:600">Single AA</button>
+<button class="btn btn-sm" id="insertModePaste" style="padding:4px 12px;font-size:11px;border:1.5px solid var(--border);background:var(--bg);color:var(--text-secondary);font-weight:500">Paste sequence</button>
+</div>
+<div id="insertSingleAARow" style="display:flex;gap:10px;align-items:flex-end">
 <div style="flex:1">
-<label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px">Amino acid</label>
 <select id="insertResidueAA" style="width:100%;height:38px;padding:0 10px;border:1.5px solid var(--border);border-radius:6px;font-family:var(--font-mono);font-size:14px;font-weight:600;outline:none;color:var(--text-primary);background:var(--bg);cursor:pointer">
-<option value="">Select…</option>
+<option value="">Select amino acid…</option>
 <option value="A">A — Ala</option><option value="C">C — Cys</option><option value="D">D — Asp</option>
 <option value="E">E — Glu</option><option value="F">F — Phe</option><option value="G">G — Gly</option>
 <option value="H">H — His</option><option value="I">I — Ile</option><option value="K">K — Lys</option>
@@ -148,6 +151,10 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text-primary)
 </select>
 </div>
 <button class="btn btn-primary" id="insertResidueOk" style="padding:8px 16px;height:38px;white-space:nowrap">+ Insert</button>
+</div>
+<div id="insertPasteRow" style="display:none">
+<textarea id="insertPasteSeq" placeholder="Paste amino acid sequence (e.g., GGGGS, EAAAK)…" style="width:100%;height:60px;padding:8px 12px;font-family:var(--font-mono);font-size:13px;border:1.5px solid var(--border);border-radius:6px;resize:vertical;outline:none;color:var(--text-primary);margin-bottom:8px"></textarea>
+<button class="btn btn-primary" id="insertPasteOk" style="width:100%;padding:8px 16px">+ Insert sequence</button>
 </div>
 </div>
 <div style="padding:0 24px 16px;display:flex;gap:10px;justify-content:flex-end">
@@ -487,9 +494,9 @@ if(!result||!result.insertions||result.insertions.length===0)return;
 saveUndo();
 // Apply insertions from end to start (sorted descending)
 result.insertions.forEach(ins=>{
-const posN=ins.localPos;const aa=ins.aa;
+const posN=ins.localPos;const aa=ins.aa;const aaLen=aa.length;
 if(p.type==='protein'){
-let offset=0;for(const seg of p.segments){if(!seg.active)continue;if(posN<=offset+seg.sequence.length){const localPos=posN-offset;seg.sequence=seg.sequence.slice(0,localPos)+aa+seg.sequence.slice(localPos);seg.end++;seg.ss.splice(localPos,0,'loop');break;}offset+=seg.sequence.length;}
+let offset=0;for(const seg of p.segments){if(!seg.active)continue;if(posN<=offset+seg.sequence.length){const localPos=posN-offset;seg.sequence=seg.sequence.slice(0,localPos)+aa+seg.sequence.slice(localPos);seg.end+=aaLen;for(let si=0;si<aaLen;si++)seg.ss.splice(localPos,0,'loop');break;}offset+=seg.sequence.length;}
 if(p.fullSequence)p.fullSequence=p.fullSequence.slice(0,posN)+aa+p.fullSequence.slice(posN);
 }else{p.sequence=p.sequence.slice(0,posN)+aa+p.sequence.slice(posN);}
 });
@@ -517,9 +524,9 @@ saveUndo();
 // Apply insertions from end to start (sorted descending)
 const part=AppState.construct.parts[pi];
 result.insertions.forEach(ins=>{
-const posN=ins.localPos;const aa=ins.aa;
+const posN=ins.localPos;const aa=ins.aa;const aaLen=aa.length;
 seg.sequence=seg.sequence.slice(0,posN)+aa+seg.sequence.slice(posN);
-seg.end++;seg.ss.splice(posN,0,'loop');
+seg.end+=aaLen;for(let si=0;si<aaLen;si++)seg.ss.splice(posN,0,'loop');
 if(part.fullSequence){const globalPos=seg.start-1+posN;part.fullSequence=part.fullSequence.slice(0,globalPos)+aa+part.fullSequence.slice(globalPos);}
 });
 renderAll();
@@ -745,80 +752,99 @@ document.getElementById('insertResidueTitle').textContent=title||'Insert residue
 document.getElementById('insertResidueDesc').textContent=desc||'';
 var posInput=document.getElementById('insertResiduePos');
 var aaSelect=document.getElementById('insertResidueAA');
+var pasteInput=document.getElementById('insertPasteSeq');
 var basePos=startPos||1;
-var insertions=[];// {localPos, aa} sorted by localPos desc
+var insertions=[];// {localPos, aa (string, can be multi-char)}
 var origSeq=sequence||'';
+
+// Mode toggle
+var singleBtn=document.getElementById('insertModeSingle');
+var pasteBtn=document.getElementById('insertModePaste');
+var singleRow=document.getElementById('insertSingleAARow');
+var pasteRow=document.getElementById('insertPasteRow');
+function setMode(mode){
+if(mode==='single'){singleBtn.style.borderColor='var(--accent)';singleBtn.style.background='var(--accent-light)';singleBtn.style.color='var(--accent)';singleBtn.style.fontWeight='600';pasteBtn.style.borderColor='var(--border)';pasteBtn.style.background='var(--bg)';pasteBtn.style.color='var(--text-secondary)';pasteBtn.style.fontWeight='500';singleRow.style.display='flex';pasteRow.style.display='none';}
+else{pasteBtn.style.borderColor='var(--accent)';pasteBtn.style.background='var(--accent-light)';pasteBtn.style.color='var(--accent)';pasteBtn.style.fontWeight='600';singleBtn.style.borderColor='var(--border)';singleBtn.style.background='var(--bg)';singleBtn.style.color='var(--text-secondary)';singleBtn.style.fontWeight='500';singleRow.style.display='none';pasteRow.style.display='';}
+}
+setMode('single');
+singleBtn.onclick=function(){setMode('single');};
+pasteBtn.onclick=function(){setMode('paste');};
 
 function renderSeqDisplay(){
 var seqWrap=document.getElementById('insertResidueSeqWrap');
 if(!origSeq){seqWrap.style.display='none';return;}
 seqWrap.style.display='';seqWrap.innerHTML='';
-// Build display sequence with insertions merged in
 var displayItems=[];
 for(var i=0;i<origSeq.length;i++){
-// Check for insertions before this position
-insertions.forEach(function(ins,idx){if(ins.localPos===i)displayItems.push({ch:ins.aa,inserted:true,insIdx:idx});});
+insertions.forEach(function(ins,idx){if(ins.localPos===i){for(var c=0;c<ins.aa.length;c++)displayItems.push({ch:ins.aa[c],inserted:true,insIdx:idx});}});
 displayItems.push({ch:origSeq[i],inserted:false,origIdx:i,realPos:basePos+i});
 }
-// Check for insertions at end
-insertions.forEach(function(ins,idx){if(ins.localPos===origSeq.length)displayItems.push({ch:ins.aa,inserted:true,insIdx:idx});});
+insertions.forEach(function(ins,idx){if(ins.localPos===origSeq.length){for(var c=0;c<ins.aa.length;c++)displayItems.push({ch:ins.aa[c],inserted:true,insIdx:idx});}});
 var origCount=0;
-displayItems.forEach(function(item,di){
+displayItems.forEach(function(item){
 if(!item.inserted){
 origCount++;
 if(origCount>1&&(origCount-1)%10===0){var sp=document.createElement('span');sp.textContent=' ';seqWrap.appendChild(sp);}
-// Position marker every 50 original residues
 if(origCount>1&&(origCount-1)%50===0){var numSpan=document.createElement('span');numSpan.textContent=' '+(item.realPos-1)+' ';numSpan.style.cssText='font-size:8px;color:var(--text-tertiary);font-weight:500';seqWrap.appendChild(numSpan);}
 var span=document.createElement('span');span.textContent=item.ch;span.style.color='var(--accent)';span.style.cursor='pointer';
 span.title='Pos '+(item.realPos);
 span.addEventListener('click',(function(rp){return function(){posInput.value=rp;posInput.focus();};})(item.realPos));
 seqWrap.appendChild(span);
 }else{
-// Inserted residue — green with delete
 var span=document.createElement('span');span.textContent=item.ch;
-span.style.cssText='color:#16a34a;font-weight:700;background:#dcfce7;border-radius:2px;padding:0 1px;cursor:pointer;position:relative';
-span.title='Inserted — click to remove';
+span.style.cssText='color:#16a34a;font-weight:700;background:#dcfce7;border-radius:2px;padding:0 1px;cursor:pointer';
+span.title='Inserted \u2014 click to remove';
 span.addEventListener('click',(function(idx){return function(){insertions.splice(idx,1);renderSeqDisplay();};})(item.insIdx));
 seqWrap.appendChild(span);
 }
 });
-// End position
 if(origSeq.length>0){var endNum=document.createElement('span');endNum.textContent=' '+(basePos+origSeq.length-1);endNum.style.cssText='font-size:8px;color:var(--text-tertiary);font-weight:500';seqWrap.appendChild(endNum);}
 }
 
 posInput.value='';posInput.min=basePos-1;posInput.max=basePos+origSeq.length-1;
 posInput.placeholder=(basePos-1)+' = before '+basePos+', or '+basePos+'\u2013'+(basePos+origSeq.length-1);
-aaSelect.value='';
+aaSelect.value='';pasteInput.value='';
 renderSeqDisplay();
 document.getElementById('insertResiduePopup').style.display='block';
 posInput.focus();
 var okBtn=document.getElementById('insertResidueOk');
+var pasteOkBtn=document.getElementById('insertPasteOk');
 var cancelBtn=document.getElementById('insertResidueCancel');
 var doneBtn=document.getElementById('insertResidueDone');
 var overlay=document.getElementById('insertResidueOverlay');
-function cleanup(){document.getElementById('insertResiduePopup').style.display='none';okBtn.removeEventListener('click',onInsert);cancelBtn.removeEventListener('click',onCancel);doneBtn.removeEventListener('click',onDone);overlay.removeEventListener('click',onCancel);posInput.removeEventListener('keydown',onKey);}
-function onInsert(){
-var realP=parseInt(posInput.value);var aa=aaSelect.value;
-// Convert real position to local position
+
+function doInsert(aaStr){
+var realP=parseInt(posInput.value);
 var localP=realP-(basePos-1);
-if(isNaN(realP)||localP<0||localP>origSeq.length){posInput.style.borderColor='#dc2626';setTimeout(function(){posInput.style.borderColor='';},1500);return;}
-if(!aa){aaSelect.style.borderColor='#dc2626';setTimeout(function(){aaSelect.style.borderColor='';},1500);return;}
-insertions.push({localPos:localP,aa:aa.toUpperCase()});
-// Sort by localPos so rendering works correctly
+if(isNaN(realP)||localP<0||localP>origSeq.length){posInput.style.borderColor='#dc2626';setTimeout(function(){posInput.style.borderColor='';},1500);return false;}
+if(!aaStr||aaStr.length===0)return false;
+insertions.push({localPos:localP,aa:aaStr.toUpperCase()});
 insertions.sort(function(a,b){return a.localPos-b.localPos;});
-posInput.value='';aaSelect.value='';
+posInput.value='';
 renderSeqDisplay();
 posInput.focus();
+return true;
+}
+function onInsertSingle(){
+var aa=aaSelect.value;
+if(!aa){aaSelect.style.borderColor='#dc2626';setTimeout(function(){aaSelect.style.borderColor='';},1500);return;}
+doInsert(aa);aaSelect.value='';
+}
+function onInsertPaste(){
+var raw=pasteInput.value.trim().replace(/[\s\d\n\r]/g,'').toUpperCase();
+if(!raw||!/^[ACDEFGHIKLMNPQRSTVWY]+$/.test(raw)){pasteInput.style.borderColor='#dc2626';setTimeout(function(){pasteInput.style.borderColor='';},1500);return;}
+if(doInsert(raw))pasteInput.value='';
 }
 function onDone(){
 if(insertions.length===0){cleanup();resolve(null);return;}
-// Return insertions sorted by localPos descending so caller can apply from end to start
 var sorted=insertions.slice().sort(function(a,b){return b.localPos-a.localPos;});
 cleanup();resolve({insertions:sorted});
 }
 function onCancel(){cleanup();resolve(null);}
-function onKey(e){if(e.key==='Enter')onInsert();if(e.key==='Escape')onCancel();}
-okBtn.addEventListener('click',onInsert);
+function onKey(e){if(e.key==='Enter'){if(singleRow.style.display!=='none')onInsertSingle();else onInsertPaste();}if(e.key==='Escape')onCancel();}
+function cleanup(){document.getElementById('insertResiduePopup').style.display='none';okBtn.removeEventListener('click',onInsertSingle);pasteOkBtn.removeEventListener('click',onInsertPaste);cancelBtn.removeEventListener('click',onCancel);doneBtn.removeEventListener('click',onDone);overlay.removeEventListener('click',onCancel);posInput.removeEventListener('keydown',onKey);}
+okBtn.addEventListener('click',onInsertSingle);
+pasteOkBtn.addEventListener('click',onInsertPaste);
 cancelBtn.addEventListener('click',onCancel);
 doneBtn.addEventListener('click',onDone);
 overlay.addEventListener('click',onCancel);
