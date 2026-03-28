@@ -300,9 +300,11 @@ if(!overlaps)finalFeats.push(f);
 });
 finalFeats.sort((a,b)=>a.start-b.start);const segments=[];let cursor=signalPeptide?signalPeptide.end+1:1;finalFeats.forEach(df=>{if(df.start>cursor){segments.push({name:`Region ${cursor}\u2013${df.start-1}`,type:'unannotated',start:cursor,end:df.start-1,sequence:fullSeq.slice(cursor-1,df.start-1),description:'Unannotated region',active:true,isTM:false});}if(df.start>=cursor){segments.push({name:df.name,type:df.uniprotType,start:df.start,end:df.end,sequence:df.sequence,description:df.description,active:true,isTM:df.isTM||false});cursor=df.end+1;}});if(cursor<=length){segments.push({name:segments.length>0?`Region ${cursor}\u2013${length}`:name,type:segments.length>0?'unannotated':'full',start:cursor,end:length,sequence:fullSeq.slice(cursor-1),description:segments.length>0?'Unannotated region':'Full protein sequence',active:true,isTM:false});}if(segments.length===0){segments.push({name,type:'full',start:1,end:length,sequence:fullSeq,description:'Full protein sequence',active:true,isTM:false});}const ssPerResidue=new Array(length).fill('loop');features.forEach(f=>{const start=f.location?.start?.value;const end=f.location?.end?.value;if(!start||!end)return;if(f.type==='Helix')for(let i=start-1;i<end&&i<length;i++)ssPerResidue[i]='helix';else if(f.type==='Beta strand')for(let i=start-1;i<end&&i<length;i++)ssPerResidue[i]='strand';});segments.forEach(seg=>{seg.ss=ssPerResidue.slice(seg.start-1,seg.end);if(!seg.mutations)seg.mutations=[];});const mutations=features.filter(f=>f.type==='Natural variant'||f.type==='Mutagenesis').map(f=>{const alt=f.alternativeSequence||{};return{type:f.type,position:f.location?.start?.value||0,endPosition:f.location?.end?.value||f.location?.start?.value||0,original:alt.originalSequence||'?',alternatives:alt.alternativeSequences||[],change:f.description||''};});const otherFeatures=features.filter(f=>!segmentTypes.has(f.type)&&!['Signal peptide','Signal','Helix','Beta strand','Turn','Natural variant','Mutagenesis'].includes(f.type)).map(f=>({type:f.type,start:f.location?.start?.value||'?',end:f.location?.end?.value||'?',description:f.description||f.type}));const publications=(data.references||[]).map(ref=>({title:ref.citation?.title||'Untitled',authors:(ref.citation?.authors||[]).slice(0,5).join(', ')+((ref.citation?.authors||[]).length>5?' et al.':''),journal:ref.citation?.journal||'',year:ref.citation?.publicationDate||'',pubmedId:ref.citation?.citationCrossReferences?.find(x=>x.database==='PubMed')?.id||null}));return{part:{type:'protein',name,entryName,gene,organism,accession,source:'uniprot',fullSequence:fullSeq,length,mw,segments,expanded:false},signalPeptide,topoFeatures,mutations,features:otherFeatures,publications,ssPerResidue};}
 function getAssembledSequence(){let seq='';AppState.construct.parts.forEach(p=>{if(p.type==='protein')p.segments.filter(s=>s.active).forEach(s=>{let segSeq=s.sequence.split('');(s.mutations||[]).forEach(m=>{const idx=m.position-s.start;if(idx>=0&&idx<segSeq.length)segSeq[idx]=m.mutant;});seq+=segSeq.join('');});else{let partSeq=(p.sequence||'').split('');(p.mutations||[]).forEach(m=>{const idx=m.position-1;if(idx>=0&&idx<partSeq.length)partSeq[idx]=m.mutant;});seq+=partSeq.join('');}});return seq;}
-function getMutationMap(){const map={};let gpos=0;AppState.construct.parts.forEach(p=>{if(p.type==='protein'){p.segments.filter(s=>s.active).forEach(s=>{(s.mutations||[]).forEach(m=>{const idx=m.position-s.start;if(idx>=0&&idx<s.sequence.length)map[gpos+idx]=m;});gpos+=s.sequence.length;});}else{(p.mutations||[]).forEach(m=>{const idx=m.position-1;if(idx>=0&&idx<(p.sequence||'').length)map[gpos+idx]=m;});gpos+=(p.sequence||'').length;}});return map;}
+function getMutationMap(){const map={};let gpos=0;AppState.construct.parts.forEach(p=>{if(p.type==='protein'){p.segments.filter(s=>s.active).forEach(s=>{(s.mutations||[]).forEach(m=>{const li=origPosToLocalIdx(s,m.position);if(li>=0&&li<s.sequence.length)map[gpos+li]=m;});gpos+=s.sequence.length;});}else{(p.mutations||[]).forEach(m=>{const li=origPosToLocalIdx({start:1,_inserted:p._inserted||[]},m.position);if(li>=0&&li<(p.sequence||'').length)map[gpos+li]=m;});gpos+=(p.sequence||'').length;}});return map;}
 function getInsertedMap(){const map={};let gpos=0;AppState.construct.parts.forEach(p=>{if(p.type==='protein'){p.segments.filter(s=>s.active).forEach(s=>{(s._inserted||[]).forEach(li=>{if(li>=0&&li<s.sequence.length)map[gpos+li]=true;});gpos+=s.sequence.length;});}else{(p._inserted||[]).forEach(li=>{if(li>=0&&li<(p.sequence||'').length)map[gpos+li]=true;});gpos+=(p.sequence||'').length;}});return map;}
-function findSegmentAtGlobalPos(globalPos){let gpos=0;for(const part of AppState.construct.parts){if(part.type==='protein'){for(const seg of part.segments){if(!seg.active)continue;if(globalPos>=gpos&&globalPos<gpos+seg.sequence.length)return{part,seg,localIdx:globalPos-gpos,uniprotPos:seg.start+(globalPos-gpos)};gpos+=seg.sequence.length;}}else{const seq=part.sequence||'';if(globalPos>=gpos&&globalPos<gpos+seq.length){if(!part.mutations)part.mutations=[];const virtualSeg={name:part.name,type:part.type,start:1,end:seq.length,sequence:seq,mutations:part.mutations,_inserted:part._inserted||[],_deleted:part._deleted||[],_replaced:part._replaced||[],active:true,isTM:false,_isVirtualSeg:true,_partRef:part};return{part,seg:virtualSeg,localIdx:globalPos-gpos,uniprotPos:1+(globalPos-gpos)};}gpos+=seq.length;}}return null;}
+function localIdxToOrigPos(seg,localIdx){const ins=seg._inserted||[];if(ins.includes(localIdx))return null;let insCount=0;for(let ii=0;ii<ins.length;ii++){if(ins[ii]<=localIdx)insCount++;}return seg.start+(localIdx-insCount);}
+function origPosToLocalIdx(seg,origPos){const ins=seg._inserted||[];if(ins.length===0)return origPos-seg.start;const sortedIns=[...ins].sort((a,b)=>a-b);let li=origPos-seg.start;for(const ii of sortedIns){if(ii<=li)li++;else break;}return li;}
+function findSegmentAtGlobalPos(globalPos){let gpos=0;for(const part of AppState.construct.parts){if(part.type==='protein'){for(const seg of part.segments){if(!seg.active)continue;if(globalPos>=gpos&&globalPos<gpos+seg.sequence.length){const li=globalPos-gpos;const origPos=localIdxToOrigPos(seg,li);const isIns=(seg._inserted||[]).includes(li);const nearestOrigPos=isIns?localIdxToOrigPos(seg,li-1>=0?li-1:0)||seg.start:origPos;return{part,seg,localIdx:li,uniprotPos:origPos||nearestOrigPos,isInserted:isIns};}gpos+=seg.sequence.length;}}else{const seq=part.sequence||'';if(globalPos>=gpos&&globalPos<gpos+seq.length){if(!part.mutations)part.mutations=[];const virtualSeg={name:part.name,type:part.type,start:1,end:seq.length,sequence:seq,mutations:part.mutations,_inserted:part._inserted||[],_deleted:part._deleted||[],_replaced:part._replaced||[],active:true,isTM:false,_isVirtualSeg:true,_partRef:part};const li=globalPos-gpos;const origPos=localIdxToOrigPos(virtualSeg,li);const isIns=(virtualSeg._inserted||[]).includes(li);const nearestOrigPos=isIns?localIdxToOrigPos(virtualSeg,li-1>=0?li-1:0)||1:origPos;return{part,seg:virtualSeg,localIdx:li,uniprotPos:origPos||nearestOrigPos,isInserted:isIns};}gpos+=seq.length;}}return null;}
 function applyMutation(seg,uniprotPos,original,mutant,source,description){if(!seg.mutations)seg.mutations=[];seg.mutations=seg.mutations.filter(m=>m.position!==uniprotPos);if(original!==mutant)seg.mutations.push({position:uniprotPos,original,mutant,source:source||'manual',description:description||''});if(seg._isVirtualSeg&&seg._partRef)seg._partRef.mutations=seg.mutations;renderAll();}
 function removeMutation(seg,uniprotPos){if(!seg.mutations)return;seg.mutations=seg.mutations.filter(m=>m.position!==uniprotPos);if(seg._isVirtualSeg&&seg._partRef)seg._partRef.mutations=seg.mutations;renderAll();}
 function getAssembledParts(){const result=[];let dci=0;AppState.construct.parts.forEach((part,pi)=>{if(part.type==='protein'){part.segments.filter(s=>s.active).forEach((seg,si)=>{let color;if(seg.isTM)color={main:'#374151',bg:'#f3f4f6',border:'#9ca3af'};else if(seg.type==='unannotated')color={main:'#94a3b8',bg:'#f1f5f9',border:'#cbd5e1'};else{color=DOMAIN_COLORS[dci%DOMAIN_COLORS.length];dci++;}result.push({sequence:seg.sequence,ss:seg.ss||[],color,name:seg.name,type:seg.type,partIndex:pi,segIndex:si,isProteinSegment:true,isTM:seg.isTM||false,isUnannotated:seg.type==='unannotated',start:seg.start,end:seg.end});});}else{const color=PART_COLORS[part.type]||PART_COLORS.tag;result.push({sequence:part.sequence||'',ss:new Array((part.sequence||'').length).fill('loop'),color,name:part.name,type:part.type,partIndex:pi,segIndex:-1,isProteinSegment:false,isTM:false,isUnannotated:false});}});return result;}
@@ -453,7 +455,7 @@ if((i+1)%100===0){const tag=document.createElement('span');tag.style.cssText='fo
 function renderZone2(){const zone2=document.getElementById('zone2');if(AppState.construct.parts.length===0){zone2.classList.remove('visible');return;}zone2.classList.add('visible');const strip=document.getElementById('constructStrip');const stripEmpty=document.getElementById('stripEmpty');strip.querySelectorAll('.part-card,.strip-arrow').forEach(el=>el.remove());if(AppState.construct.parts.length===0){stripEmpty.style.display='';return;}stripEmpty.style.display='none';const cTermLabel=strip.querySelector('.strip-term-c');
 AppState.construct.parts.forEach((part,idx)=>{if(idx>0){const arrow=document.createElement('span');arrow.className='strip-arrow';arrow.textContent='\u2192';strip.insertBefore(arrow,cTermLabel);}const card=document.createElement('div');card.className='part-card'+(AppState.expandedParts.has(idx)?' expanded':'');card.draggable=true;card.dataset.partIdx=idx;const typeColor=getPartColor(part,idx);card.style.borderColor=typeColor.border||typeColor.main;card.style.background=typeColor.bg||(typeColor.main+'15');let seq;if(part.type==='protein'){let seqArr=[];part.segments.filter(s=>s.active).forEach(s=>{let segSeq=s.sequence.split('');(s.mutations||[]).forEach(m=>{const mi2=m.position-s.start;if(mi2>=0&&mi2<segSeq.length)segSeq[mi2]=m.mutant;});seqArr.push(segSeq.join(''));});seq=seqArr.join('');}else{let partSeqArr=(part.sequence||'').split('');(part.mutations||[]).forEach(m=>{const mi2=m.position-1;if(mi2>=0&&mi2<partSeqArr.length)partSeqArr[mi2]=m.mutant;});seq=partSeqArr.join('');}const displayName=part.entryName||part.name;let rangeInfo='';if(part.type!=='protein'&&part.sequence)rangeInfo=`<div class="part-card-range">${part.originalRange||part.sequence.length+' aa'}</div>`;let expandIcon='';if(part.type==='protein'&&part.segments.length>1)expandIcon=`<div class="part-card-expand-icon">${AppState.expandedParts.has(idx)?'\u25BC':'\u25B6'}</div>`;card.innerHTML=`${expandIcon}<div class="part-card-actions"><button class="part-card-action action-undo" data-idx="${idx}" title="Undo last edit" style="font-size:10px;font-family:var(--font-sans);font-weight:500;width:auto;padding:0 4px">↩</button><button class="part-card-action action-copy" data-idx="${idx}" title="Copy sequence"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button><button class="part-card-action action-insert" data-idx="${idx}" title="Edit sequence"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></button><button class="part-card-action action-delete" data-idx="${idx}" title="Remove part"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14"/></svg></button></div><div class="part-card-type" style="color:${part.type==='protein'?'#0891b2':typeColor.main}">${part.type.toUpperCase()}</div><div class="part-card-name">${displayName}</div>${rangeInfo}<div class="part-card-seq">${seq.slice(0,16)}${seq.length>16?'\u2026':''}</div>`;
 if(part.type==='protein'&&part.segments.length>1){const domainsDiv=document.createElement('div');domainsDiv.className='part-card-domains';const substrip=document.createElement('div');substrip.className='domain-substrip';let segOffset=0;const segOffsets=[];part.segments.forEach((seg,si)=>{segOffsets.push({start:segOffset,len:seg.active?seg.sequence.length:0,active:seg.active});if(seg.active)segOffset+=seg.sequence.length;});
-part.segments.forEach((seg,si)=>{const subcard=document.createElement('div');subcard.className='domain-subcard';subcard.dataset.partIdx=idx;subcard.dataset.segIdx=si;subcard.style.borderColor=seg.active?'var(--border)':'var(--border-light)';subcard.style.background=seg.active?'var(--bg)':'#f9fafb';subcard.style.opacity=seg.active?'1':'0.5';subcard.style.transition='box-shadow .15s,border-color .15s';const origLen=seg.end-seg.start+1;const curLen=seg.sequence.length;const delta=curLen-origLen;const deltaStr=delta>0?'<span style="color:#16a34a;font-weight:600"> +'+delta+'</span>':delta<0?'<span style="color:#dc2626;font-weight:600"> '+delta+'</span>':'';subcard.innerHTML=`<div class="domain-subcard-name" style="color:var(--text-primary);font-weight:600">${seg.name}${seg.isTM?' \uD83D\uDD36':''}</div><div class="domain-subcard-range">${seg.start}\u2013${seg.end} (${curLen} aa${delta!==0?deltaStr:''})</div><div style="display:flex;justify-content:space-between;align-items:center"><div class="domain-subcard-active"><input type="checkbox" class="domain-toggle" data-part="${idx}" data-seg="${si}" ${seg.active?'checked':''}><span style="font-size:10px;color:var(--text-tertiary)">${seg.active?'Active':'Inactive'}</span></div><div class="domain-subcard-actions"><button class="domain-subcard-action seg-copy" data-part="${idx}" data-seg="${si}" title="Copy domain sequence"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button><button class="domain-subcard-action seg-insert" data-part="${idx}" data-seg="${si}" title="Edit sequence"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><path d="M12 5v14M5 12h14"/></svg></button></div></div>`;
+part.segments.forEach((seg,si)=>{const subcard=document.createElement('div');subcard.className='domain-subcard';subcard.dataset.partIdx=idx;subcard.dataset.segIdx=si;subcard.style.borderColor=seg.active?'var(--border)':'var(--border-light)';subcard.style.background=seg.active?'var(--bg)':'#f9fafb';subcard.style.opacity=seg.active?'1':'0.5';subcard.style.transition='box-shadow .15s,border-color .15s';const curLen=seg.sequence.length;const numIns=(seg._inserted||[]).length;const numDel=(seg._deleted||[]).length;const delta=numIns-numDel;const origEnd=seg.end-numIns+numDel;const deltaStr=delta>0?'<span style="color:#16a34a;font-weight:600"> +'+delta+'</span>':delta<0?'<span style="color:#dc2626;font-weight:600"> '+delta+'</span>':'';subcard.innerHTML=`<div class="domain-subcard-name" style="color:var(--text-primary);font-weight:600">${seg.name}${seg.isTM?' \uD83D\uDD36':''}</div><div class="domain-subcard-range">${seg.start}\u2013${origEnd} (${curLen} aa${delta!==0?deltaStr:''})</div><div style="display:flex;justify-content:space-between;align-items:center"><div class="domain-subcard-active"><input type="checkbox" class="domain-toggle" data-part="${idx}" data-seg="${si}" ${seg.active?'checked':''}><span style="font-size:10px;color:var(--text-tertiary)">${seg.active?'Active':'Inactive'}</span></div><div class="domain-subcard-actions"><button class="domain-subcard-action seg-copy" data-part="${idx}" data-seg="${si}" title="Copy domain sequence"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button><button class="domain-subcard-action seg-insert" data-part="${idx}" data-seg="${si}" title="Edit sequence"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><path d="M12 5v14M5 12h14"/></svg></button></div></div>`;
 // Hover: highlight corresponding sequence range
 if(seg.active){const sOff=segOffsets[si];
 subcard.addEventListener('mouseenter',function(){const seqDiv=domainsDiv.querySelector('.part-card-inline-seq');if(!seqDiv)return;const spans=seqDiv.querySelectorAll('.seq-residue');for(let ri=sOff.start;ri<sOff.start+sOff.len&&ri<spans.length;ri++)spans[ri].style.background='rgba(37,99,235,0.12)';});
@@ -465,7 +467,7 @@ const editLog=[];
 part.segments.forEach((seg,si)=>{
 (seg.mutations||[]).filter(m=>!(seg._replaced||[]).some(r=>r.position===m.position)).forEach((m,mi)=>{editLog.push({type:'mutation',label:m.original+m.position+m.mutant,segName:seg.name,segIdx:si,mutIdx:mi,source:m.source||'manual'});});
 (seg._replaced||[]).forEach((r,ri)=>{editLog.push({type:'replacement',label:r.original+r.position+'\u2192'+r.mutant,segName:seg.name,segIdx:si,repIdx:ri,repPos:r.position});});
-(seg._inserted||[]).forEach((li,ii)=>{editLog.push({type:'insertion',label:'+'+seg.sequence[li]+' at pos '+(seg.start+li),segName:seg.name,segIdx:si,insLocalIdx:li});});
+(seg._inserted||[]).forEach((li,ii)=>{const afterPos=localIdxToOrigPos(seg,li-1>=0?li-1:0)||seg.start;editLog.push({type:'insertion',label:'+'+seg.sequence[li]+' after pos '+afterPos,segName:seg.name,segIdx:si,insLocalIdx:li});});
 (seg._deleted||[]).forEach((d,di)=>{editLog.push({type:'deletion',label:'\u2212'+d.aa+d.origPos,segName:seg.name,segIdx:si,delIdx:di});});
 });
 if(editLog.length>0){
@@ -530,15 +532,16 @@ const partInsMap={};lpos=0;part.segments.filter(s=>s.active).forEach(s=>{(s._ins
 // Build segment boundary markers: local position → UniProt position label with delta
 const segBoundaryMarkers={};const activeSegs=part.segments.filter(s=>s.active);
 segRanges.forEach((sr,ri)=>{const seg=part.segments[sr.segIdx];if(sr.end-sr.start<1)return;
-const origLen=seg.end-seg.start+1;const curLen=seg.sequence.length;const delta=curLen-origLen;
+const numIns=(seg._inserted||[]).length;const numDel=(seg._deleted||[]).length;const delta=numIns-numDel;
 // Start marker — always show
 segBoundaryMarkers[sr.start]=(segBoundaryMarkers[sr.start]?segBoundaryMarkers[sr.start]+' ':'')+seg.start;
 // End marker — suppress if next domain starts consecutively AND no delta
 if(sr.end-sr.start>1){
 const nextSr=segRanges[ri+1];const nextSeg=nextSr?part.segments[nextSr.segIdx]:null;
-const isConsecutive=nextSeg&&nextSeg.start===seg.end+1;
+const origEnd=seg.end-numIns+numDel;
+const isConsecutive=nextSeg&&nextSeg.start===origEnd+1;
 if(!isConsecutive||delta!==0){
-const endLabel=delta>0?seg.end+'+'+delta:delta<0?seg.end+delta:seg.end;
+const endLabel=delta>0?origEnd+'+'+delta:delta<0?origEnd+delta:''+origEnd;
 segBoundaryMarkers[sr.end-1]=(segBoundaryMarkers[sr.end-1]?segBoundaryMarkers[sr.end-1]+' ':'')+endLabel;
 }}});
 for(let i=0;i<partSeq.length;i++){const span=document.createElement('span');const mut=partMutMap[i];const isIns=partInsMap[i];
@@ -569,12 +572,12 @@ if(part.type==='protein'&&part.segments.length===1){
 const seg=part.segments[0];
 (seg.mutations||[]).filter(m=>!(seg._replaced||[]).some(r=>r.position===m.position)).forEach((m,mi)=>{editLog2.push({type:'mutation',label:m.original+m.position+m.mutant,source:m.source||'manual',revert:function(){saveUndo();seg.mutations.splice(seg.mutations.indexOf(m),1);renderAll();}});});
 (seg._replaced||[]).forEach((r,ri)=>{editLog2.push({type:'replacement',label:r.original+r.position+'\u2192'+r.mutant,revert:function(){saveUndo();const pos=r.position;seg.mutations=(seg.mutations||[]).filter(m2=>m2.position!==pos);seg._replaced.splice(seg._replaced.indexOf(r),1);renderAll();}});});
-(seg._inserted||[]).forEach((li)=>{editLog2.push({type:'insertion',label:'+'+seg.sequence[li]+' at pos '+(seg.start+li),revert:function(){saveUndo();if(li>=0&&li<seg.sequence.length){seg.sequence=seg.sequence.slice(0,li)+seg.sequence.slice(li+1);seg.end--;if(seg.ss)seg.ss.splice(li,1);seg._inserted=seg._inserted.filter(x=>x!==li).map(x=>x>li?x-1:x);if(part.fullSequence){const gp=seg.start-1+li;part.fullSequence=part.fullSequence.slice(0,gp)+part.fullSequence.slice(gp+1);}}renderAll();}});});
+(seg._inserted||[]).forEach((li)=>{const afterPos=localIdxToOrigPos(seg,li-1>=0?li-1:0)||seg.start;editLog2.push({type:'insertion',label:'+'+seg.sequence[li]+' after pos '+afterPos,revert:function(){saveUndo();if(li>=0&&li<seg.sequence.length){seg.sequence=seg.sequence.slice(0,li)+seg.sequence.slice(li+1);seg.end--;if(seg.ss)seg.ss.splice(li,1);seg._inserted=seg._inserted.filter(x=>x!==li).map(x=>x>li?x-1:x);if(part.fullSequence){const gp=seg.start-1+li;part.fullSequence=part.fullSequence.slice(0,gp)+part.fullSequence.slice(gp+1);}}renderAll();}});});
 (seg._deleted||[]).forEach((d,di)=>{editLog2.push({type:'deletion',label:'\u2212'+d.aa+d.origPos,revert:function(){saveUndo();const restorePos=d.origPos-seg.start;const clampPos=Math.min(restorePos,seg.sequence.length);seg.sequence=seg.sequence.slice(0,clampPos)+d.aa+seg.sequence.slice(clampPos);seg.end++;if(seg.ss)seg.ss.splice(clampPos,0,'loop');if(part.fullSequence){const gp=seg.start-1+clampPos;part.fullSequence=part.fullSequence.slice(0,gp)+d.aa+part.fullSequence.slice(gp);}seg._deleted.splice(di,1);renderAll();}});});
 }else if(part.type!=='protein'){
 (part.mutations||[]).filter(m=>!(part._replaced||[]).some(r=>r.position===m.position)).forEach((m,mi)=>{editLog2.push({type:'mutation',label:m.original+m.position+m.mutant,source:m.source||'manual',revert:function(){saveUndo();part.mutations.splice(part.mutations.indexOf(m),1);renderAll();}});});
 (part._replaced||[]).forEach((r,ri)=>{editLog2.push({type:'replacement',label:r.original+r.position+'\u2192'+r.mutant,revert:function(){saveUndo();const pos=r.position;part.mutations=(part.mutations||[]).filter(m2=>m2.position!==pos);part._replaced.splice(part._replaced.indexOf(r),1);renderAll();}});});
-(part._inserted||[]).forEach((li)=>{editLog2.push({type:'insertion',label:'+'+(part.sequence||'')[li]+' at pos '+(1+li),revert:function(){saveUndo();if(li>=0&&li<part.sequence.length){part.sequence=part.sequence.slice(0,li)+part.sequence.slice(li+1);part._inserted=part._inserted.filter(x=>x!==li).map(x=>x>li?x-1:x);}renderAll();}});});
+(part._inserted||[]).forEach((li)=>{const afterPos=localIdxToOrigPos({start:1,_inserted:part._inserted||[]},li-1>=0?li-1:0)||1;editLog2.push({type:'insertion',label:'+'+(part.sequence||'')[li]+' after pos '+afterPos,revert:function(){saveUndo();if(li>=0&&li<part.sequence.length){part.sequence=part.sequence.slice(0,li)+part.sequence.slice(li+1);part._inserted=part._inserted.filter(x=>x!==li).map(x=>x>li?x-1:x);}renderAll();}});});
 (part._deleted||[]).forEach((d,di)=>{editLog2.push({type:'deletion',label:'\u2212'+d.aa+d.origPos,revert:function(){saveUndo();const restorePos=d.origPos-1;const clampPos=Math.min(restorePos,part.sequence.length);part.sequence=part.sequence.slice(0,clampPos)+d.aa+part.sequence.slice(clampPos);part._deleted.splice(di,1);renderAll();}});});
 }
 if(editLog2.length>0){
@@ -637,13 +640,13 @@ if(!edits)return;
 saveUndo();
 // Apply replacements as mutations (so they show red everywhere) and track
 Object.keys(edits.replacements).forEach(function(k){var localIdx=parseInt(k);var newAA=edits.replacements[k];
-if(p.type==='protein'){let offset=0;for(const seg of p.segments){if(!seg.active)continue;if(localIdx<offset+seg.sequence.length){const li=localIdx-offset;const uniPos=seg.start+li;
+if(p.type==='protein'){let offset=0;for(const seg of p.segments){if(!seg.active)continue;if(localIdx<offset+seg.sequence.length){const li=localIdx-offset;
 const isIns=(seg._inserted||[]).includes(li);
 if(isIns){
 // Replacing an inserted residue = edit the insertion directly (Rule 4)
 seg.sequence=seg.sequence.slice(0,li)+newAA+seg.sequence.slice(li+1);
 }else{
-const origAA=seg.sequence[li];if(!seg.mutations)seg.mutations=[];seg.mutations=seg.mutations.filter(m=>m.position!==uniPos);
+const uniPos=localIdxToOrigPos(seg,li);const origAA=seg.sequence[li];if(!seg.mutations)seg.mutations=[];seg.mutations=seg.mutations.filter(m=>m.position!==uniPos);
 if(!seg._replaced)seg._replaced=[];seg._replaced=seg._replaced.filter(r=>r.position!==uniPos);
 if(origAA!==newAA){seg.mutations.push({position:uniPos,original:origAA,mutant:newAA,source:'manual',description:'Sequence editor replacement'});seg._replaced.push({position:uniPos,original:origAA,mutant:newAA});}
 }break;}offset+=seg.sequence.length;}}
@@ -652,28 +655,25 @@ if(isIns){
 // Replacing an inserted residue = edit the insertion directly (Rule 4)
 p.sequence=p.sequence.slice(0,localIdx)+newAA+p.sequence.slice(localIdx+1);
 }else{
-const origAA=(p.sequence||'')[localIdx];if(!p.mutations)p.mutations=[];p.mutations=p.mutations.filter(m=>m.position!==(localIdx+1));
-if(!p._replaced)p._replaced=[];p._replaced=p._replaced.filter(r=>r.position!==(localIdx+1));
-if(origAA!==newAA){p.mutations.push({position:localIdx+1,original:origAA,mutant:newAA,source:'manual',description:'Sequence editor replacement'});p._replaced.push({position:localIdx+1,original:origAA,mutant:newAA});}
+const uniPos=localIdxToOrigPos({start:1,_inserted:p._inserted||[]},localIdx);const origAA=(p.sequence||'')[localIdx];if(!p.mutations)p.mutations=[];p.mutations=p.mutations.filter(m=>m.position!==uniPos);
+if(!p._replaced)p._replaced=[];p._replaced=p._replaced.filter(r=>r.position!==uniPos);
+if(origAA!==newAA){p.mutations.push({position:uniPos,original:origAA,mutant:newAA,source:'manual',description:'Sequence editor replacement'});p._replaced.push({position:uniPos,original:origAA,mutant:newAA});}
 }}
 });
 // Apply deletions (from end to start) and track
 var delArr=[...edits.deletions].sort(function(a,b){return b-a;});
 delArr.forEach(function(localIdx){
-if(p.type==='protein'){let offset=0;for(const seg of p.segments){if(!seg.active)continue;if(localIdx<offset+seg.sequence.length){const li=localIdx-offset;const delAA=seg.sequence[li];const origPos=seg.start+li;
+if(p.type==='protein'){let offset=0;for(const seg of p.segments){if(!seg.active)continue;if(localIdx<offset+seg.sequence.length){const li=localIdx-offset;const delAA=seg.sequence[li];
 const isIns=(seg._inserted||[]).includes(li);
 if(isIns){
-// Deleting an inserted residue = undo the insertion (Rule 2)
 seg._inserted=seg._inserted.filter(x=>x!==li).map(x=>x>li?x-1:x);
 }else{
-// Deleting an original residue — find true original AA
+const origPos=localIdxToOrigPos(seg,li);
 const existMut=(seg.mutations||[]).find(m=>m.position===origPos);
 const trueOrigAA=existMut?existMut.original:delAA;
 if(!seg._deleted)seg._deleted=[];seg._deleted.push({origPos:origPos,aa:trueOrigAA});
-// Clean up any mutation at this position (Rule 5)
 if(seg.mutations)seg.mutations=seg.mutations.filter(m=>m.position!==origPos);
 if(seg._replaced)seg._replaced=seg._replaced.filter(r=>r.position!==origPos);
-// Adjust remaining _inserted indices
 if(seg._inserted)seg._inserted=seg._inserted.map(x=>x>li?x-1:x);
 }
 seg.sequence=seg.sequence.slice(0,li)+seg.sequence.slice(li+1);seg.end--;if(seg.ss)seg.ss.splice(li,1);
@@ -682,17 +682,14 @@ if(p.fullSequence)p.fullSequence=p.fullSequence.slice(0,localIdx)+p.fullSequence
 else{const delAA=(p.sequence||'')[localIdx];
 const isIns=(p._inserted||[]).includes(localIdx);
 if(isIns){
-// Deleting an inserted residue = undo the insertion (Rule 2)
 p._inserted=p._inserted.filter(x=>x!==localIdx).map(x=>x>localIdx?x-1:x);
 }else{
-// Deleting an original residue — find true original AA
-const existMut=(p.mutations||[]).find(m=>m.position===(localIdx+1));
+const origPos=localIdxToOrigPos({start:1,_inserted:p._inserted||[]},localIdx);
+const existMut=(p.mutations||[]).find(m=>m.position===origPos);
 const trueOrigAA=existMut?existMut.original:delAA;
-if(!p._deleted)p._deleted=[];p._deleted.push({origPos:localIdx+1,aa:trueOrigAA});
-// Clean up any mutation at this position (Rule 5)
-if(p.mutations)p.mutations=p.mutations.filter(m=>m.position!==(localIdx+1));
-if(p._replaced)p._replaced=p._replaced.filter(r=>r.position!==(localIdx+1));
-// Adjust remaining _inserted indices
+if(!p._deleted)p._deleted=[];p._deleted.push({origPos:origPos,aa:trueOrigAA});
+if(p.mutations)p.mutations=p.mutations.filter(m=>m.position!==origPos);
+if(p._replaced)p._replaced=p._replaced.filter(r=>r.position!==origPos);
 if(p._inserted)p._inserted=p._inserted.map(x=>x>localIdx?x-1:x);
 }
 p.sequence=p.sequence.slice(0,localIdx)+p.sequence.slice(localIdx+1);}
@@ -731,12 +728,11 @@ saveUndo();
 const part=AppState.construct.parts[pi];
 // Replacements as mutations and track
 Object.keys(edits.replacements).forEach(function(k){var li=parseInt(k);var newAA=edits.replacements[k];
-const uniPos=seg.start+li;
 const isIns=(seg._inserted||[]).includes(li);
 if(isIns){
 seg.sequence=seg.sequence.slice(0,li)+newAA+seg.sequence.slice(li+1);
 }else{
-const origAA=seg.sequence[li];
+const uniPos=localIdxToOrigPos(seg,li);const origAA=seg.sequence[li];
 if(!seg.mutations)seg.mutations=[];seg.mutations=seg.mutations.filter(m=>m.position!==uniPos);
 if(!seg._replaced)seg._replaced=[];seg._replaced=seg._replaced.filter(r=>r.position!==uniPos);
 if(origAA!==newAA){seg.mutations.push({position:uniPos,original:origAA,mutant:newAA,source:'manual',description:'Sequence editor replacement'});seg._replaced.push({position:uniPos,original:origAA,mutant:newAA});}
@@ -744,11 +740,12 @@ if(origAA!==newAA){seg.mutations.push({position:uniPos,original:origAA,mutant:ne
 });
 // Deletions (end to start) and track
 var delArr=[...edits.deletions].sort(function(a,b){return b-a;});
-delArr.forEach(function(li){const delAA=seg.sequence[li];const origPos=seg.start+li;
+delArr.forEach(function(li){const delAA=seg.sequence[li];
 const isIns=(seg._inserted||[]).includes(li);
 if(isIns){
 seg._inserted=seg._inserted.filter(x=>x!==li).map(x=>x>li?x-1:x);
 }else{
+const origPos=localIdxToOrigPos(seg,li);
 const existMut=(seg.mutations||[]).find(m=>m.position===origPos);
 const trueOrigAA=existMut?existMut.original:delAA;
 if(!seg._deleted)seg._deleted=[];seg._deleted.push({origPos:origPos,aa:trueOrigAA});
@@ -770,7 +767,7 @@ strip.querySelectorAll('.domain-toggle').forEach(cb=>{cb.addEventListener('click
 const totalSeq=getAssembledSequence();const statsEl=document.getElementById('constructStats');if(totalSeq.length>0){statsEl.style.display='';document.getElementById('statLength').textContent=totalSeq.length;document.getElementById('statMW').textContent=(calculateMW(totalSeq)/1000).toFixed(1);const ec=calculateExtinctionCoeff(totalSeq);document.getElementById('statExtCoeffOx').textContent=ec.oxidized.toLocaleString();document.getElementById('statExtCoeffRed').textContent=ec.reduced.toLocaleString();}else statsEl.style.display='none';
 renderRightPanel();}
 const AA_LIST=['A','C','D','E','F','G','H','I','K','L','M','N','P','Q','R','S','T','V','W','Y'];
-function showMutationPopup(globalPos,event){const info=findSegmentAtGlobalPos(globalPos);if(!info)return;const popup=document.getElementById('mutationPopup');const origAA=info.seg.sequence[info.localIdx];const existingMut=(info.seg.mutations||[]).find(m=>m.position===info.uniprotPos);const isInserted=(info.seg._inserted||[]).includes(info.localIdx);const displayAA=existingMut?existingMut.mutant:origAA;const realOriginal=existingMut?existingMut.original:origAA;document.getElementById('mutPopTitle').textContent=isInserted?'Edit inserted residue':existingMut?'Edit mutation':'Mutate residue';const partName=info.part.entryName||info.part.name||'';const constructPos=globalPos+1;let posHtml=`<div style="font-weight:600;color:var(--text-primary);font-size:12px">${partName}</div>`;if(isInserted)posHtml+=`<div style="color:#16a34a;font-weight:500">Inserted residue at position ${info.uniprotPos}</div>`;else posHtml+=`<div>Position ${info.uniprotPos} in ${shortName(info.seg.name)} (${info.seg.start}\u2013${info.seg.end})</div>`;posHtml+=`<div style="color:var(--text-tertiary)">Construct position ${constructPos}</div>`;document.getElementById('mutPopPos').innerHTML=posHtml;document.getElementById('mutPopOriginal').textContent=realOriginal;const select=document.getElementById('mutPopSelect');select.innerHTML='';AA_LIST.forEach(aa=>{const opt=document.createElement('option');opt.value=aa;opt.textContent=aa;if(aa===displayAA)opt.selected=true;select.appendChild(opt);});const rect=event.target.getBoundingClientRect();popup.style.left=Math.min(rect.left,window.innerWidth-240)+'px';popup.style.top=(rect.bottom+6)+'px';popup.style.display='block';clampPopupToViewport(popup);popup.dataset.globalPos=globalPos;popup.dataset.segStart=info.seg.start;popup.dataset.uniprotPos=info.uniprotPos;popup.dataset.original=realOriginal;}
+function showMutationPopup(globalPos,event){const info=findSegmentAtGlobalPos(globalPos);if(!info)return;const popup=document.getElementById('mutationPopup');const origAA=info.seg.sequence[info.localIdx];const existingMut=info.isInserted?null:(info.seg.mutations||[]).find(m=>m.position===info.uniprotPos);const displayAA=existingMut?existingMut.mutant:origAA;const realOriginal=existingMut?existingMut.original:origAA;document.getElementById('mutPopTitle').textContent=info.isInserted?'Edit inserted residue':existingMut?'Edit mutation':'Mutate residue';const partName=info.part.entryName||info.part.name||'';const constructPos=globalPos+1;const origEnd=info.seg.end-(info.seg._inserted||[]).length+(info.seg._deleted||[]).length;let posHtml=`<div style="font-weight:600;color:var(--text-primary);font-size:12px">${partName}</div>`;if(info.isInserted)posHtml+=`<div style="color:#16a34a;font-weight:500">Inserted after position ${info.uniprotPos}</div>`;else posHtml+=`<div>Position ${info.uniprotPos} in ${shortName(info.seg.name)} (${info.seg.start}\u2013${origEnd})</div>`;posHtml+=`<div style="color:var(--text-tertiary)">Construct position ${constructPos}</div>`;document.getElementById('mutPopPos').innerHTML=posHtml;document.getElementById('mutPopOriginal').textContent=realOriginal;const select=document.getElementById('mutPopSelect');select.innerHTML='';AA_LIST.forEach(aa=>{const opt=document.createElement('option');opt.value=aa;opt.textContent=aa;if(aa===displayAA)opt.selected=true;select.appendChild(opt);});const rect=event.target.getBoundingClientRect();popup.style.left=Math.min(rect.left,window.innerWidth-240)+'px';popup.style.top=(rect.bottom+6)+'px';popup.style.display='block';clampPopupToViewport(popup);popup.dataset.globalPos=globalPos;popup.dataset.segStart=info.seg.start;popup.dataset.uniprotPos=info.uniprotPos;popup.dataset.original=realOriginal;}
 function renderRightPanel(){const mutPanel=document.getElementById('libMutations');const proteinParts=AppState.construct.parts.filter(p=>p.type==='protein'&&p.accession);let html='';if(proteinParts.length>0){html+='<div class="lib-sticky-header"><select class="part-selector" id="mutPartSelector">';AppState.construct.parts.forEach((p,i)=>{if(p.type==='protein'&&p.accession)html+=`<option value="${i}" ${AppState.mutSelectedPart===i?'selected':''}>${p.entryName||p.name}</option>`;});html+='</select></div>';}
 const appliedMuts=[];AppState.construct.parts.forEach(part=>{if(part.type==='protein'){part.segments.forEach(seg=>{(seg.mutations||[]).forEach(m=>{appliedMuts.push({...m,segName:seg.name,seg});});});}});
 let selIdx=AppState.mutSelectedPart;const selCheck=selIdx>=0?AppState.construct.parts[selIdx]:null;if(!selCheck||selCheck.type!=='protein'||!selCheck.accession){selIdx=AppState.construct.parts.findIndex(p=>p.type==='protein'&&p.accession);if(selIdx>=0)AppState.mutSelectedPart=selIdx;}
@@ -1219,11 +1216,11 @@ if(targetSeg){
 // Apply to specific segment
 // Replacements as mutations
 Object.keys(edits.replacements).forEach(function(k){var li=parseInt(k);var newAA=edits.replacements[k];
-var uniPos=targetSeg.start+li;
 var isIns=(targetSeg._inserted||[]).includes(li);
 if(isIns){
 targetSeg.sequence=targetSeg.sequence.slice(0,li)+newAA+targetSeg.sequence.slice(li+1);
 }else{
+var uniPos=localIdxToOrigPos(targetSeg,li);
 var origAA=targetSeg.sequence[li];
 if(!targetSeg.mutations)targetSeg.mutations=[];targetSeg.mutations=targetSeg.mutations.filter(function(m){return m.position!==uniPos;});
 if(!targetSeg._replaced)targetSeg._replaced=[];targetSeg._replaced=targetSeg._replaced.filter(function(r){return r.position!==uniPos;});
@@ -1232,11 +1229,12 @@ if(origAA!==newAA){targetSeg.mutations.push({position:uniPos,original:origAA,mut
 });
 // Deletions (end to start)
 var delArr=[...edits.deletions].sort(function(a,b){return b-a;});
-delArr.forEach(function(li){var delAA=targetSeg.sequence[li];var origPos=targetSeg.start+li;
+delArr.forEach(function(li){var delAA=targetSeg.sequence[li];
 var isIns=(targetSeg._inserted||[]).includes(li);
 if(isIns){
 targetSeg._inserted=targetSeg._inserted.filter(function(x){return x!==li;}).map(function(x){return x>li?x-1:x;});
 }else{
+var origPos=localIdxToOrigPos(targetSeg,li);
 var existMut2=(targetSeg.mutations||[]).find(function(m){return m.position===origPos;});
 var trueOrigAA=existMut2?existMut2.original:delAA;
 if(!targetSeg._deleted)targetSeg._deleted=[];targetSeg._deleted.push({origPos:origPos,aa:trueOrigAA});
@@ -1307,10 +1305,8 @@ document.getElementById('copyFastaBtn').addEventListener('click',()=>{const seq=
 document.querySelectorAll('.zone3-tab').forEach(tab=>{tab.addEventListener('click',()=>{document.querySelectorAll('.zone3-tab').forEach(t=>t.classList.remove('active'));tab.classList.add('active');AppState.zone3Tab=tab.dataset.z3tab;document.getElementById('zone3Content').classList.add('visible');renderZone3();});});
 document.querySelectorAll('.library-tab').forEach(tab=>{tab.addEventListener('click',()=>{document.querySelectorAll('.library-tab').forEach(t=>t.classList.remove('active'));tab.classList.add('active');const target=tab.dataset.libtab;['libMutations','libSignals','libLinkers','libConjugation','libTags'].forEach(id=>{document.getElementById(id).style.display='none';});document.getElementById({mutations:'libMutations',signals:'libSignals',linkers:'libLinkers',conjugation:'libConjugation',tags:'libTags'}[target]).style.display='';});});
 document.getElementById('mutPopApply').addEventListener('click',()=>{const popup=document.getElementById('mutationPopup');const globalPos=parseInt(popup.dataset.globalPos);const uniprotPos=parseInt(popup.dataset.uniprotPos);const original=popup.dataset.original;const mutant=document.getElementById('mutPopSelect').value;saveUndo();const info=findSegmentAtGlobalPos(globalPos);if(info){
-// Check if this is an inserted residue (Rule 3 & 5)
-const isInserted=info.seg._isVirtualSeg?(info.part._inserted||[]).includes(info.localIdx):(info.seg._inserted||[]).includes(info.localIdx);
-if(isInserted){
-// Directly edit the character in sequence — no mutation entry
+if(info.isInserted){
+// Directly edit the character in sequence — no mutation entry (Rule 3)
 if(info.seg._isVirtualSeg){info.part.sequence=info.part.sequence.slice(0,info.localIdx)+mutant+info.part.sequence.slice(info.localIdx+1);}
 else{info.seg.sequence=info.seg.sequence.slice(0,info.localIdx)+mutant+info.seg.sequence.slice(info.localIdx+1);}
 renderAll();
