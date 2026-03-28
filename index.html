@@ -611,7 +611,7 @@ else if(isIns){span.className='seq-residue seq-inserted seq-clickable';span.text
 else{span.className='seq-residue seq-clickable';span.textContent=pSeq[i];span.style.color='var(--text-secondary)';}
 span.dataset.globalpos=gi2;span.addEventListener('click',e=>{e.stopPropagation();showMutationPopup(gi2,e);});seqDiv2.appendChild(span);
 if((i+1)%10===0){const sp=document.createElement('span');sp.textContent=' ';seqDiv2.appendChild(sp);}
-if((i+1)%20===0){const tag=document.createElement('span');tag.style.cssText='font-size:8px;color:var(--text-tertiary);vertical-align:super;margin:0 1px;user-select:none';tag.textContent=i+1;seqDiv2.appendChild(tag);}}
+if((i+1)%20===0){const origPosNP=localIdxToOrigPos({start:1,_inserted:part._inserted||[]},i);if(origPosNP!==null){const tag=document.createElement('span');tag.style.cssText='font-size:8px;color:var(--text-tertiary);vertical-align:super;margin:0 1px;user-select:none';tag.textContent=origPosNP;seqDiv2.appendChild(tag);}}}
 card.appendChild(seqDiv2);
 if(!card.dataset.clickBound){card.dataset.clickBound='1';card.addEventListener('click',e=>{if(e.target.classList.contains('seq-clickable')||e.target.classList.contains('seq-mutated')||e.target.closest('.part-card-actions')||e.target.closest('.domain-subcard-actions'))return;if(AppState.expandedParts.has(idx))AppState.expandedParts.delete(idx);else AppState.expandedParts.add(idx);renderAll();});}}
 else if(part.type!=='protein'||part.segments.length<=1){card.addEventListener('click',e=>{if(e.target.closest('.part-card-actions')||e.target.closest('.domain-subcard-actions'))return;if(AppState.expandedParts.has(idx))AppState.expandedParts.delete(idx);else AppState.expandedParts.add(idx);renderAll();});}
@@ -1211,8 +1211,17 @@ editMuts=targetSeg.mutations||[];editIns=targetSeg._inserted||[];editDel=targetS
 editSeq=selPart.fullSequence.slice(start-1,end);editStart=start;
 editMuts=[];editIns=[];editDel=[];
 // Collect mutations/insertions/deletions from all overlapping segments
+var seqOffset=0;
 selPart.segments.forEach(function(s){if(!s.active)return;
+var segOrigEndVal=segOrigEnd(s);
+// Check overlap
+if(s.start>end||segOrigEndVal<start){seqOffset+=s.sequence.length;return;}
 (s.mutations||[]).forEach(function(m){if(m.position>=start&&m.position<=end)editMuts.push(m);});
+// Map segment _inserted local indices to editSeq local indices
+var segStartInEdit=s.start-start;// offset of this segment's start within editSeq
+(s._inserted||[]).forEach(function(li){var editLi=segStartInEdit+li;if(editLi>=0&&editLi<editSeq.length)editIns.push(editLi);});
+(s._deleted||[]).forEach(function(d){if(d.origPos>=start&&d.origPos<=end)editDel.push(d);});
+seqOffset+=s.sequence.length;
 });
 }
 var partName=selPart.entryName||selPart.name||'';
@@ -1260,6 +1269,66 @@ targetSeg.sequence=targetSeg.sequence.slice(0,posN)+aa+targetSeg.sequence.slice(
 for(var si2=0;si2<aaLen;si2++)targetSeg.ss.splice(posN,0,'loop');
 if(!targetSeg._inserted)targetSeg._inserted=[];for(var si2=0;si2<aaLen;si2++)targetSeg._inserted.push(posN+si2);
 if(selPart.fullSequence){var gp=targetSeg.start-1+posN;selPart.fullSequence=selPart.fullSequence.slice(0,gp)+aa+selPart.fullSequence.slice(gp);}
+});
+}else{
+// Multi-segment range: map each edit to the correct segment by UniProt position
+// Virtual segment for the edit range — used to convert editor local indices to original positions
+var editVirtualSeg={start:editStart,_inserted:editIns};
+// Helper: find segment containing a UniProt position
+function findSegForPos(pos){for(var si2=0;si2<selPart.segments.length;si2++){var s=selPart.segments[si2];if(s.active&&pos>=s.start&&pos<=segOrigEnd(s))return s;}return null;}
+// Replacements
+Object.keys(edits.replacements).forEach(function(k){var li=parseInt(k);var newAA=edits.replacements[k];
+var isEditIns=editIns.includes(li);
+var uniPos=localIdxToOrigPos(editVirtualSeg,li);
+if(isEditIns){
+// Replacing an inserted residue — find which segment owns it and edit directly
+uniPos=nearestOrigPosBefore(editVirtualSeg,li);
+var seg2=findSegForPos(uniPos);if(!seg2)return;
+// Find the inserted residue's local index in the segment
+var segStartInEdit=seg2.start-editStart;var insCountBefore=0;editIns.forEach(function(idx){if(idx<segStartInEdit)insCountBefore++;});
+var segLi=li-segStartInEdit+insCountBefore;
+// Find actual position in segment's _inserted
+for(var ii=0;ii<(seg2._inserted||[]).length;ii++){if(seg2.sequence[seg2._inserted[ii]]===editSeq[li]){seg2.sequence=seg2.sequence.slice(0,seg2._inserted[ii])+newAA+seg2.sequence.slice(seg2._inserted[ii]+1);break;}}
+}else{
+if(uniPos===null)return;
+var seg2=findSegForPos(uniPos);if(!seg2)return;
+var segLi=origPosToLocalIdx(seg2,uniPos);
+var origAA=seg2.sequence[segLi];if(!seg2.mutations)seg2.mutations=[];seg2.mutations=seg2.mutations.filter(function(m){return m.position!==uniPos;});if(!seg2._replaced)seg2._replaced=[];seg2._replaced=seg2._replaced.filter(function(r){return r.position!==uniPos;});if(origAA!==newAA){seg2.mutations.push({position:uniPos,original:origAA,mutant:newAA,source:'manual',description:'Region editor'});seg2._replaced.push({position:uniPos,original:origAA,mutant:newAA});}}
+});
+// Deletions (end to start)
+var delArr2=[...edits.deletions].sort(function(a,b){return b-a;});
+delArr2.forEach(function(li){
+var isEditIns=editIns.includes(li);
+var uniPos=localIdxToOrigPos(editVirtualSeg,li);
+if(isEditIns){
+// Deleting an inserted residue — undo the insertion in the owning segment
+var nearPos=nearestOrigPosBefore(editVirtualSeg,li);
+var seg2=findSegForPos(nearPos);if(!seg2)return;
+var segLi=origPosToLocalIdx(seg2,nearPos);
+// Walk forward in segment to find the inserted residue
+for(var ci=segLi;ci<seg2.sequence.length;ci++){if((seg2._inserted||[]).includes(ci)){seg2._inserted=seg2._inserted.filter(function(x){return x!==ci;}).map(function(x){return x>ci?x-1:x;});seg2.sequence=seg2.sequence.slice(0,ci)+seg2.sequence.slice(ci+1);seg2.end--;if(seg2.ss)seg2.ss.splice(ci,1);break;}}
+if(selPart.fullSequence){var gp2=nearPos-1+li-(nearPos-editStart);selPart.fullSequence=selPart.fullSequence.slice(0,start-1+li)+selPart.fullSequence.slice(start-1+li+1);}
+}else{
+if(uniPos===null)return;
+var seg2=findSegForPos(uniPos);if(!seg2)return;
+var segLi=origPosToLocalIdx(seg2,uniPos);
+var delAA=seg2.sequence[segLi];var existMut3=(seg2.mutations||[]).find(function(m){return m.position===uniPos;});var trueOrigAA=existMut3?existMut3.original:delAA;if(!seg2._deleted)seg2._deleted=[];seg2._deleted.push({origPos:uniPos,aa:trueOrigAA});if(seg2.mutations)seg2.mutations=seg2.mutations.filter(function(m){return m.position!==uniPos;});if(seg2._replaced)seg2._replaced=seg2._replaced.filter(function(r){return r.position!==uniPos;});if(seg2._inserted)seg2._inserted=seg2._inserted.map(function(x){return x>segLi?x-1:x;});
+seg2.sequence=seg2.sequence.slice(0,segLi)+seg2.sequence.slice(segLi+1);seg2.end--;if(seg2.ss)seg2.ss.splice(segLi,1);
+if(selPart.fullSequence){selPart.fullSequence=selPart.fullSequence.slice(0,uniPos-1)+selPart.fullSequence.slice(uniPos);}
+}
+});
+// Insertions (end to start)
+var insArr2=edits.insertions.slice().sort(function(a,b){return b.localPos-a.localPos;});
+insArr2.forEach(function(ins){
+var uniPos=localIdxToOrigPos(editVirtualSeg,ins.localPos);
+if(uniPos===null)uniPos=nearestOrigPosBefore(editVirtualSeg,ins.localPos);
+var seg2=findSegForPos(uniPos);if(!seg2){seg2=findSegForPos(uniPos-1);}if(!seg2)return;
+var segLi=Math.min(origPosToLocalIdx(seg2,uniPos),seg2.sequence.length);
+var aa=ins.aa;var aaLen=aa.length;
+seg2.sequence=seg2.sequence.slice(0,segLi)+aa+seg2.sequence.slice(segLi);seg2.end+=aaLen;
+if(seg2.ss)for(var si3=0;si3<aaLen;si3++)seg2.ss.splice(segLi,0,'loop');
+if(!seg2._inserted)seg2._inserted=[];for(var si3=0;si3<aaLen;si3++)seg2._inserted.push(segLi+si3);
+if(selPart.fullSequence){selPart.fullSequence=selPart.fullSequence.slice(0,uniPos-1)+aa+selPart.fullSequence.slice(uniPos-1);}
 });
 }
 renderAll();
