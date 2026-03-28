@@ -17,22 +17,17 @@
     {"name": "Ost1", "sequence": "MRQVWFSWIVGLFLCFFNVSSA", "organism": "Saccharomyces cerevisiae", "system": ["yeast"], "use": "Alternative yeast signal, co-translational"}
   ],
   "linkers": [
-    {"name": "(GGGGS)x1", "sequence": "GGGGS", "category": "flexible", "use": "Short flexible, minimal spacing"},
-    {"name": "(GGGGS)x2", "sequence": "GGGGSGGGGS", "category": "flexible", "use": "Medium flexible linker"},
-    {"name": "(GGGGS)x3", "sequence": "GGGGSGGGGSGGGGS", "category": "flexible", "use": "Standard flexible linker"},
-    {"name": "(GGGGS)x4", "sequence": "GGGGSGGGGSGGGGSGGGGS", "category": "flexible", "use": "Long flexible linker"},
-    {"name": "(GGS)x2", "sequence": "GGSGGS", "category": "flexible", "use": "Short flexible alternative"},
-    {"name": "GSGSGS", "sequence": "GSGSGS", "category": "flexible", "use": "Ser-Gly flexible linker"},
-    {"name": "(EAAAK)x1", "sequence": "EAAAK", "category": "rigid", "use": "Short helical rigid linker"},
-    {"name": "(EAAAK)x2", "sequence": "EAAAKEAAAK", "category": "rigid", "use": "Medium helical rigid linker"},
-    {"name": "(EAAAK)x3", "sequence": "EAAAKEAAAKEAAAK", "category": "rigid", "use": "Long helical rigid linker"},
-    {"name": "(AP)x10", "sequence": "APAPAPAPAPAPAPAPAPAP", "category": "rigid", "use": "Proline-rich rigid linker"},
-    {"name": "PAPAP", "sequence": "PAPAP", "category": "rigid", "use": "Short proline rigid linker"},
-    {"name": "TEV site", "sequence": "ENLYFQS", "category": "cleavable", "use": "TEV protease \u2014 most common lab protease"},
-    {"name": "HRV 3C site", "sequence": "LEVLFQGP", "category": "cleavable", "use": "HRV 3C / PreScission protease"},
-    {"name": "Thrombin site", "sequence": "LVPRGS", "category": "cleavable", "use": "Thrombin cleavage"},
-    {"name": "Factor Xa site", "sequence": "IEGR", "category": "cleavable", "use": "Factor Xa cleavage"},
-    {"name": "Enterokinase site", "sequence": "DDDDK", "category": "cleavable", "use": "Enterokinase cleavage"}
+    {"name": "(GGGGS)n", "unit": "GGGGS", "sequence": "GGGGS", "category": "flexible", "use": "Flexible Gly-Ser linker — most widely used", "repeat": true},
+    {"name": "(GGS)n", "unit": "GGS", "sequence": "GGS", "category": "flexible", "use": "Short flexible alternative", "repeat": true},
+    {"name": "(GSGSGS)n", "unit": "GSGSGS", "sequence": "GSGSGS", "category": "flexible", "use": "Ser-Gly flexible linker", "repeat": true},
+    {"name": "(EAAAK)n", "unit": "EAAAK", "sequence": "EAAAK", "category": "rigid", "use": "Helical rigid linker", "repeat": true},
+    {"name": "(AP)n", "unit": "AP", "sequence": "AP", "category": "rigid", "use": "Proline-rich rigid linker", "repeat": true},
+    {"name": "(PAPAP)n", "unit": "PAPAP", "sequence": "PAPAP", "category": "rigid", "use": "Short proline rigid linker", "repeat": true},
+    {"name": "TEV site", "sequence": "ENLYFQG", "category": "cleavable", "use": "TEV protease — cleavage between Q and G"},
+    {"name": "HRV 3C site", "sequence": "LEVLFQGP", "category": "cleavable", "use": "HRV 3C / PreScission — cleavage between Q and GP"},
+    {"name": "Thrombin site", "sequence": "LVPRGS", "category": "cleavable", "use": "Thrombin — cleavage between R and G"},
+    {"name": "Factor Xa site", "sequence": "IEGR", "category": "cleavable", "use": "Factor Xa — cleavage after R"},
+    {"name": "Enterokinase site", "sequence": "DDDDK", "category": "cleavable", "use": "Enterokinase — cleavage after K"}
   ],
   "conjugation": [
     {"name": "LPETG (Sortase A)", "sequence": "LPETG", "use": "C-terminal sortase tag \u2014 ligate to GGG-payload"},
