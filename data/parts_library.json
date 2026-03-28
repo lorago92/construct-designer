@@ -32,13 +32,7 @@
     {"name": "HRV 3C site", "sequence": "LEVLFQGP", "category": "cleavable", "use": "HRV 3C / PreScission protease"},
     {"name": "Thrombin site", "sequence": "LVPRGS", "category": "cleavable", "use": "Thrombin cleavage"},
     {"name": "Factor Xa site", "sequence": "IEGR", "category": "cleavable", "use": "Factor Xa cleavage"},
-    {"name": "Enterokinase site", "sequence": "DDDDK", "category": "cleavable", "use": "Enterokinase cleavage"},
-    {"name": "T2A", "sequence": "EGRGSLLTCGDVEENPGP", "category": "2a", "use": "Thosea asigna virus 2A \u2014 most efficient"},
-    {"name": "P2A", "sequence": "GSGATNFSLLKQAGDVEENPGP", "category": "2a", "use": "Porcine teschovirus 2A \u2014 widely used"},
-    {"name": "E2A", "sequence": "QCTNYALLKLAGDVESNPGP", "category": "2a", "use": "Equine rhinitis A virus 2A"},
-    {"name": "F2A", "sequence": "VKQTLNFDLLKLAGDVESNPGP", "category": "2a", "use": "Foot-and-mouth disease virus 2A"},
-    {"name": "IgG1 hinge", "sequence": "EPKSCDKTHTCPPCP", "category": "hinge", "use": "Human IgG1 hinge \u2014 Fc fusions, flexibility + dimerization"},
-    {"name": "IgG4 hinge", "sequence": "ESKYGPPCPSCP", "category": "hinge", "use": "Human IgG4 hinge \u2014 reduced Fab-arm exchange"}
+    {"name": "Enterokinase site", "sequence": "DDDDK", "category": "cleavable", "use": "Enterokinase cleavage"}
   ],
   "conjugation": [
     {"name": "LPETG (Sortase A)", "sequence": "LPETG", "use": "C-terminal sortase tag \u2014 ligate to GGG-payload"},
