@@ -45,12 +45,13 @@
     {"name": "Strep-tag II", "sequence": "WSHPQFEK", "category": "purification", "use": "Strep-Tactin purification \u2014 high purity"},
     {"name": "Twin-Strep", "sequence": "WSHPQFEKGGGSGGGSGGSAWSHPQFEK", "category": "purification", "use": "Twin Strep-Tactin \u2014 enhanced affinity"},
     {"name": "FLAG", "sequence": "DYKDDDDK", "category": "purification", "use": "Anti-FLAG purification & detection"},
-    {"name": "Calmodulin-binding", "sequence": "KRRWKKNFIAVSAANRFKKISSSGAL", "category": "purification", "use": "Calmodulin affinity purification"},
     {"name": "HA tag", "sequence": "YPYDVPDYA", "category": "detection", "use": "Anti-HA detection \u2014 Western, IF, IP"},
     {"name": "Myc tag", "sequence": "EQKLISEEDL", "category": "detection", "use": "Anti-Myc (9E10) detection"},
-    {"name": "V5 tag", "sequence": "GKPIPNPLLGLD", "category": "detection", "use": "Anti-V5 detection"},
+    {"name": "V5 tag", "sequence": "GKPIPNPLLGLDST", "category": "detection", "use": "Anti-V5 detection"},
     {"name": "E-tag", "sequence": "GAPVPYPDPLEPR", "category": "detection", "use": "Anti-E-tag detection"},
     {"name": "SUMO", "sequence": "MSDSEVNQEAKPEVKPEVKPETHINLKVSDGSSEIFFKIKKTTPLRRLMEAFAKRQGKEMDSLRFLYDGIRIQADQTPEDLDMEDNDIIEAHREQIGG", "category": "solubility", "use": "SUMO fusion \u2014 solubility + ULP1 cleavable"},
-    {"name": "GB1", "sequence": "MQYKLILNGKTLKGETTTEAVDAATAEKVFKQYANDNGVDGEWTYDDATKTFTVTE", "category": "solubility", "use": "Protein G B1 domain \u2014 small solubility enhancer"}
+    {"name": "GB1", "sequence": "MTYKLILNGKTLKGETTTEAVDAATAEKVFKQYANDNGVDGEWTYDDATKTFTVTE", "category": "solubility", "use": "Protein G B1 domain \u2014 small solubility enhancer"},
+    {"name": "GST", "sequence": "MSPILGYWKIKGLVQPTRLLLEYLEEKYEEHLYERDEGDKWRNKKFELGLEFPNLPYYIDGDVKLTQSMAIIRYIADKHNMLGGCPKERAEISMLEGAVLDIRYGVSRIAYSKDFETLKVDFLSKLPEMLKMFEDRLCHKTYLNGDHVTHPDFMLYDALDVVLYMDPMCLDAFPKLVCFKKRIEAIPQIDKYLKSSKYIAWPLQGWQATFGGGDHPPK", "category": "solubility", "use": "Glutathione S-transferase \u2014 solubility + glutathione purification"},
+    {"name": "MBP", "sequence": "KIEEGKLVIWINGDKGYNGLAEVGKKFEKDTGIKVTVEHPDKLEEKFPQVAATGDGPDIIFWAHDRFGGYAQSGLLAEITPDKAFQDKLYPFTWDAVRYNGKLIAYPIAVEALSLIYNKDLLPNPPKTWEEIPALDKELKAKGKSALMFNLQEPYFTWPLIAADGGYAFKYENGKYDIKDVGVDNAGAKAGLTFLVDLIKNKHMNADTDYSIAEAAFNKGETAMTINGPWAWSNIDTSKVNYGVTVLPTFKGQPSKPFVGVLSAGINAASPNKELAKEFLENYLLTDEGLEAVNKDKPLGAVALKSYEEELAKDPRIAATMENAQKGEIMPNIPQMSAFWYAVRTAVINAASGRQTVDEALKDAQTRITK", "category": "solubility", "use": "Maltose-binding protein \u2014 solubility + amylose purification"}
   ]
 }
