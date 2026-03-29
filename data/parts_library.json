@@ -24,7 +24,7 @@
     {"name": "(AP)n", "unit": "AP", "sequence": "AP", "category": "rigid", "use": "Proline-rich rigid linker", "repeat": true},
     {"name": "(PAPAP)n", "unit": "PAPAP", "sequence": "PAPAP", "category": "rigid", "use": "Short proline rigid linker", "repeat": true},
     {"name": "TEV site", "sequence": "ENLYFQG", "category": "cleavable", "use": "TEV protease — cleavage between Q and G"},
-    {"name": "HRV 3C site", "sequence": "LEVLFQGP", "category": "cleavable", "use": "HRV 3C / PreScission — cleavage between Q and GP"},
+    {"name": "HRV 3C site", "sequence": "LEVLFQGP", "category": "cleavable", "use": "HRV 3C / PreScission — cleavage between Q and G"},
     {"name": "Thrombin site", "sequence": "LVPRGS", "category": "cleavable", "use": "Thrombin — cleavage between R and G"},
     {"name": "Factor Xa site", "sequence": "IEGR", "category": "cleavable", "use": "Factor Xa — cleavage after R"},
     {"name": "Enterokinase site", "sequence": "DDDDK", "category": "cleavable", "use": "Enterokinase — cleavage after K"}
@@ -33,11 +33,11 @@
     {"name": "LPETG (Sortase A)", "sequence": "LPETG", "use": "C-terminal sortase tag \u2014 ligate to GGG-payload"},
     {"name": "GGG (Sortase nucleophile)", "sequence": "GGG", "use": "N-terminal \u2014 pairs with LPETG for sortase ligation"},
     {"name": "Single Cys", "sequence": "C", "use": "Maleimide conjugation \u2014 ADCs, PEGylation, fluorophores"},
-    {"name": "Avi-tag", "sequence": "GLNDIFEAQKIEWHE", "use": "BirA biotin ligase \u2014 site-specific biotinylation"},
-    {"name": "SpyTag", "sequence": "AHIVMVDAYKPTK", "use": "SpyTag/SpyCatcher \u2014 irreversible isopeptide bond"},
-    {"name": "SnoopTag", "sequence": "KLGDIEFIKVNK", "use": "SnoopTag/SnoopCatcher \u2014 orthogonal to SpyTag"},
+    {"name": "Avi-tag", "sequence": "GLNDIFEAQKIEWHE", "use": "BirA biotin ligase \u2014 site-specific biotinylation", "ref": "Engineered \u2014 minimal BirA substrate from combinatorial library (Beckett et al. 1999)"},
+    {"name": "SpyTag", "sequence": "AHIVMVDAYKPTK", "use": "SpyTag/SpyCatcher \u2014 irreversible isopeptide bond", "ref": "Engineered \u2014 split from CnaB2 domain of S. pyogenes FbaB (Zakeri et al. 2012)"},
+    {"name": "SnoopTag", "sequence": "KLGDIEFIKVNK", "use": "SnoopTag/SnoopCatcher \u2014 orthogonal to SpyTag", "ref": "Engineered \u2014 split from D4 domain of S. pneumoniae RrgA (Veggiani et al. 2016)"},
     {"name": "ybbR tag", "sequence": "DSLEFIASKLA", "use": "Sfp transferase \u2014 CoA-substrate labeling"},
-    {"name": "Q-tag", "sequence": "LLQG", "use": "Transglutaminase \u2014 site-specific amine conjugation"}
+    {"name": "Q-tag", "sequence": "LLQG", "use": "Transglutaminase \u2014 site-specific amine conjugation", "ref": "Synthetic \u2014 minimal mTG substrate from peptide screening"}
   ],
   "tags": [
     {"name": "His6", "sequence": "HHHHHH", "category": "purification", "use": "IMAC purification \u2014 most common"},
