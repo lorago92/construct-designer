@@ -448,10 +448,13 @@ const totalSeqStr=getAssembledSequence();
 const partColorMap=[];partLevelView.forEach(pv=>{for(let i=0;i<pv.sequence.length;i++)partColorMap.push(pv.color);});
 for(let i=0;i<totalSeqStr.length;i++){
 const span=document.createElement('span');const isMut=mutMap[i];const isIns=insMap[i];
-if(isMut){span.className='seq-residue seq-mutated seq-clickable';span.textContent=isMut.mutant;span.title=`${isMut.original}${isMut.position}${isMut.mutant}`;}
+if(isMut){span.className='seq-residue seq-mutated seq-clickable';span.textContent=isMut.mutant;}
 else if(isIns){span.className='seq-residue seq-inserted seq-clickable';span.textContent=totalSeqStr[i];}
 else{span.className='seq-residue seq-clickable';span.textContent=totalSeqStr[i];if(partColorMap[i])span.style.color=partColorMap[i].main;}
-span.dataset.globalpos=i;span.addEventListener('click',e=>{showMutationPopup(i,e);});seqEl.appendChild(span);
+span.dataset.globalpos=i;
+span.addEventListener('mouseenter',function(){var info=findSegmentAtGlobalPos(i);if(!info)return;var aa=this.textContent;var tt=document.getElementById('residueTooltip');if(info.isInserted){tt.textContent=aa+' (inserted)';}else{tt.textContent=aa+info.uniprotPos;}var rect=this.getBoundingClientRect();tt.style.left=(rect.left+rect.width/2-10)+'px';tt.style.top=(rect.bottom+2)+'px';tt.style.display='block';});
+span.addEventListener('mouseleave',function(){document.getElementById('residueTooltip').style.display='none';});
+span.addEventListener('click',e=>{showMutationPopup(i,e);});seqEl.appendChild(span);
 if((i+1)%10===0){const sp=document.createElement('span');sp.textContent=' ';seqEl.appendChild(sp);
 // Position marker every 100 residues
 if((i+1)%100===0){const tag=document.createElement('span');tag.style.cssText='font-size:8px;color:var(--text-tertiary);vertical-align:super;margin:0 1px;user-select:none';tag.textContent=i+1;seqEl.appendChild(tag);}}
@@ -552,7 +555,7 @@ for(let i=0;i<partSeq.length;i++){const span=document.createElement('span');cons
 // Find which segment this residue belongs to
 let segIdx=-1;for(let sr=0;sr<segRanges.length;sr++){if(i>=segRanges[sr].start&&i<segRanges[sr].end){segIdx=segRanges[sr].segIdx;break;}}
 span.dataset.segIdx=segIdx;
-if(mut){span.className='seq-residue seq-mutated seq-clickable';span.textContent=mut.mutant;span.title=`${mut.original}${mut.position}${mut.mutant}`;}
+if(mut){span.className='seq-residue seq-mutated seq-clickable';span.textContent=mut.mutant;}
 else if(isIns){span.className='seq-residue seq-inserted seq-clickable';span.textContent=partSeq[i];}
 else{span.className='seq-residue seq-clickable';span.textContent=partSeq[i];span.style.color='var(--text-secondary)';}
 const gi=globalOffset+i;span.dataset.globalpos=gi;
@@ -792,7 +795,7 @@ if(!seg._inserted)seg._inserted=[];seg._inserted=seg._inserted.map(function(x){r
 if(part.fullSequence){const gp=seg.start-1+posN;part.fullSequence=part.fullSequence.slice(0,gp)+aa+part.fullSequence.slice(gp);}});
 renderAll();
 });});
-strip.querySelectorAll('.domain-toggle').forEach(cb=>{cb.addEventListener('click',e=>{e.stopPropagation();saveUndo();const pi=parseInt(cb.dataset.part);const si=parseInt(cb.dataset.seg);AppState.construct.parts[pi].segments[si].active=cb.checked;renderAll();});});
+strip.querySelectorAll('.domain-toggle').forEach(cb=>{cb.addEventListener('click',e=>{e.stopPropagation();saveUndo();const pi=parseInt(cb.dataset.part);const si=parseInt(cb.dataset.seg);AppState.construct.parts[pi].segments[si].active=cb.checked;renderAll();requestAnimationFrame(()=>{const card=document.querySelector('.part-card[data-part-idx="'+pi+'"]');if(card)card.scrollIntoView({block:'nearest',behavior:'instant'});});});});
 const totalSeq=getAssembledSequence();const statsEl=document.getElementById('constructStats');if(totalSeq.length>0){statsEl.style.display='';document.getElementById('statLength').textContent=totalSeq.length;document.getElementById('statMW').textContent=(calculateMW(totalSeq)/1000).toFixed(1);const ec=calculateExtinctionCoeff(totalSeq);document.getElementById('statExtCoeffOx').textContent=ec.oxidized.toLocaleString();document.getElementById('statExtCoeffRed').textContent=ec.reduced.toLocaleString();}else statsEl.style.display='none';
 renderRightPanel();}
 const AA_LIST=['A','C','D','E','F','G','H','I','K','L','M','N','P','Q','R','S','T','V','W','Y'];
