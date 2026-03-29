@@ -265,6 +265,7 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text-primary)
 <div class="mutation-popup" id="mutationPopup" style="display:none"><div class="popup-header-bar" data-drag-target="mutationPopup"><span class="popup-drag-icon">⠿</span><span class="popup-title-text" id="mutPopTitle">Mutate residue</span><button class="popup-close-btn" onclick="document.getElementById('mutationPopup').style.display='none'">&times;</button></div><div class="mutation-popup-inner"><div class="mutation-popup-pos" id="mutPopPos"></div><div class="mutation-popup-row"><span id="mutPopOriginal" style="font-family:var(--font-mono);font-size:16px;font-weight:700"></span><span class="arrow">→</span><select id="mutPopSelect"></select></div><div class="mutation-popup-actions"><button class="btn btn-primary btn-sm" id="mutPopApply">Apply</button><button class="btn btn-secondary btn-sm" id="mutPopCancel">Cancel</button></div></div></div>
 <div class="variant-tooltip" id="variantTooltip" style="display:none"></div>
 <div class="variant-tooltip" id="engRefTooltip" style="display:none"></div>
+<div id="residueTooltip" style="display:none;position:fixed;z-index:300;background:var(--text-primary);color:white;padding:2px 6px;border-radius:4px;font-size:10px;font-family:var(--font-mono);pointer-events:none;white-space:nowrap"></div>
 <div class="add-part-popup" id="addPartPopup"><div class="popup-header-bar" data-drag-target="addPartPopup"><span class="popup-drag-icon">⠿</span><span class="popup-title-text">Add sequence</span><button class="popup-close-btn" onclick="document.getElementById('addPartPopup').style.display='none'">&times;</button></div><div class="add-part-popup-header"><button class="add-part-popup-tab active" data-addtab="search">Search UniProt</button><button class="add-part-popup-tab" data-addtab="paste">Paste sequence</button></div><div class="add-part-popup-body"><div id="addPartSearch"><input type="text" class="add-part-search-input" id="addPartSearchInput" placeholder="Search protein name, gene, or UniProt ID…"><div class="add-part-results" id="addPartResults"></div></div><div id="addPartPaste" style="display:none"><input type="text" class="add-part-name-input" id="addPartName" placeholder="Name (e.g., Fc region, Nanobody)"><div style="margin-bottom:10px"><label style="font-size:11px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px">Classify as</label><select id="addPartTypeSelect" style="width:100%;height:34px;padding:0 10px;border:1.5px solid var(--border);border-radius:6px;font-family:var(--font-sans);font-size:12px;outline:none;background:var(--bg);color:var(--text-primary);cursor:pointer"><option value="protein">Protein</option><option value="signal">Signal</option><option value="linker">Linker</option><option value="conjugation">Conjugation</option><option value="tag">Tag</option><option value="custom">Custom</option></select></div><textarea class="add-part-paste-area" id="addPartPasteArea" placeholder="Paste amino acid sequence…"></textarea><button class="btn btn-primary" id="addPartPasteBtn" style="font-size:12px;width:100%">Add to construct</button></div></div></div>
 <div class="zone3" id="zone3"><div class="card"><div class="zone3-tabs" id="zone3Tabs"><button class="zone3-tab active" data-z3tab="function">Function</button><button class="zone3-tab" data-z3tab="names">Names & Taxonomy</button><button class="zone3-tab" data-z3tab="subcellular">Subcellular Location</button><button class="zone3-tab" data-z3tab="disease">Disease & Variants</button><button class="zone3-tab" data-z3tab="ptm">PTM/Processing</button><button class="zone3-tab" data-z3tab="expression">Expression</button><button class="zone3-tab" data-z3tab="interaction">Interaction</button><button class="zone3-tab" data-z3tab="structure">Structure</button><button class="zone3-tab" data-z3tab="family">Family & Domains</button><button class="zone3-tab" data-z3tab="publications">Publications</button></div><div id="zone3Content" class="zone3-panel visible"></div></div></div>
 </main>
@@ -272,7 +273,7 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text-primary)
 const AppState={searchMode:'search',construct:{parts:[]},uniprotCache:{},rawDataCache:{},alphaFoldCache:{},expandedParts:new Set(),zone3Tab:'function',pubSortAsc:false,zone3SelectedPart:0,mutSelectedPart:-1};
 const DOMAIN_COLORS=[{main:'#0891b2',bg:'#cffafe',border:'#67e8f9'},{main:'#7c3aed',bg:'#ede9fe',border:'#c4b5fd'},{main:'#0d9488',bg:'#ccfbf1',border:'#5eead4'},{main:'#4f46e5',bg:'#e0e7ff',border:'#a5b4fc'},{main:'#be185d',bg:'#fce7f3',border:'#f9a8d4'},{main:'#ea580c',bg:'#fff7ed',border:'#fdba74'}];
 const PART_COLORS={signal:{main:'#16a34a',bg:'#dcfce7',border:'#86efac'},tag:{main:'#7c3aed',bg:'#f3e8ff',border:'#c4b5fd'},conjugation:{main:'#d97706',bg:'#fef3c7',border:'#fcd34d'},linker:{main:'#6b7280',bg:'#f3f4f6',border:'#d1d5db'},protease:{main:'#dc2626',bg:'#fef2f2',border:'#fca5a5'},custom:{main:'#e11d48',bg:'#ffe4e6',border:'#fb7185'}};
-const PROTEIN_COLORS=['#0891b2','#7c3aed','#0d9488','#4f46e5','#be185d','#ea580c'];
+const PROTEIN_COLORS=['#0891b2','#2563eb','#0d9488','#4f46e5','#c026d3','#0369a1'];
 const undoHistory=[];
 function saveUndo(){undoHistory.push(JSON.stringify({parts:AppState.construct.parts,expanded:[...AppState.expandedParts]}));if(undoHistory.length>30)undoHistory.shift();document.getElementById('undoBtn').style.display=undoHistory.length>0?'':'none';}
 async function performUndo(){if(undoHistory.length===0)return;const nextState=JSON.parse(undoHistory[undoHistory.length-1]);if(nextState.parts.length===0){const ok=await customConfirm('Undo will clear entire construct','All parts and mutations will be removed. Continue?');if(!ok)return;}const state=JSON.parse(undoHistory.pop());AppState.construct.parts=state.parts;AppState.expandedParts=new Set(state.expanded);document.getElementById('undoBtn').style.display=undoHistory.length>0?'':'none';renderAll();}
@@ -303,8 +304,8 @@ finalFeats.sort((a,b)=>a.start-b.start);const segments=[];let cursor=signalPepti
 function getAssembledSequence(){let seq='';AppState.construct.parts.forEach(p=>{if(p.type==='protein')p.segments.filter(s=>s.active).forEach(s=>{let segSeq=s.sequence.split('');(s.mutations||[]).forEach(m=>{const idx=origPosToLocalIdx(s,m.position);if(idx>=0&&idx<segSeq.length)segSeq[idx]=m.mutant;});seq+=segSeq.join('');});else{let partSeq=(p.sequence||'').split('');(p.mutations||[]).forEach(m=>{const idx=origPosToLocalIdx({start:1,_inserted:p._inserted||[]},m.position);if(idx>=0&&idx<partSeq.length)partSeq[idx]=m.mutant;});seq+=partSeq.join('');}});return seq;}
 function getMutationMap(){const map={};let gpos=0;AppState.construct.parts.forEach(p=>{if(p.type==='protein'){p.segments.filter(s=>s.active).forEach(s=>{(s.mutations||[]).forEach(m=>{const li=origPosToLocalIdx(s,m.position);if(li>=0&&li<s.sequence.length)map[gpos+li]=m;});gpos+=s.sequence.length;});}else{(p.mutations||[]).forEach(m=>{const li=origPosToLocalIdx({start:1,_inserted:p._inserted||[]},m.position);if(li>=0&&li<(p.sequence||'').length)map[gpos+li]=m;});gpos+=(p.sequence||'').length;}});return map;}
 function getInsertedMap(){const map={};let gpos=0;AppState.construct.parts.forEach(p=>{if(p.type==='protein'){p.segments.filter(s=>s.active).forEach(s=>{(s._inserted||[]).forEach(li=>{if(li>=0&&li<s.sequence.length)map[gpos+li]=true;});gpos+=s.sequence.length;});}else{(p._inserted||[]).forEach(li=>{if(li>=0&&li<(p.sequence||'').length)map[gpos+li]=true;});gpos+=(p.sequence||'').length;}});return map;}
-function localIdxToOrigPos(seg,localIdx){const ins=seg._inserted||[];if(ins.includes(localIdx))return null;let insCount=0;for(let ii=0;ii<ins.length;ii++){if(ins[ii]<=localIdx)insCount++;}return seg.start+(localIdx-insCount);}
-function origPosToLocalIdx(seg,origPos){const ins=seg._inserted||[];if(ins.length===0)return origPos-seg.start;const sortedIns=[...ins].sort((a,b)=>a-b);let li=origPos-seg.start;for(const ii of sortedIns){if(ii<=li)li++;else break;}return li;}
+function localIdxToOrigPos(seg,localIdx){const ins=seg._inserted||[];if(ins.includes(localIdx))return null;let insCount=0;for(let ii=0;ii<ins.length;ii++){if(ins[ii]<=localIdx)insCount++;}var pos=seg.start+(localIdx-insCount);var del=(seg._deleted||[]).map(function(d){return d.origPos;}).sort(function(a,b){return a-b;});for(var di=0;di<del.length;di++){if(del[di]<=pos)pos++;else break;}return pos;}
+function origPosToLocalIdx(seg,origPos){var del=(seg._deleted||[]).map(function(d){return d.origPos;}).sort(function(a,b){return a-b;});var delBefore=0;for(var di=0;di<del.length;di++){if(del[di]<origPos)delBefore++;else break;}var ins=seg._inserted||[];var li=origPos-seg.start-delBefore;if(ins.length===0)return li;var sortedIns=[...ins].sort(function(a,b){return a-b;});for(var ii=0;ii<sortedIns.length;ii++){if(sortedIns[ii]<=li)li++;else break;}return li;}
 function segOrigEnd(seg){return seg.end-(seg._inserted||[]).length+(seg._deleted||[]).length;}
 function nearestOrigPosBefore(seg,localIdx){for(let bi=localIdx;bi>=0;bi--){const bp=localIdxToOrigPos(seg,bi);if(bp!==null)return bp;}return seg.start;}
 function findSegmentAtGlobalPos(globalPos){let gpos=0;for(const part of AppState.construct.parts){if(part.type==='protein'){for(const seg of part.segments){if(!seg.active)continue;if(globalPos>=gpos&&globalPos<gpos+seg.sequence.length){const li=globalPos-gpos;const origPos=localIdxToOrigPos(seg,li);const isIns=(seg._inserted||[]).includes(li);const uniPos=origPos!==null?origPos:nearestOrigPosBefore(seg,li-1>=0?li-1:0);return{part,seg,localIdx:li,uniprotPos:uniPos,isInserted:isIns};}gpos+=seg.sequence.length;}}else{const seq=part.sequence||'';if(globalPos>=gpos&&globalPos<gpos+seq.length){if(!part.mutations)part.mutations=[];const virtualSeg={name:part.name,type:part.type,start:1,end:seq.length,sequence:seq,mutations:part.mutations,_inserted:part._inserted||[],_deleted:part._deleted||[],_replaced:part._replaced||[],active:true,isTM:false,_isVirtualSeg:true,_partRef:part};const li=globalPos-gpos;const origPos=localIdxToOrigPos(virtualSeg,li);const isIns=(virtualSeg._inserted||[]).includes(li);const uniPos=origPos!==null?origPos:nearestOrigPosBefore(virtualSeg,li-1>=0?li-1:0);return{part,seg:virtualSeg,localIdx:li,uniprotPos:uniPos,isInserted:isIns};}gpos+=seq.length;}}return null;}
@@ -554,10 +555,27 @@ span.dataset.segIdx=segIdx;
 if(mut){span.className='seq-residue seq-mutated seq-clickable';span.textContent=mut.mutant;span.title=`${mut.original}${mut.position}${mut.mutant}`;}
 else if(isIns){span.className='seq-residue seq-inserted seq-clickable';span.textContent=partSeq[i];}
 else{span.className='seq-residue seq-clickable';span.textContent=partSeq[i];span.style.color='var(--text-secondary)';}
-const gi=globalOffset+i;span.dataset.globalpos=gi;span.addEventListener('click',e=>{e.stopPropagation();showMutationPopup(gi,e);});
-// Hover: highlight corresponding subcard
-span.addEventListener('mouseenter',function(){const si2=parseInt(this.dataset.segIdx);if(si2<0)return;const sc=domainsDiv.querySelector('.domain-subcard[data-seg-idx="'+si2+'"]');if(sc)sc.style.boxShadow='0 0 0 2px var(--accent)';});
-span.addEventListener('mouseleave',function(){domainsDiv.querySelectorAll('.domain-subcard').forEach(sc2=>{sc2.style.boxShadow='';});});
+const gi=globalOffset+i;span.dataset.globalpos=gi;
+// Store original position and segment range for hover
+const segRange=segRanges.find(sr=>i>=sr.start&&i<sr.end);
+if(segRange){span.dataset.segStart=segRange.start;span.dataset.segEnd=segRange.end;}
+// Compute original position for this residue
+const info2=findSegmentAtGlobalPos(gi);
+if(info2&&!info2.isInserted)span.dataset.origPos=info2.uniprotPos;
+else if(info2&&info2.isInserted)span.dataset.origPos='ins';
+span.addEventListener('click',e=>{e.stopPropagation();showMutationPopup(gi,e);});
+// Hover: highlight corresponding subcard + domain residues + position tooltip
+span.addEventListener('mouseenter',function(ev){const si2=parseInt(this.dataset.segIdx);if(si2<0)return;
+const sc=domainsDiv.querySelector('.domain-subcard[data-seg-idx="'+si2+'"]');if(sc)sc.style.boxShadow='0 0 0 2px var(--accent)';
+// Highlight all residues in same domain
+const sStart=parseInt(this.dataset.segStart);const sEnd=parseInt(this.dataset.segEnd);
+if(!isNaN(sStart)){const allSpans=seqDiv.querySelectorAll('.seq-residue');for(let ri=sStart;ri<sEnd&&ri<allSpans.length;ri++){if(!allSpans[ri].classList.contains('seq-mutated')&&!allSpans[ri].classList.contains('seq-inserted'))allSpans[ri].style.background='rgba(37,99,235,0.18)';}}
+// Position tooltip
+var op=this.dataset.origPos;var aa=this.textContent;if(op&&op!=='ins'){var tt=document.getElementById('residueTooltip');tt.textContent=aa+op;var rect=this.getBoundingClientRect();tt.style.left=(rect.left+rect.width/2-10)+'px';tt.style.top=(rect.bottom+2)+'px';tt.style.display='block';}else if(op==='ins'){var tt=document.getElementById('residueTooltip');tt.textContent=aa+' (inserted)';var rect=this.getBoundingClientRect();tt.style.left=(rect.left+rect.width/2-10)+'px';tt.style.top=(rect.bottom+2)+'px';tt.style.display='block';}
+});
+span.addEventListener('mouseleave',function(){domainsDiv.querySelectorAll('.domain-subcard').forEach(sc2=>{sc2.style.boxShadow='';});
+var allSpans=seqDiv.querySelectorAll('.seq-residue');allSpans.forEach(sp2=>{if(!sp2.classList.contains('seq-mutated')&&!sp2.classList.contains('seq-inserted'))sp2.style.background='';});
+document.getElementById('residueTooltip').style.display='none';});
 seqDiv.appendChild(span);
 if((i+1)%10===0){const sp=document.createElement('span');sp.textContent=' ';seqDiv.appendChild(sp);}
 // Show segment boundary markers (UniProt positions at start/end of each domain)
@@ -702,11 +720,11 @@ var insArr=edits.insertions.slice().sort(function(a,b){return b.localPos-a.local
 insArr.forEach(function(ins){
 const posN=ins.localPos;const aa=ins.aa;const aaLen=aa.length;
 if(p.type==='protein'){let offset=0;for(const seg of p.segments){if(!seg.active)continue;if(posN<=offset+seg.sequence.length){const localPos=posN-offset;seg.sequence=seg.sequence.slice(0,localPos)+aa+seg.sequence.slice(localPos);seg.end+=aaLen;for(let si=0;si<aaLen;si++)seg.ss.splice(localPos,0,'loop');
-if(!seg._inserted)seg._inserted=[];for(let si=0;si<aaLen;si++)seg._inserted.push(localPos+si);
+if(!seg._inserted)seg._inserted=[];seg._inserted=seg._inserted.map(function(x){return x>=localPos?x+aaLen:x;});for(let si=0;si<aaLen;si++)seg._inserted.push(localPos+si);
 break;}offset+=seg.sequence.length;}
 if(p.fullSequence)p.fullSequence=p.fullSequence.slice(0,posN)+aa+p.fullSequence.slice(posN);}
 else{p.sequence=p.sequence.slice(0,posN)+aa+p.sequence.slice(posN);
-if(!p._inserted)p._inserted=[];for(let si=0;si<aaLen;si++)p._inserted.push(posN+si);}
+if(!p._inserted)p._inserted=[];p._inserted=p._inserted.map(function(x){return x>=posN?x+aaLen:x;});for(let si=0;si<aaLen;si++)p._inserted.push(posN+si);}
 });
 renderAll();
 });});
@@ -763,7 +781,7 @@ if(part.fullSequence){const gp=seg.start-1+li;part.fullSequence=part.fullSequenc
 var insArr=edits.insertions.slice().sort(function(a,b){return b.localPos-a.localPos;});
 insArr.forEach(function(ins){const posN=ins.localPos;const aa=ins.aa;const aaLen=aa.length;
 seg.sequence=seg.sequence.slice(0,posN)+aa+seg.sequence.slice(posN);seg.end+=aaLen;for(let si2=0;si2<aaLen;si2++)seg.ss.splice(posN,0,'loop');
-if(!seg._inserted)seg._inserted=[];for(let si2=0;si2<aaLen;si2++)seg._inserted.push(posN+si2);
+if(!seg._inserted)seg._inserted=[];seg._inserted=seg._inserted.map(function(x){return x>=posN?x+aaLen:x;});for(let si2=0;si2<aaLen;si2++)seg._inserted.push(posN+si2);
 if(part.fullSequence){const gp=seg.start-1+posN;part.fullSequence=part.fullSequence.slice(0,gp)+aa+part.fullSequence.slice(gp);}});
 renderAll();
 });});
@@ -1060,7 +1078,7 @@ var delLabel=document.createElement('span');delLabel.textContent='Previously del
 deletedHistory.forEach(function(d){var sp=document.createElement('span');sp.textContent=d.aa+d.origPos;sp.style.cssText='color:#dc2626;text-decoration:line-through;margin-right:6px;font-weight:500';delDiv.appendChild(sp);});
 wrap.appendChild(delDiv);
 }
-var origCount=0;
+var origCount=0;var lastPeriodicPos=null;
 // Build items: original residues + insertions interleaved
 for(var i=0;i<origSeq.length;i++){
 // Insertions before this position
@@ -1077,7 +1095,7 @@ origCount++;
 if(origCount>1&&(origCount-1)%10===0){var sp2=document.createElement('span');sp2.textContent=' ';wrap.appendChild(sp2);}
 // Position marker every 20 — use original position
 var origP=editorOrigPos(i);
-if(origCount>1&&(origCount-1)%20===0&&origP!==null){var nm=document.createElement('span');nm.textContent=origP+'';nm.style.cssText='font-size:8px;color:var(--text-tertiary);vertical-align:super;margin:0 2px;user-select:none';wrap.appendChild(nm);}
+if(origCount>1&&(origCount-1)%20===0&&origP!==null){var nm=document.createElement('span');nm.textContent=origP+'';nm.style.cssText='font-size:8px;color:var(--text-tertiary);vertical-align:super;margin:0 2px;user-select:none';wrap.appendChild(nm);lastPeriodicPos=origP;}
 var isDel=edits.deletions.has(i);
 var isRep=edits.replacements[i]!==undefined;
 var span=document.createElement('span');
@@ -1119,8 +1137,8 @@ sp.title='Inserted \u2014 click to remove';
 sp.addEventListener('click',(function(idx2){return function(){edits.insertions.splice(idx2,1);updateStatus();renderSeq();};})(idx));
 wrap.appendChild(sp);
 }}});
-// End number — show last original position
-if(origSeq.length>0){var lastOrigPos=editorOrigPos(origSeq.length-1);if(lastOrigPos===null){for(var ei=origSeq.length-2;ei>=0;ei--){lastOrigPos=editorOrigPos(ei);if(lastOrigPos!==null)break;}}var endN=document.createElement('span');endN.textContent=' '+(lastOrigPos||'');endN.style.cssText='font-size:8px;color:var(--text-tertiary);font-weight:500;margin-left:4px';wrap.appendChild(endN);}
+// End number — show last original position (suppress if same as last periodic marker)
+if(origSeq.length>0){var lastOrigPos=editorOrigPos(origSeq.length-1);if(lastOrigPos===null){for(var ei=origSeq.length-2;ei>=0;ei--){lastOrigPos=editorOrigPos(ei);if(lastOrigPos!==null)break;}}if(lastOrigPos!==null&&lastOrigPos!==lastPeriodicPos){var endN=document.createElement('span');endN.textContent=' '+(lastOrigPos||'');endN.style.cssText='font-size:8px;color:var(--text-tertiary);font-weight:500;margin-left:4px';wrap.appendChild(endN);}}
 updateStatus();
 }
 
@@ -1268,7 +1286,7 @@ var insArr=edits.insertions.slice().sort(function(a,b){return b.localPos-a.local
 insArr.forEach(function(ins){var posN=ins.localPos;var aa=ins.aa;var aaLen=aa.length;
 targetSeg.sequence=targetSeg.sequence.slice(0,posN)+aa+targetSeg.sequence.slice(posN);targetSeg.end+=aaLen;
 for(var si2=0;si2<aaLen;si2++)targetSeg.ss.splice(posN,0,'loop');
-if(!targetSeg._inserted)targetSeg._inserted=[];for(var si2=0;si2<aaLen;si2++)targetSeg._inserted.push(posN+si2);
+if(!targetSeg._inserted)targetSeg._inserted=[];targetSeg._inserted=targetSeg._inserted.map(function(x){return x>=posN?x+aaLen:x;});for(var si2=0;si2<aaLen;si2++)targetSeg._inserted.push(posN+si2);
 if(selPart.fullSequence){var gp=targetSeg.start-1+posN;selPart.fullSequence=selPart.fullSequence.slice(0,gp)+aa+selPart.fullSequence.slice(gp);}
 });
 }else{
@@ -1328,7 +1346,7 @@ var segLi=Math.min(origPosToLocalIdx(seg2,uniPos),seg2.sequence.length);
 var aa=ins.aa;var aaLen=aa.length;
 seg2.sequence=seg2.sequence.slice(0,segLi)+aa+seg2.sequence.slice(segLi);seg2.end+=aaLen;
 if(seg2.ss)for(var si3=0;si3<aaLen;si3++)seg2.ss.splice(segLi,0,'loop');
-if(!seg2._inserted)seg2._inserted=[];for(var si3=0;si3<aaLen;si3++)seg2._inserted.push(segLi+si3);
+if(!seg2._inserted)seg2._inserted=[];seg2._inserted=seg2._inserted.map(function(x){return x>=segLi?x+aaLen:x;});for(var si3=0;si3<aaLen;si3++)seg2._inserted.push(segLi+si3);
 if(selPart.fullSequence){selPart.fullSequence=selPart.fullSequence.slice(0,uniPos-1)+aa+selPart.fullSequence.slice(uniPos-1);}
 });
 }
