@@ -43,7 +43,7 @@
     {"name": "His6", "sequence": "HHHHHH", "category": "purification", "use": "IMAC purification \u2014 most common"},
     {"name": "His10", "sequence": "HHHHHHHHHH", "category": "purification", "use": "IMAC \u2014 stronger binding than His6"},
     {"name": "Strep-tag II", "sequence": "WSHPQFEK", "category": "purification", "use": "Strep-Tactin purification \u2014 high purity"},
-    {"name": "Twin-Strep", "sequence": "WSHPQFEKGGGSGGGSWSHPQFEK", "category": "purification", "use": "Twin Strep-Tactin \u2014 enhanced affinity"},
+    {"name": "Twin-Strep", "sequence": "WSHPQFEKGGGSGGGSGGSAWSHPQFEK", "category": "purification", "use": "Twin Strep-Tactin \u2014 enhanced affinity"},
     {"name": "FLAG", "sequence": "DYKDDDDK", "category": "purification", "use": "Anti-FLAG purification & detection"},
     {"name": "Calmodulin-binding", "sequence": "KRRWKKNFIAVSAANRFKKISSSGAL", "category": "purification", "use": "Calmodulin affinity purification"},
     {"name": "HA tag", "sequence": "YPYDVPDYA", "category": "detection", "use": "Anti-HA detection \u2014 Western, IF, IP"},
