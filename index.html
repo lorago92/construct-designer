@@ -262,7 +262,7 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text-primary)
 <div id="tagEntries"></div>
 </div>
 </div></div></div></div>
-<div class="mutation-popup" id="mutationPopup" style="display:none"><div class="popup-header-bar" data-drag-target="mutationPopup"><span class="popup-drag-icon">⠿</span><span class="popup-title-text" id="mutPopTitle">Mutate residue</span><button class="popup-close-btn" onclick="document.getElementById('mutationPopup').style.display='none'">&times;</button></div><div class="mutation-popup-inner"><div class="mutation-popup-pos" id="mutPopPos"></div><div class="mutation-popup-row"><span id="mutPopOriginal" style="font-family:var(--font-mono);font-size:16px;font-weight:700"></span><span class="arrow">→</span><select id="mutPopSelect"></select></div><div class="mutation-popup-actions"><button class="btn btn-primary btn-sm" id="mutPopApply">Apply</button><button class="btn btn-secondary btn-sm" id="mutPopCancel">Cancel</button></div></div></div>
+<div class="mutation-popup" id="mutationPopup" style="display:none"><div class="popup-header-bar" data-drag-target="mutationPopup"><span class="popup-drag-icon">⠿</span><span class="popup-title-text" id="mutPopTitle">Mutate residue</span><button class="popup-close-btn" onclick="document.getElementById('mutationPopup').style.display='none'">&times;</button></div><div class="mutation-popup-inner"><div class="mutation-popup-pos" id="mutPopPos"></div><div class="mutation-popup-row"><span id="mutPopOriginal" style="font-family:var(--font-mono);font-size:16px;font-weight:700"></span><span class="arrow">→</span><select id="mutPopSelect"></select></div><div class="mutation-popup-actions"><button class="btn btn-primary btn-sm" id="mutPopApply">Apply</button><button class="btn btn-secondary btn-sm" id="mutPopCancel">Cancel</button></div><div style="border-top:1px solid var(--border-light);margin-top:8px;padding-top:8px;display:flex;gap:6px"><button class="btn btn-sm" id="mutPopInsert" style="flex:1;font-size:10px;padding:4px 0;background:#dcfce7;color:#16a34a;border:1px solid #86efac">+ Insert</button><button class="btn btn-sm" id="mutPopDelete" style="flex:1;font-size:10px;padding:4px 0;background:#fef2f2;color:#dc2626;border:1px solid #fca5a5">− Delete</button><button class="btn btn-sm" id="mutPopReplace" style="flex:1;font-size:10px;padding:4px 0;background:#fef3c7;color:#d97706;border:1px solid #fcd34d">⇄ Replace</button></div></div></div>
 <div class="variant-tooltip" id="variantTooltip" style="display:none"></div>
 <div class="variant-tooltip" id="engRefTooltip" style="display:none"></div>
 <div id="residueTooltip" style="display:none;position:fixed;z-index:300;background:var(--text-primary);color:white;padding:2px 6px;border-radius:4px;font-size:10px;font-family:var(--font-mono);pointer-events:none;white-space:nowrap"></div>
@@ -1033,7 +1033,7 @@ okBtn.addEventListener('click',onOk);
 cancelBtn.addEventListener('click',onCancel);
 });
 }
-function showSeqEditor(title,desc,sequence,startPos,existingMuts,existingInserted,existingDeleted){
+function showSeqEditor(title,desc,sequence,startPos,existingMuts,existingInserted,existingDeleted,options){
 return new Promise(function(resolve){
 document.getElementById('seqEdTitle').textContent=title||'Edit sequence';
 document.getElementById('seqEdDesc').textContent=desc||'';
@@ -1043,7 +1043,9 @@ var mutations=existingMuts||[];
 var insertedSet=new Set(existingInserted||[]);
 var deletedHistory=existingDeleted||[];// [{origPos, aa}]
 var edits={insertions:[],deletions:new Set(),replacements:{}};// deletions: Set of local indices; replacements: {localIdx: newAA(s)}; insertions: [{localPos,aa}]
-var activeTab='insert';
+var preTab=(options&&options.tab)||'insert';
+var prePos=(options&&options.position)||null;
+var activeTab=preTab;
 
 // Tab switching
 document.querySelectorAll('.seqed-tab').forEach(function(tab){
@@ -1056,11 +1058,11 @@ document.getElementById('seqEdDelete').style.display=activeTab==='delete'?'':'no
 document.getElementById('seqEdReplace').style.display=activeTab==='replace'?'':'none';
 renderSeq();
 };});
-// Reset to insert tab
+// Activate pre-selected tab
 document.querySelectorAll('.seqed-tab').forEach(function(t){t.style.background='transparent';t.style.color='var(--text-tertiary)';t.style.fontWeight='500';t.style.borderBottomColor='transparent';});
-var firstTab=document.querySelector('.seqed-tab[data-tab="insert"]');
-firstTab.style.background='var(--accent-light)';firstTab.style.color='var(--accent)';firstTab.style.fontWeight='600';firstTab.style.borderBottomColor='var(--accent)';
-document.getElementById('seqEdInsert').style.display='';document.getElementById('seqEdDelete').style.display='none';document.getElementById('seqEdReplace').style.display='none';
+var selTab=document.querySelector('.seqed-tab[data-tab="'+preTab+'"]')||document.querySelector('.seqed-tab[data-tab="insert"]');
+selTab.style.background='var(--accent-light)';selTab.style.color='var(--accent)';selTab.style.fontWeight='600';selTab.style.borderBottomColor='var(--accent)';
+document.getElementById('seqEdInsert').style.display=preTab==='insert'?'':'none';document.getElementById('seqEdDelete').style.display=preTab==='delete'?'':'none';document.getElementById('seqEdReplace').style.display=preTab==='replace'?'':'none';
 
 function updateStatus(){
 var n=edits.insertions.length+edits.deletions.size+Object.keys(edits.replacements).length;
@@ -1153,7 +1155,12 @@ document.getElementById('seqEdRepFrom').value='';document.getElementById('seqEdR
 renderSeq();
 var seqEdCard=document.getElementById('seqEditorCard');seqEdCard.style.transform='translate(-50%,-50%)';seqEdCard.style.left='50%';seqEdCard.style.top='50%';
 document.getElementById('seqEditorPopup').style.display='block';
-insPos.focus();
+// Pre-fill position if provided
+if(prePos!==null){
+if(preTab==='insert'){insPos.value=prePos;insPos.focus();}
+else if(preTab==='delete'){document.getElementById('seqEdDelFrom').value=prePos;document.getElementById('seqEdDelTo').value=prePos;document.getElementById('seqEdDelFrom').focus();}
+else if(preTab==='replace'){document.getElementById('seqEdRepFrom').value=prePos;document.getElementById('seqEdRepTo').value=prePos;document.getElementById('seqEdRepSeq').focus();}
+}else{insPos.focus();}
 
 function validAA(s){return s&&/^[ACDEFGHIKLMNPQRSTVWY]+$/i.test(s);}
 // Insert handler
@@ -1412,6 +1419,37 @@ renderAll();
 applyMutation(info.seg,uniprotPos,original,mutant,'manual','');
 }}popup.style.display='none';});
 document.getElementById('mutPopCancel').addEventListener('click',()=>{document.getElementById('mutationPopup').style.display='none';});
+// Insert/Delete/Replace quick-action buttons in mutation popup
+['insert','delete','replace'].forEach(function(tabName){
+document.getElementById('mutPop'+tabName.charAt(0).toUpperCase()+tabName.slice(1)).addEventListener('click',async function(){
+var popup=document.getElementById('mutationPopup');var globalPos=parseInt(popup.dataset.globalPos);var uniPos=parseInt(popup.dataset.uniprotPos);popup.style.display='none';
+var info=findSegmentAtGlobalPos(globalPos);if(!info)return;
+var part=info.part;var seg=info.seg;
+// For virtual segments (non-protein parts), use the part-level editor
+if(seg._isVirtualSeg){
+var pi2=-1;AppState.construct.parts.forEach(function(pp,ii){if(pp===part)pi2=ii;});
+var pSeq=part.sequence||'';
+var edits=await showSeqEditor('Edit '+part.name,pSeq.length+' aa',pSeq,1,part.mutations||[],part._inserted||[],part._deleted||[],{tab:tabName,position:uniPos});
+if(!edits)return;saveUndo();
+Object.keys(edits.replacements).forEach(function(k){var li=parseInt(k);var newAA=edits.replacements[k];var isIns2=(part._inserted||[]).includes(li);if(isIns2){part.sequence=part.sequence.slice(0,li)+newAA+part.sequence.slice(li+1);}else{var up=localIdxToOrigPos({start:1,_inserted:part._inserted||[],_deleted:part._deleted||[]},li);var oAA=(part.sequence||'')[li];if(!part.mutations)part.mutations=[];part.mutations=part.mutations.filter(function(m){return m.position!==up;});if(!part._replaced)part._replaced=[];part._replaced=part._replaced.filter(function(r){return r.position!==up;});if(oAA!==newAA){part.mutations.push({position:up,original:oAA,mutant:newAA,source:'manual',description:'Sequence editor replacement'});part._replaced.push({position:up,original:oAA,mutant:newAA});}}});
+[...edits.deletions].sort(function(a,b){return b-a;}).forEach(function(li){var isIns2=(part._inserted||[]).includes(li);if(isIns2){part._inserted=part._inserted.filter(function(x){return x!==li;}).map(function(x){return x>li?x-1:x;});}else{var up=localIdxToOrigPos({start:1,_inserted:part._inserted||[],_deleted:part._deleted||[]},li);var dAA=(part.sequence||'')[li];var em=(part.mutations||[]).find(function(m){return m.position===up;});var tAA=em?em.original:dAA;if(!part._deleted)part._deleted=[];part._deleted.push({origPos:up,aa:tAA});if(part.mutations)part.mutations=part.mutations.filter(function(m){return m.position!==up;});if(part._replaced)part._replaced=part._replaced.filter(function(r){return r.position!==up;});if(part._inserted)part._inserted=part._inserted.map(function(x){return x>li?x-1:x;});}part.sequence=part.sequence.slice(0,li)+part.sequence.slice(li+1);});
+edits.insertions.slice().sort(function(a,b){return b.localPos-a.localPos;}).forEach(function(ins2){var pN=ins2.localPos;var aa2=ins2.aa;var aL=aa2.length;part.sequence=part.sequence.slice(0,pN)+aa2+part.sequence.slice(pN);if(!part._inserted)part._inserted=[];part._inserted=part._inserted.map(function(x){return x>=pN?x+aL:x;});for(var si3=0;si3<aL;si3++)part._inserted.push(pN+si3);});
+renderAll();
+}else{
+// Protein segment — find part and segment indices
+var pi2=-1;var si2=-1;AppState.construct.parts.forEach(function(pp,ii){if(pp===part)pi2=ii;});si2=part.segments.indexOf(seg);
+if(pi2<0||si2<0)return;
+var partName=part.entryName||part.name||'';
+var numInsS=(seg._inserted||[]).length;var numDelS=(seg._deleted||[]).length;var origEndS=seg.end-numInsS+numDelS;var deltaS=numInsS-numDelS;var deltaStrS=deltaS>0?' +'+deltaS:deltaS<0?' '+deltaS:'';
+var edits=await showSeqEditor('Edit '+seg.name,partName+' \u00B7 '+seg.start+'\u2013'+origEndS+' ('+seg.sequence.length+' aa'+deltaStrS+')',seg.sequence,seg.start,seg.mutations||[],seg._inserted||[],seg._deleted||[],{tab:tabName,position:uniPos});
+if(!edits)return;saveUndo();
+Object.keys(edits.replacements).forEach(function(k){var li=parseInt(k);var newAA=edits.replacements[k];var isIns2=(seg._inserted||[]).includes(li);if(isIns2){seg.sequence=seg.sequence.slice(0,li)+newAA+seg.sequence.slice(li+1);}else{var up=localIdxToOrigPos(seg,li);var oAA=seg.sequence[li];if(!seg.mutations)seg.mutations=[];seg.mutations=seg.mutations.filter(function(m){return m.position!==up;});if(!seg._replaced)seg._replaced=[];seg._replaced=seg._replaced.filter(function(r){return r.position!==up;});if(oAA!==newAA){seg.mutations.push({position:up,original:oAA,mutant:newAA,source:'manual',description:'Sequence editor replacement'});seg._replaced.push({position:up,original:oAA,mutant:newAA});}}});
+[...edits.deletions].sort(function(a,b){return b-a;}).forEach(function(li){var dAA=seg.sequence[li];var isIns2=(seg._inserted||[]).includes(li);if(isIns2){seg._inserted=seg._inserted.filter(function(x){return x!==li;}).map(function(x){return x>li?x-1:x;});}else{var up=localIdxToOrigPos(seg,li);var em=(seg.mutations||[]).find(function(m){return m.position===up;});var tAA=em?em.original:dAA;if(!seg._deleted)seg._deleted=[];seg._deleted.push({origPos:up,aa:tAA});if(seg.mutations)seg.mutations=seg.mutations.filter(function(m){return m.position!==up;});if(seg._replaced)seg._replaced=seg._replaced.filter(function(r){return r.position!==up;});if(seg._inserted)seg._inserted=seg._inserted.map(function(x){return x>li?x-1:x;});}seg.sequence=seg.sequence.slice(0,li)+seg.sequence.slice(li+1);seg.end--;if(seg.ss)seg.ss.splice(li,1);if(part.fullSequence){var gp=seg.start-1+li;part.fullSequence=part.fullSequence.slice(0,gp)+part.fullSequence.slice(gp+1);}});
+edits.insertions.slice().sort(function(a,b){return b.localPos-a.localPos;}).forEach(function(ins2){var pN=ins2.localPos;var aa2=ins2.aa;var aL=aa2.length;seg.sequence=seg.sequence.slice(0,pN)+aa2+seg.sequence.slice(pN);seg.end+=aL;for(var si3=0;si3<aL;si3++)seg.ss.splice(pN,0,'loop');if(!seg._inserted)seg._inserted=[];seg._inserted=seg._inserted.map(function(x){return x>=pN?x+aL:x;});for(var si3=0;si3<aL;si3++)seg._inserted.push(pN+si3);if(part.fullSequence){var gp=seg.start-1+pN;part.fullSequence=part.fullSequence.slice(0,gp)+aa2+part.fullSequence.slice(gp);}});
+renderAll();
+}
+});
+});
 // Popup close handled by X buttons
 const addPartPopup=document.getElementById('addPartPopup');
 function showAddPartPopup(e){
